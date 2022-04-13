@@ -2,6 +2,13 @@
 name = "generic-ip"
 version = "0.1.0-alpha.1"
 edition = "2021"
+authors = ["Ben Maddison <benm@workonline.africa>"]
+description = "IP address types for generic programming"
+license = "MIT"
+repository = "https://github.com/wolcomm/generic-ip-rs"
+readme = "README.md"
+keywords = ["ip", "network", "cidr", "prefix", "subnet"]
+categories = ["network-programming"]
 
 [lib]
 name = "ip"
