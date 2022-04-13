@@ -1,6 +1,6 @@
 //! Types and traits for working with IP addresses and prefixes generically
 //! over address families.
-#![doc(html_root_url = "https://docs.rs/generic-ip/0.1.0-alpha.1")]
+#![doc(html_root_url = "https://docs.rs/generic-ip/0.1.0-alpha.2")]
 #![no_std]
 #![warn(missing_docs)]
 
