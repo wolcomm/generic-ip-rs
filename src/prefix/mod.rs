@@ -9,6 +9,7 @@ mod len;
 mod ord;
 
 pub use self::len::PrefixLength;
+pub use self::ord::PrefixOrdering as Ordering;
 
 mod private {
     use super::*;

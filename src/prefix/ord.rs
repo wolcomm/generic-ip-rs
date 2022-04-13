@@ -4,11 +4,16 @@ use crate::af::Afi;
 
 use super::Prefix;
 
+/// Ordering relationship between a pair of [`Prefix<A>`] `P` and `Q`.
 #[derive(Clone, Copy, Debug, Hash, PartialEq, Eq)]
 pub enum PrefixOrdering<A: Afi> {
+    /// `Q` is equal to `P`.
     Equal,
+    /// `Q` is a subprefix of `P`.
     Subprefix(Prefix<A>),
+    /// `Q` is a superprefix of `P`.
     Superprefix(Prefix<A>),
+    /// Neither `P` nor `Q` is a subprefix of the other.
     Divergent(Prefix<A>),
 }
 
