@@ -46,7 +46,11 @@ impl<A: Afi, T: Type> Shl<PrefixLength<A>> for Mask<A, T> {
     type Output = Self;
 
     fn shl(self, rhs: PrefixLength<A>) -> Self::Output {
-        Self::new(Self::into_primitive(self) << rhs.into_primitive())
+        if rhs == PrefixLength::<A>::MAX {
+            Self::ZEROS
+        } else {
+            Self::new(Self::into_primitive(self) << rhs.into_primitive())
+        }
     }
 }
 
@@ -54,7 +58,11 @@ impl<A: Afi, T: Type> Shr<PrefixLength<A>> for Mask<A, T> {
     type Output = Self;
 
     fn shr(self, rhs: PrefixLength<A>) -> Self::Output {
-        Self::new(Self::into_primitive(self) >> rhs.into_primitive())
+        if rhs == PrefixLength::<A>::MAX {
+            Self::ZEROS
+        } else {
+            Self::new(Self::into_primitive(self) >> rhs.into_primitive())
+        }
     }
 }
 
