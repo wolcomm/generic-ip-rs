@@ -4,13 +4,13 @@ use core::ops::{Shl, Shr};
 
 use crate::{af::Afi, prefix::PrefixLength, primitive::AddressPrimitive};
 
-pub trait Type: Debug {}
+pub trait Type: Copy + Debug {}
 
-#[derive(Debug)]
+#[derive(Clone, Copy, Debug)]
 pub enum Net {}
 impl Type for Net {}
 
-#[derive(Debug)]
+#[derive(Clone, Copy, Debug)]
 pub enum Host {}
 impl Type for Host {}
 
@@ -75,6 +75,23 @@ impl<A: Afi> From<PrefixLength<A>> for Netmask<A> {
 impl<A: Afi> From<PrefixLength<A>> for Hostmask<A> {
     fn from(len: PrefixLength<A>) -> Self {
         Self::ONES >> len
+    }
+}
+
+mod fmt {
+    use super::*;
+
+    use core::fmt;
+
+    use crate::fmt::AddressDisplay;
+
+    impl<A: Afi, T: Type> fmt::Display for Mask<A, T>
+    where
+        A::Addr: AddressDisplay<A>,
+    {
+        fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+            self.into_primitive().fmt_addr(f)
+        }
     }
 }
 

@@ -38,3 +38,15 @@ name = "stdlib_constistency_ipv6"
 path = "fuzz_targets/stdlib_constistency_ipv6.rs"
 test = false
 doc = false
+
+[[bin]]
+name = "stdlib_constistency_ipv4_display"
+path = "fuzz_targets/stdlib_constistency_ipv4_display.rs"
+test = false
+doc = false
+
+[[bin]]
+name = "stdlib_constistency_ipv6_display"
+path = "fuzz_targets/stdlib_constistency_ipv6_display.rs"
+test = false
+doc = false

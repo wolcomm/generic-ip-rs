@@ -11,6 +11,8 @@ extern crate std;
 pub mod addr;
 /// IP address family traits and marker types.
 pub mod af;
+/// IP address formatting traits
+pub mod fmt;
 /// IP prefix and prefix-length types.
 pub mod prefix;
 /// Number-like primitives for IP address and prefix representation.

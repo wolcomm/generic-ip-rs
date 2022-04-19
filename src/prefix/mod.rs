@@ -74,6 +74,23 @@ mod parse {
     }
 }
 
+mod fmt {
+    use super::*;
+
+    use core::fmt;
+
+    use crate::fmt::AddressDisplay;
+
+    impl<A: Afi> fmt::Display for Prefix<A>
+    where
+        A::Addr: AddressDisplay<A>,
+    {
+        fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+            write!(f, "{}/{}", self.prefix(), self.length())
+        }
+    }
+}
+
 #[cfg(feature = "ipnet")]
 mod convert {
     use super::*;

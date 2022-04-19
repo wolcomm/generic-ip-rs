@@ -86,6 +86,23 @@ mod parse {
     }
 }
 
+mod fmt {
+    use super::*;
+
+    use core::fmt;
+
+    use crate::fmt::AddressDisplay;
+
+    impl<A: Afi> fmt::Display for Address<A>
+    where
+        A::Addr: AddressDisplay<A>,
+    {
+        fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+            self.into_primitive().fmt_addr(f)
+        }
+    }
+}
+
 #[cfg(feature = "std")]
 mod convert {
     use super::*;
