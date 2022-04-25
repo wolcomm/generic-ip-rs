@@ -2,7 +2,7 @@
 //! over address families.
 #![doc(html_root_url = "https://docs.rs/generic-ip/0.1.0-alpha.2")]
 #![no_std]
-#![warn(missing_docs)]
+// #![warn(missing_docs)]
 
 #[cfg(feature = "std")]
 extern crate std;

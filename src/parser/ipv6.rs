@@ -23,7 +23,7 @@ fn u16s_into_u128(from: [u16; 8]) -> u128 {
 }
 
 #[inline(always)]
-pub fn parse_addr(input: &str) -> Result<u128, Error<'static, Ipv6>> {
+pub fn parse_addr(input: &str) -> Result<u128, Error<'static, Ipv6, u128>> {
     Parser::new(input)
         .take_only(Parser::take_ipv6_octets)
         .ok_or_else(|| err!(ErrorKind::ParserError))
@@ -31,7 +31,7 @@ pub fn parse_addr(input: &str) -> Result<u128, Error<'static, Ipv6>> {
 }
 
 #[inline(always)]
-pub fn parse_prefix(input: &str) -> Result<(u128, u8), Error<'static, Ipv6>> {
+pub fn parse_prefix(input: &str) -> Result<(u128, u8), Error<'static, Ipv6, u128>> {
     Parser::new(input)
         .take_with_length(Parser::take_ipv6_octets)
         .ok_or_else(|| err!(ErrorKind::ParserError))
@@ -140,7 +140,7 @@ mod tests {
 
         use proptest::{arbitrary::any, proptest};
 
-        use crate::addr::Address;
+        use crate::addr::ConcreteAddress;
 
         use super::*;
 
@@ -157,7 +157,7 @@ mod tests {
             #[test]
             fn parse_any_utf8(s in r"\PC*") {
                 let stdlib: Option<Ipv6Addr> = s.parse().ok();
-                assert_eq!(parse_addr(&s).map(Address::new).ok(), stdlib.map(Address::from))
+                assert_eq!(parse_addr(&s).map(ConcreteAddress::new).ok(), stdlib.map(ConcreteAddress::from))
             }
         }
 

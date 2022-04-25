@@ -6,7 +6,7 @@ use crate::{
 use super::Parser;
 
 #[inline(always)]
-pub fn parse_addr(input: &str) -> Result<u32, Error<'static, Ipv4>> {
+pub fn parse_addr(input: &str) -> Result<u32, Error<'static, Ipv4, u32>> {
     Parser::new(input)
         .take_only(Parser::take_ipv4_octets)
         .ok_or_else(|| err!(ErrorKind::ParserError))
@@ -14,7 +14,7 @@ pub fn parse_addr(input: &str) -> Result<u32, Error<'static, Ipv4>> {
 }
 
 #[inline(always)]
-pub fn parse_prefix(input: &str) -> Result<(u32, u8), Error<'static, Ipv4>> {
+pub fn parse_prefix(input: &str) -> Result<(u32, u8), Error<'static, Ipv4, u32>> {
     Parser::new(input)
         .take_with_length(Parser::take_ipv4_octets)
         .ok_or_else(|| err!(ErrorKind::ParserError))
@@ -62,7 +62,7 @@ mod tests {
 
         use proptest::{arbitrary::any, proptest};
 
-        use crate::addr::Address;
+        use crate::addr::ConcreteAddress;
 
         use super::*;
 
@@ -79,7 +79,7 @@ mod tests {
             #[test]
             fn parse_any_utf8(s in r"\PC*") {
                 let stdlib: Option<Ipv4Addr> = s.parse().ok();
-                assert_eq!(parse_addr(&s).map(Address::new).ok(), stdlib.map(Address::from))
+                assert_eq!(parse_addr(&s).map(ConcreteAddress::new).ok(), stdlib.map(ConcreteAddress::from))
             }
         }
 
