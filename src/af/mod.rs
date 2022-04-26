@@ -2,7 +2,13 @@ use core::cmp::Ord;
 use core::fmt::Debug;
 use core::hash::Hash;
 
-use crate::addr::{AddressI, AnyAddress, ConcreteAddress};
+use crate::addr::{
+    AddressI, AnyAddress, AnyHostmask, AnyNetmask, ConcreteAddress, ConcreteHostmask,
+    ConcreteNetmask, MaskI,
+};
+use crate::prefix::{
+    AnyPrefix, AnyPrefixLength, ConcretePrefix, ConcretePrefixLength, PrefixI, PrefixLengthI,
+};
 use crate::primitive::AddressPrimitive;
 use crate::{error::Error, parser};
 
@@ -31,15 +37,31 @@ pub type DefaultPrimitive<A> = <A as DefaultPrimitives>::Type;
 /// Provides an interface for describing a class of IP address families.
 pub trait AfiClass<As: Afis, Ps: Primitives<As>>: Copy + Debug + Hash + Ord {
     type Address: AddressI;
+    type PrefixLength: PrefixLengthI;
+    type Prefix: PrefixI;
+    type Netmask: MaskI;
+    type Hostmask: MaskI;
 }
 impl<A: Afi, P: AddressPrimitive<A>> AfiClass<A, P> for A {
     type Address = ConcreteAddress<A, P>;
+    type PrefixLength = ConcretePrefixLength<A, P>;
+    type Prefix = ConcretePrefix<A, P>;
+    type Netmask = ConcreteNetmask<A, P>;
+    type Hostmask = ConcreteHostmask<A, P>;
 }
 pub type Address<A, P = DefaultPrimitive<A>> = <A as AfiClass<A, P>>::Address;
+pub type PrefixLength<A, P = DefaultPrimitive<A>> = <A as AfiClass<A, P>>::PrefixLength;
+pub type Prefix<A, P = DefaultPrimitive<A>> = <A as AfiClass<A, P>>::Prefix;
+pub type Netmask<A, P = DefaultPrimitive<A>> = <A as AfiClass<A, P>>::Netmask;
+pub type Hostmask<A, P = DefaultPrimitive<A>> = <A as AfiClass<A, P>>::Hostmask;
 
 afi_definitions! {
     pub class Any {
         type Address = AnyAddress;
+        type PrefixLength = AnyPrefixLength;
+        type Prefix = AnyPrefix;
+        type Netmask = AnyNetmask;
+        type Hostmask = AnyHostmask;
         /// IPv4 address family marker type.
         pub afi Ipv4 (P4) {
             type Octets = [u8; 4];

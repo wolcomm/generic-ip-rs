@@ -4,6 +4,10 @@ macro_rules! afi_definitions {
             $( #[$class_attr:meta] )*
             $class_vis:vis class $class_name:ident {
                 type Address = $address_ty:ty;
+                type PrefixLength = $prefix_len_ty:ty;
+                type Prefix = $prefix_ty:ty;
+                type Netmask = $netmask_ty:ty;
+                type Hostmask = $hostmask_ty:ty;
                 $(
                     $( #[$afi_attr:meta] )*
                     $afi_vis:vis afi $afi_name:ident ($type_var:ident) {
@@ -116,6 +120,10 @@ macro_rules! afi_definitions {
                 $( $type_var: AddressPrimitive<$afi_name>, )*
             {
                 type Address = $address_ty;
+                type PrefixLength = $prefix_len_ty;
+                type Prefix = $prefix_ty;
+                type Netmask = $netmask_ty;
+                type Hostmask = $hostmask_ty;
             }
         )*
 
