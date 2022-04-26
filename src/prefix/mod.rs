@@ -1,12 +1,10 @@
 use core::cmp::min;
 
 use crate::{
-    addr::{
-        common_length, AddressI, AnyAddress, AnyHostmask, AnyNetmask, ConcreteAddress,
-        ConcreteHostmask, ConcreteNetmask, MaskI,
-    },
+    addr::{common_length, AddressI, AnyAddress, ConcreteAddress},
     af::{Afi, DefaultPrimitive, Ipv4, Ipv6},
     error::Error,
+    mask::{AnyHostmask, AnyNetmask, ConcreteHostmask, ConcreteNetmask, MaskI},
     primitive::AddressPrimitive,
 };
 

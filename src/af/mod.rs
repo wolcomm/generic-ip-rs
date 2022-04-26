@@ -2,15 +2,16 @@ use core::cmp::Ord;
 use core::fmt::Debug;
 use core::hash::Hash;
 
-use crate::addr::{
-    AddressI, AnyAddress, AnyHostmask, AnyNetmask, ConcreteAddress, ConcreteHostmask,
-    ConcreteNetmask, MaskI,
+use crate::{
+    addr::{AddressI, AnyAddress, ConcreteAddress},
+    error::Error,
+    mask::{AnyHostmask, AnyNetmask, ConcreteHostmask, ConcreteNetmask, MaskI},
+    parser,
+    prefix::{
+        AnyPrefix, AnyPrefixLength, ConcretePrefix, ConcretePrefixLength, PrefixI, PrefixLengthI,
+    },
+    primitive::AddressPrimitive,
 };
-use crate::prefix::{
-    AnyPrefix, AnyPrefixLength, ConcretePrefix, ConcretePrefixLength, PrefixI, PrefixLengthI,
-};
-use crate::primitive::AddressPrimitive;
-use crate::{error::Error, parser};
 
 mod macros;
 

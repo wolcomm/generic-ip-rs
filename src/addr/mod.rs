@@ -3,14 +3,9 @@ use core::ops::{BitAnd, BitAndAssign, BitOr, BitXor};
 
 use crate::{
     af::{Afi, DefaultPrimitive, Ipv4, Ipv6},
+    mask::{self, ConcreteMask},
     prefix::{ConcretePrefix, ConcretePrefixLength, PrefixI},
     primitive::AddressPrimitive,
-};
-
-mod mask;
-
-pub use self::mask::{
-    AnyHostmask, AnyMask, AnyNetmask, ConcreteHostmask, ConcreteMask, ConcreteNetmask, MaskI,
 };
 
 mod private {

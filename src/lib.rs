@@ -7,12 +7,14 @@
 #[cfg(feature = "std")]
 extern crate std;
 
-/// IP address and address-mask types and helper functions.
+/// IP address types and helper functions.
 pub mod addr;
 /// IP address family traits and marker types.
 pub mod af;
 /// IP address formatting traits
 pub mod fmt;
+/// IP address-mask types and helper functions.
+pub mod mask;
 /// IP prefix and prefix-length types.
 pub mod prefix;
 /// Number-like primitives for IP address and prefix representation.
