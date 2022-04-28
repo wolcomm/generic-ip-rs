@@ -1,8 +1,7 @@
 use core::cmp::Ordering::{self, Equal, Greater, Less};
 
-use crate::af::Afi;
-
-use super::Prefix;
+use super::ConcretePrefix;
+use crate::{addr::ConcreteAddress, af::Afi};
 
 /// Ordering relationship between a pair of [`Prefix<A>`] `P` and `Q`.
 #[derive(Clone, Copy, Debug, Hash, PartialEq, Eq)]
@@ -10,14 +9,14 @@ pub enum PrefixOrdering<A: Afi> {
     /// `Q` is equal to `P`.
     Equal,
     /// `Q` is a subprefix of `P`.
-    Subprefix(Prefix<A>),
+    Subprefix(ConcretePrefix<A>),
     /// `Q` is a superprefix of `P`.
-    Superprefix(Prefix<A>),
+    Superprefix(ConcretePrefix<A>),
     /// Neither `P` nor `Q` is a subprefix of the other.
-    Divergent(Prefix<A>),
+    Divergent(ConcretePrefix<A>),
 }
 
-impl<A: Afi> Prefix<A> {
+impl<A: Afi> ConcretePrefix<A> {
     /// Perform ordinal comparison with another [`Prefix<A>`], calculating the
     /// longest common prefix in the process.
     pub fn compare(self, other: Self) -> PrefixOrdering<A> {
@@ -37,7 +36,7 @@ impl<A: Afi> Prefix<A> {
     }
 }
 
-impl<A: Afi> PartialOrd for Prefix<A> {
+impl<A: Afi> PartialOrd<Self> for ConcretePrefix<A> {
     fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
         match self.compare(*other) {
             PrefixOrdering::Equal => Some(Equal),
@@ -45,6 +44,18 @@ impl<A: Afi> PartialOrd for Prefix<A> {
             PrefixOrdering::Superprefix(_) => Some(Greater),
             PrefixOrdering::Divergent(_) => None,
         }
+    }
+}
+
+impl<A: Afi> PartialEq<ConcreteAddress<A>> for ConcretePrefix<A> {
+    fn eq(&self, other: &ConcreteAddress<A>) -> bool {
+        self.eq(&ConcretePrefix::from(*other))
+    }
+}
+
+impl<A: Afi> PartialOrd<ConcreteAddress<A>> for ConcretePrefix<A> {
+    fn partial_cmp(&self, other: &ConcreteAddress<A>) -> Option<Ordering> {
+        self.partial_cmp(&ConcretePrefix::from(*other))
     }
 }
 

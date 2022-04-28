@@ -18,6 +18,7 @@ fn fmt_segments(segments: &[u16], sep: char, f: &mut fmt::Formatter) -> fmt::Res
     Ok(())
 }
 
+/// TODO: implement directly for `ConcreteAddress`, using `::octets()`
 /// IP address style formatting.
 pub trait AddressDisplay<A: Afi> {
     /// Format `Self` using the canical respresentation for IP addresses of

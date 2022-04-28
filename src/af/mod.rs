@@ -1,67 +1,81 @@
 use core::cmp::Ord;
-use core::fmt::Debug;
+use core::fmt::{self, Debug};
 use core::hash::Hash;
 
-use crate::primitive::{AddressPrimitive, WidthOf, WidthPrimitive};
-use crate::{error::Error, parser};
+use crate::{
+    addr::{AddressI, AnyAddress, ConcreteAddress},
+    mask::{AnyHostmask, AnyNetmask, ConcreteHostmask, ConcreteNetmask, MaskI},
+    prefix::{
+        AnyPrefix, AnyPrefixLength, ConcretePrefix, ConcretePrefixLength, PrefixI, PrefixLengthI,
+    },
+    primitive::AddressPrimitive,
+};
 
-mod macros;
+#[derive(Clone, Copy, Debug, Hash, PartialEq, Eq, PartialOrd, Ord)]
+pub enum Ipv4 {}
 
-use self::macros::afi_definitions;
+#[derive(Clone, Copy, Debug, Hash, PartialEq, Eq, PartialOrd, Ord)]
+pub enum Ipv6 {}
 
-/// Provides an interface for describing a class of IP address families.
-pub trait AfiClass: Copy + Debug + Hash + Ord {}
+#[derive(Clone, Copy, Debug, Hash, PartialEq, Eq, PartialOrd, Ord)]
+pub enum Any {}
 
-/// Provides an interface for describing an IP address family.
-pub trait Afi: AfiClass + Copy + Debug + Hash + Ord {
-    /// Underlying primitive type used to store IP address integers for this
-    /// address family.
-    type Addr: AddressPrimitive;
-
-    /// Minimum valid value of the underlying primitive value used to store
-    /// prefix-lengths for this address-family.
-    const MIN_LENGTH: WidthOf<Self::Addr> = <WidthOf<Self::Addr>>::ZERO;
-
-    /// Maximum valid value of the underlying primitive value used to store
-    /// prefix-lengths for this address-family.
-    const MAX_LENGTH: WidthOf<Self::Addr> = Self::Addr::MAX_WIDTH;
-
-    /// Get the [`AfiEnum`] variant associated with `Self`.
-    fn as_enum() -> AfiEnum;
-
-    /// Parse an `impl AsRef<str>` into a [`Self::Addr`].
-    ///
-    /// This method is primarily intended for use via the
-    /// [`FromStr`][core::str::FromStr] implementation for
-    /// [`Address<A>`][crate::addr::Address].
-    fn parse_addr<S>(s: &S) -> Result<Self::Addr, Error<'static, Self>>
-    where
-        S: AsRef<str> + ?Sized;
-
-    /// Parse an `impl AsRef<str>` into a `(Self::Addr, WidthOf<Self::Addr>)`
-    /// pair.
-    ///
-    /// This method is primarily intended for use via the
-    /// [`FromStr`][core::str::FromStr] implementation for
-    /// [`Prefix<A>`][crate::prefix::Prefix].
-    fn parse_prefix<S>(s: &S) -> Result<(Self::Addr, WidthOf<Self::Addr>), Error<'static, Self>>
-    where
-        S: AsRef<str> + ?Sized;
+pub enum AfiEnum {
+    Ipv4,
+    Ipv6,
 }
 
-impl<A: Afi> AfiClass for A {}
+impl fmt::Display for AfiEnum {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        match self {
+            Self::Ipv4 => f.write_str("ipv4"),
+            Self::Ipv6 => f.write_str("ipv6"),
+        }
+    }
+}
 
-afi_definitions! {
-    /// IPv4 address family marker type.
-    pub afi Ipv4 {
-        type Addr = u32;
-        fn parse_addr = parser::ipv4::parse_addr;
-        fn parse_prefix = parser::ipv4::parse_prefix;
+/// Provides an interface for describing an IP address family.
+pub trait Afi: Copy + Debug + Hash + Ord {
+    type Octets;
+    type AddressPrimitive: AddressPrimitive<Self>;
+    /// Get the [`AfiEnum`] variant associated with `Self`.
+    fn as_enum() -> AfiEnum;
+}
+
+impl Afi for Ipv4 {
+    type Octets = [u8; 4];
+    type AddressPrimitive = u32;
+    fn as_enum() -> AfiEnum {
+        AfiEnum::Ipv4
     }
-    /// IPv6 address family marker type.
-    pub afi Ipv6 {
-        type Addr = u128;
-        fn parse_addr = parser::ipv6::parse_addr;
-        fn parse_prefix = parser::ipv6::parse_prefix;
+}
+impl Afi for Ipv6 {
+    type Octets = [u8; 16];
+    type AddressPrimitive = u128;
+    fn as_enum() -> AfiEnum {
+        AfiEnum::Ipv6
     }
+}
+
+/// Provides an interface for describing a class of IP address families.
+pub trait AfiClass: Copy + Debug + Hash + Ord {
+    type Address: AddressI;
+    type PrefixLength: PrefixLengthI;
+    type Prefix: PrefixI;
+    type Netmask: MaskI;
+    type Hostmask: MaskI;
+}
+impl<A: Afi> AfiClass for A {
+    type Address = ConcreteAddress<A>;
+    type PrefixLength = ConcretePrefixLength<A>;
+    type Prefix = ConcretePrefix<A>;
+    type Netmask = ConcreteNetmask<A>;
+    type Hostmask = ConcreteHostmask<A>;
+}
+impl AfiClass for Any {
+    type Address = AnyAddress;
+    type PrefixLength = AnyPrefixLength;
+    type Prefix = AnyPrefix;
+    type Netmask = AnyNetmask;
+    type Hostmask = AnyHostmask;
 }

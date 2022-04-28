@@ -1,6 +1,6 @@
 use core::fmt;
 
-use crate::{af::Afi, primitive::WidthOf};
+use crate::{af::Afi, primitive::AddressPrimitive};
 
 #[derive(Debug)]
 pub struct Error<'a, A: Afi> {
@@ -49,7 +49,7 @@ impl<'a, A: Afi> Error<'a, A> {
 
 #[derive(Clone, Copy, Debug, Hash, Eq, PartialEq)]
 pub enum ErrorKind<A: Afi> {
-    PrefixLength(WidthOf<A::Addr>),
+    PrefixLength(<A::AddressPrimitive as AddressPrimitive<A>>::Width),
     ParserError,
 }
 
