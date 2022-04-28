@@ -2,7 +2,7 @@ use core::fmt::Debug;
 use core::ops::{Shl, Shr};
 
 use crate::{
-    af::{Afi, DefaultPrimitive, Ipv4, Ipv6},
+    af::{Afi, Ipv4, Ipv6},
     prefix::ConcretePrefixLength,
     primitive::AddressPrimitive,
 };
@@ -23,21 +23,17 @@ mod private {
     use core::marker::PhantomData;
 
     #[derive(Clone, Copy, Debug, Hash, PartialEq, Eq)]
-    pub struct ConcreteMask<T: Type, A: Afi, P: AddressPrimitive<A> = DefaultPrimitive<A>>(
-        P,
-        PhantomData<A>,
-        PhantomData<T>,
-    );
+    pub struct ConcreteMask<T: Type, A: Afi>(A::AddressPrimitive, PhantomData<T>);
 
-    impl<A: Afi, P: AddressPrimitive<A>, T: Type> ConcreteMask<T, A, P> {
-        pub const ZEROS: Self = Self(P::ZERO, PhantomData, PhantomData);
-        pub const ONES: Self = Self(P::ONES, PhantomData, PhantomData);
+    impl<A: Afi, T: Type> ConcreteMask<T, A> {
+        pub const ZEROS: Self = Self(A::AddressPrimitive::ZERO, PhantomData);
+        pub const ONES: Self = Self(A::AddressPrimitive::ONES, PhantomData);
 
-        pub fn new(bits: P) -> Self {
-            Self(bits, PhantomData, PhantomData)
+        pub fn new(bits: A::AddressPrimitive) -> Self {
+            Self(bits, PhantomData)
         }
 
-        pub fn into_primitive(self) -> P {
+        pub fn into_primitive(self) -> A::AddressPrimitive {
             self.0
         }
     }
@@ -46,52 +42,40 @@ mod private {
 pub use self::private::ConcreteMask;
 
 #[derive(Clone, Copy, Debug, Hash, PartialEq, Eq)]
-pub enum AnyMask<T: Type, P4 = DefaultPrimitive<Ipv4>, P6 = DefaultPrimitive<Ipv6>>
-where
-    P4: AddressPrimitive<Ipv4>,
-    P6: AddressPrimitive<Ipv6>,
-{
-    Ipv4(ConcreteMask<T, Ipv4, P4>),
-    Ipv6(ConcreteMask<T, Ipv6, P6>),
+pub enum AnyMask<T: Type> {
+    Ipv4(ConcreteMask<T, Ipv4>),
+    Ipv6(ConcreteMask<T, Ipv6>),
 }
 
 pub trait MaskI {}
-impl<T: Type, A: Afi, P: AddressPrimitive<A>> MaskI for ConcreteMask<T, A, P> {}
-impl<T: Type, P4: AddressPrimitive<Ipv4>, P6: AddressPrimitive<Ipv6>> MaskI for AnyMask<T, P4, P6> {}
+impl<T: Type, A: Afi> MaskI for ConcreteMask<T, A> {}
+impl<T: Type> MaskI for AnyMask<T> {}
 
 /// An IP Netmask.
-pub type ConcreteNetmask<A, P = DefaultPrimitive<A>> = ConcreteMask<Net, A, P>;
-pub type AnyNetmask<P4 = DefaultPrimitive<Ipv4>, P6 = DefaultPrimitive<Ipv6>> =
-    AnyMask<Net, P4, P6>;
+pub type ConcreteNetmask<A> = ConcreteMask<Net, A>;
+pub type AnyNetmask = AnyMask<Net>;
 
 /// An IP Hostmask.
-pub type ConcreteHostmask<A, P = DefaultPrimitive<A>> = ConcreteMask<Host, A, P>;
-pub type AnyHostmask<P4 = DefaultPrimitive<Ipv4>, P6 = DefaultPrimitive<Ipv6>> =
-    AnyMask<Host, P4, P6>;
+pub type ConcreteHostmask<A> = ConcreteMask<Host, A>;
+pub type AnyHostmask = AnyMask<Host>;
 
-impl<T: Type, P4: AddressPrimitive<Ipv4>, P6: AddressPrimitive<Ipv6>>
-    From<ConcreteMask<T, Ipv4, P4>> for AnyMask<T, P4, P6>
-{
-    fn from(mask: ConcreteMask<T, Ipv4, P4>) -> Self {
+impl<T: Type> From<ConcreteMask<T, Ipv4>> for AnyMask<T> {
+    fn from(mask: ConcreteMask<T, Ipv4>) -> Self {
         Self::Ipv4(mask)
     }
 }
 
-impl<T: Type, P4: AddressPrimitive<Ipv4>, P6: AddressPrimitive<Ipv6>>
-    From<ConcreteMask<T, Ipv6, P6>> for AnyMask<T, P4, P6>
-{
-    fn from(mask: ConcreteMask<T, Ipv6, P6>) -> Self {
+impl<T: Type> From<ConcreteMask<T, Ipv6>> for AnyMask<T> {
+    fn from(mask: ConcreteMask<T, Ipv6>) -> Self {
         Self::Ipv6(mask)
     }
 }
 
-impl<A: Afi, P: AddressPrimitive<A>, T: Type> Shl<ConcretePrefixLength<A, P>>
-    for ConcreteMask<T, A, P>
-{
+impl<A: Afi, T: Type> Shl<ConcretePrefixLength<A>> for ConcreteMask<T, A> {
     type Output = Self;
 
-    fn shl(self, rhs: ConcretePrefixLength<A, P>) -> Self::Output {
-        if rhs == ConcretePrefixLength::<A, P>::MAX {
+    fn shl(self, rhs: ConcretePrefixLength<A>) -> Self::Output {
+        if rhs == ConcretePrefixLength::<A>::MAX {
             Self::ZEROS
         } else {
             Self::new(Self::into_primitive(self) << rhs.into_primitive())
@@ -99,13 +83,11 @@ impl<A: Afi, P: AddressPrimitive<A>, T: Type> Shl<ConcretePrefixLength<A, P>>
     }
 }
 
-impl<A: Afi, P: AddressPrimitive<A>, T: Type> Shr<ConcretePrefixLength<A, P>>
-    for ConcreteMask<T, A, P>
-{
+impl<A: Afi, T: Type> Shr<ConcretePrefixLength<A>> for ConcreteMask<T, A> {
     type Output = Self;
 
-    fn shr(self, rhs: ConcretePrefixLength<A, P>) -> Self::Output {
-        if rhs == ConcretePrefixLength::<A, P>::MAX {
+    fn shr(self, rhs: ConcretePrefixLength<A>) -> Self::Output {
+        if rhs == ConcretePrefixLength::<A>::MAX {
             Self::ZEROS
         } else {
             Self::new(Self::into_primitive(self) >> rhs.into_primitive())
@@ -113,14 +95,14 @@ impl<A: Afi, P: AddressPrimitive<A>, T: Type> Shr<ConcretePrefixLength<A, P>>
     }
 }
 
-impl<A: Afi, P: AddressPrimitive<A>> From<ConcretePrefixLength<A, P>> for ConcreteNetmask<A, P> {
-    fn from(len: ConcretePrefixLength<A, P>) -> Self {
+impl<A: Afi> From<ConcretePrefixLength<A>> for ConcreteNetmask<A> {
+    fn from(len: ConcretePrefixLength<A>) -> Self {
         Self::ONES << -len
     }
 }
 
-impl<A: Afi, P: AddressPrimitive<A>> From<ConcretePrefixLength<A, P>> for ConcreteHostmask<A, P> {
-    fn from(len: ConcretePrefixLength<A, P>) -> Self {
+impl<A: Afi> From<ConcretePrefixLength<A>> for ConcreteHostmask<A> {
+    fn from(len: ConcretePrefixLength<A>) -> Self {
         Self::ONES >> len
     }
 }
@@ -132,9 +114,9 @@ mod fmt {
 
     use crate::fmt::AddressDisplay;
 
-    impl<A: Afi, P: AddressPrimitive<A>, T: Type> fmt::Display for ConcreteMask<T, A, P>
+    impl<A: Afi, T: Type> fmt::Display for ConcreteMask<T, A>
     where
-        P: AddressDisplay<A>,
+        A::AddressPrimitive: AddressDisplay<A>,
     {
         fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
             self.into_primitive().fmt_addr(f)
@@ -151,20 +133,20 @@ mod arbitrary {
         strategy::{BoxedStrategy, Strategy},
     };
 
-    impl<A: Afi, P: AddressPrimitive<A>, T: Type> Arbitrary for ConcreteMask<T, A, P>
+    impl<A: Afi, T: Type> Arbitrary for ConcreteMask<T, A>
     where
         A: 'static,
-        P: 'static,
+        A::AddressPrimitive: 'static,
         T: 'static,
-        Self: From<ConcretePrefixLength<A, P>>,
-        ConcretePrefixLength<A, P>: Arbitrary,
-        StrategyFor<ConcretePrefixLength<A, P>>: 'static,
+        Self: From<ConcretePrefixLength<A>>,
+        ConcretePrefixLength<A>: Arbitrary,
+        StrategyFor<ConcretePrefixLength<A>>: 'static,
     {
-        type Parameters = ParamsFor<ConcretePrefixLength<A, P>>;
+        type Parameters = ParamsFor<ConcretePrefixLength<A>>;
         type Strategy = BoxedStrategy<Self>;
 
         fn arbitrary_with(params: Self::Parameters) -> Self::Strategy {
-            any_with::<ConcretePrefixLength<A, P>>(params)
+            any_with::<ConcretePrefixLength<A>>(params)
                 .prop_map(ConcreteMask::from)
                 .boxed()
         }

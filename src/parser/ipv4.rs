@@ -6,7 +6,7 @@ use crate::{
 use super::Parser;
 
 #[inline(always)]
-pub fn parse_addr(input: &str) -> Result<u32, Error<'static, Ipv4, u32>> {
+pub fn parse_addr(input: &str) -> Result<u32, Error<'static, Ipv4>> {
     Parser::new(input)
         .take_only(Parser::take_ipv4_octets)
         .ok_or_else(|| err!(ErrorKind::ParserError))
@@ -14,7 +14,7 @@ pub fn parse_addr(input: &str) -> Result<u32, Error<'static, Ipv4, u32>> {
 }
 
 #[inline(always)]
-pub fn parse_prefix(input: &str) -> Result<(u32, u8), Error<'static, Ipv4, u32>> {
+pub fn parse_prefix(input: &str) -> Result<(u32, u8), Error<'static, Ipv4>> {
     Parser::new(input)
         .take_with_length(Parser::take_ipv4_octets)
         .ok_or_else(|| err!(ErrorKind::ParserError))

@@ -8,21 +8,32 @@
 extern crate std;
 
 /// IP address types and helper functions.
-pub mod addr;
+mod addr;
 /// IP address family traits and marker types.
-pub mod af;
+mod af;
+pub use self::af::{Afi, AfiClass, Any, Ipv4, Ipv6};
+
 /// IP address formatting traits
-pub mod fmt;
+mod fmt;
 /// IP address-mask types and helper functions.
-pub mod mask;
+mod mask;
 /// IP prefix and prefix-length types.
-pub mod prefix;
+mod prefix;
+pub use self::prefix::Ordering as PrefixOrdering;
+
 /// Number-like primitives for IP address and prefix representation.
-pub mod primitive;
+mod primitive;
+pub use self::primitive::AddressPrimitive;
 
 mod parser;
 
 mod error;
+
+pub type Address<A> = <A as AfiClass>::Address;
+pub type PrefixLength<A> = <A as AfiClass>::PrefixLength;
+pub type Prefix<A> = <A as AfiClass>::Prefix;
+pub type Netmask<A> = <A as AfiClass>::Netmask;
+pub type Hostmask<A> = <A as AfiClass>::Hostmask;
 
 #[cfg(test)]
 mod tests;

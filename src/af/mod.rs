@@ -1,113 +1,81 @@
 use core::cmp::Ord;
-use core::fmt::Debug;
+use core::fmt::{self, Debug};
 use core::hash::Hash;
 
 use crate::{
     addr::{AddressI, AnyAddress, ConcreteAddress},
-    error::Error,
     mask::{AnyHostmask, AnyNetmask, ConcreteHostmask, ConcreteNetmask, MaskI},
-    parser,
     prefix::{
         AnyPrefix, AnyPrefixLength, ConcretePrefix, ConcretePrefixLength, PrefixI, PrefixLengthI,
     },
     primitive::AddressPrimitive,
 };
 
-mod macros;
+#[derive(Clone, Copy, Debug, Hash, PartialEq, Eq, PartialOrd, Ord)]
+pub enum Ipv4 {}
 
-use self::macros::afi_definitions;
+#[derive(Clone, Copy, Debug, Hash, PartialEq, Eq, PartialOrd, Ord)]
+pub enum Ipv6 {}
+
+#[derive(Clone, Copy, Debug, Hash, PartialEq, Eq, PartialOrd, Ord)]
+pub enum Any {}
+
+pub enum AfiEnum {
+    Ipv4,
+    Ipv6,
+}
+
+impl fmt::Display for AfiEnum {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        match self {
+            Self::Ipv4 => f.write_str("ipv4"),
+            Self::Ipv6 => f.write_str("ipv6"),
+        }
+    }
+}
 
 /// Provides an interface for describing an IP address family.
-pub trait Afi: DefaultPrimitives + Copy + Debug + Hash + Ord {
+pub trait Afi: Copy + Debug + Hash + Ord {
     type Octets;
+    type AddressPrimitive: AddressPrimitive<Self>;
     /// Get the [`AfiEnum`] variant associated with `Self`.
     fn as_enum() -> AfiEnum;
 }
 
-pub trait Afis {}
-impl<A: Afi> Afis for A {}
-
-pub trait Primitives<As: Afis> {}
-impl<A: Afi, P: AddressPrimitive<A>> Primitives<A> for P {}
-
-pub trait DefaultPrimitives: Afis + Sized {
-    type Type: Primitives<Self>;
+impl Afi for Ipv4 {
+    type Octets = [u8; 4];
+    type AddressPrimitive = u32;
+    fn as_enum() -> AfiEnum {
+        AfiEnum::Ipv4
+    }
 }
-pub type DefaultPrimitive<A> = <A as DefaultPrimitives>::Type;
+impl Afi for Ipv6 {
+    type Octets = [u8; 16];
+    type AddressPrimitive = u128;
+    fn as_enum() -> AfiEnum {
+        AfiEnum::Ipv6
+    }
+}
 
 /// Provides an interface for describing a class of IP address families.
-pub trait AfiClass<As: Afis, Ps: Primitives<As>>: Copy + Debug + Hash + Ord {
+pub trait AfiClass: Copy + Debug + Hash + Ord {
     type Address: AddressI;
     type PrefixLength: PrefixLengthI;
     type Prefix: PrefixI;
     type Netmask: MaskI;
     type Hostmask: MaskI;
 }
-impl<A: Afi, P: AddressPrimitive<A>> AfiClass<A, P> for A {
-    type Address = ConcreteAddress<A, P>;
-    type PrefixLength = ConcretePrefixLength<A, P>;
-    type Prefix = ConcretePrefix<A, P>;
-    type Netmask = ConcreteNetmask<A, P>;
-    type Hostmask = ConcreteHostmask<A, P>;
+impl<A: Afi> AfiClass for A {
+    type Address = ConcreteAddress<A>;
+    type PrefixLength = ConcretePrefixLength<A>;
+    type Prefix = ConcretePrefix<A>;
+    type Netmask = ConcreteNetmask<A>;
+    type Hostmask = ConcreteHostmask<A>;
 }
-pub type Address<A, P = DefaultPrimitive<A>> = <A as AfiClass<A, P>>::Address;
-pub type PrefixLength<A, P = DefaultPrimitive<A>> = <A as AfiClass<A, P>>::PrefixLength;
-pub type Prefix<A, P = DefaultPrimitive<A>> = <A as AfiClass<A, P>>::Prefix;
-pub type Netmask<A, P = DefaultPrimitive<A>> = <A as AfiClass<A, P>>::Netmask;
-pub type Hostmask<A, P = DefaultPrimitive<A>> = <A as AfiClass<A, P>>::Hostmask;
-
-afi_definitions! {
-    pub class Any {
-        type Address = AnyAddress;
-        type PrefixLength = AnyPrefixLength;
-        type Prefix = AnyPrefix;
-        type Netmask = AnyNetmask;
-        type Hostmask = AnyHostmask;
-        /// IPv4 address family marker type.
-        pub afi Ipv4 (P4) {
-            type Octets = [u8; 4];
-            type DefaultPrimitive = u32;
-            primitive u32 {
-                type Width = u8;
-
-                const MAX_LENGTH = 32;
-                const ZERO = 0x0000_0000;
-                const ONES = 0xffff_ffff;
-
-                const BROADCAST = Some(Self::ONES);
-                const LOCALHOST = 0x7f00_0001;
-                const UNSPECIFIED = Self::ZERO;
-
-                const LOCALHOST_NET = (0x7f00_0000, 8);
-                const BENCHMARK_NET = (0xc612_0000, 15);
-                const MULTICAST_NET = (0xe000_0000, 4);
-
-                fn parse_addr = parser::ipv4::parse_addr;
-                fn parse_prefix = parser::ipv4::parse_prefix;
-            }
-        }
-        /// IPv6 address family marker type.
-        pub afi Ipv6 (P6) {
-            type Octets = [u8; 16];
-            type DefaultPrimitive = u128;
-            primitive u128 {
-                type Width = u8;
-
-                const MAX_LENGTH = 128;
-                const ZERO = 0x0000_0000_0000_0000_0000_0000_0000_0000;
-                const ONES = 0xffff_ffff_ffff_ffff_ffff_ffff_ffff_ffff;
-
-                const BROADCAST = None;
-                const LOCALHOST = 0x0000_0000_0000_0000_0000_0000_0000_0001;
-                const UNSPECIFIED = Self::ZERO;
-
-                const LOCALHOST_NET = (0x0000_0000_0000_0000_0000_0000_0000_0001, 128);
-                const BENCHMARK_NET = (0x2001_0002_0000_0000_0000_0000_0000_0000, 48);
-                const MULTICAST_NET = (0xff00_0000_0000_0000_0000_0000_0000_0000, 8);
-
-                fn parse_addr = parser::ipv6::parse_addr;
-                fn parse_prefix = parser::ipv6::parse_prefix;
-            }
-        }
-    }
+impl AfiClass for Any {
+    type Address = AnyAddress;
+    type PrefixLength = AnyPrefixLength;
+    type Prefix = AnyPrefix;
+    type Netmask = AnyNetmask;
+    type Hostmask = AnyHostmask;
 }

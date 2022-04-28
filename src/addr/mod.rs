@@ -2,86 +2,47 @@ use core::mem;
 use core::ops::{BitAnd, BitAndAssign, BitOr, BitXor};
 
 use crate::{
-    af::{Afi, DefaultPrimitive, Ipv4, Ipv6},
+    af::{Afi, Ipv4, Ipv6},
     mask::{self, ConcreteMask},
-    prefix::{ConcretePrefix, ConcretePrefixLength, PrefixI},
+    prefix::ConcretePrefixLength,
     primitive::AddressPrimitive,
 };
+
+mod range;
+use self::range::AddressRange;
 
 mod private {
     use super::*;
 
-    use core::marker::PhantomData;
-
     /// An IP address.
-    #[derive(Clone, Copy, Debug, Hash, PartialEq, Eq, PartialOrd, Ord)]
-    pub struct ConcreteAddress<A, P = DefaultPrimitive<A>>
-    where
-        A: Afi,
-        P: AddressPrimitive<A>,
-    {
-        inner: P,
-        _marker: PhantomData<A>,
-    }
+    #[derive(Clone, Copy, Debug, Default, Hash, PartialEq, Eq, PartialOrd, Ord)]
+    pub struct ConcreteAddress<A: Afi>(A::AddressPrimitive);
 
-    impl<A: Afi, P: AddressPrimitive<A>> ConcreteAddress<A, P> {
+    impl<A: Afi> ConcreteAddress<A> {
         // TODO: use `Self::new()` to construct these (and move out of `mod
         // private`) once const trait bounds are available in stable rustc
         // (1.61+)
-        pub const LOCALHOST: Self = Self {
-            inner: P::LOCALHOST,
-            _marker: PhantomData,
-        };
-        pub const UNSPECIFIED: Self = Self {
-            inner: P::UNSPECIFIED,
-            _marker: PhantomData,
-        };
-
-        pub(crate) const LOCALHOST_NET: Self = Self {
-            inner: P::LOCALHOST_NET.0,
-            _marker: PhantomData,
-        };
-
-        pub(crate) const BENCHMARK_NET: Self = Self {
-            inner: P::BENCHMARK_NET.0,
-            _marker: PhantomData,
-        };
-
-        pub(crate) const MULTICAST_NET: Self = Self {
-            inner: P::MULTICAST_NET.0,
-            _marker: PhantomData,
-        };
+        pub const LOCALHOST: Self = Self(A::AddressPrimitive::LOCALHOST);
+        pub const UNSPECIFIED: Self = Self(A::AddressPrimitive::UNSPECIFIED);
 
         /// Construct a new [`Address<A>`] from an integer primitive
         /// appropriate to `A`.
-        pub fn new(inner: P) -> Self {
-            Self {
-                inner,
-                _marker: PhantomData,
-            }
+        pub fn new(inner: A::AddressPrimitive) -> Self {
+            Self(inner)
         }
 
         /// Get the inner integer val, consuming `self`.
-        pub fn into_primitive(self) -> P {
-            self.inner
+        pub fn into_primitive(self) -> A::AddressPrimitive {
+            self.0
         }
     }
 
-    impl<P: AddressPrimitive<Ipv4>> ConcreteAddress<Ipv4, P> {
+    impl ConcreteAddress<Ipv4> {
         // TODO: use `Self::new()` to contruct these once const trait bounds are
         // available in stable rustc (1.61+)
-        // TODO: figure out how to deal with "optional" primitive consts
-        // const BROADCAST: Self = Self{inner: P::BROADCAST.unwrap(), _marker: PhantomData};
-        // pub const BROADCAST: Self = Self {
-        //     inner: P::from_be_bytes([255, 255, 255, 255]),
-        //     _marker: PhantomData,
-        // };
         pub const BROADCAST: Self = {
-            if let Some(inner) = P::BROADCAST {
-                Self {
-                    inner,
-                    _marker: PhantomData,
-                }
+            if let Some(inner) = <Ipv4 as Afi>::AddressPrimitive::BROADCAST {
+                Self(inner)
             } else {
                 panic!("failed to get BROADCAST address value")
             }
@@ -92,111 +53,55 @@ mod private {
 pub use self::private::ConcreteAddress;
 
 // TODO: make methods `const fn`
-impl<P: AddressPrimitive<Ipv4>> ConcreteAddress<Ipv4, P> {
-    pub fn is_broadcast(&self) -> bool {
-        // self == &Self::BROADCAST
-        self.octets() == [255, 255, 255, 255]
+impl ConcreteAddress<Ipv4> {
+    #[allow(clippy::wrong_self_convention)]
+    pub fn to_ipv6_compatible(&self) -> ConcreteAddress<Ipv6> {
+        ConcreteAddress::new(<Ipv6 as Afi>::AddressPrimitive::from_be_bytes(
+            self.to_ipv6_lo_octets(),
+        ))
     }
-    pub fn is_link_local(&self) -> bool {
-        matches!(self.octets(), [169, 254, ..])
-    }
-    pub fn is_private(&self) -> bool {
-        matches!(
-            self.octets(),
-            [192, 168, ..] | [172, 16..=31, ..] | [10, ..]
-        )
-    }
-    pub fn is_reserved(&self) -> bool {
-        matches!(self.octets(), [240..=255, ..])
-    }
-    pub fn is_shared(&self) -> bool {
-        matches!(self.octets(), [100, 64..=127, ..])
-    }
-    pub fn is_thisnet(&self) -> bool {
-        matches!(self.octets(), [0, ..])
-    }
-    pub fn to_ipv6_compatible<P6>(&self) -> ConcreteAddress<Ipv6, P6>
-    where
-        P6: AddressPrimitive<Ipv6>,
-    {
-        ConcreteAddress::new(P6::from_be_bytes(self.to_ipv6_lo_octets()))
-    }
-    pub fn to_ipv6_mapped<P6>(&self) -> ConcreteAddress<Ipv6, P6>
-    where
-        P6: AddressPrimitive<Ipv6>,
-    {
+
+    #[allow(clippy::wrong_self_convention)]
+    pub fn to_ipv6_mapped(&self) -> ConcreteAddress<Ipv6> {
         let mut octets = self.to_ipv6_lo_octets();
         octets[10..12].copy_from_slice(&[0xffu8, 0xffu8]);
-        ConcreteAddress::new(P6::from_be_bytes(octets))
+        ConcreteAddress::new(<Ipv6 as Afi>::AddressPrimitive::from_be_bytes(octets))
     }
+
     fn to_ipv6_lo_octets(self) -> <Ipv6 as Afi>::Octets {
         let mut octets = <Ipv6 as Afi>::Octets::default();
         octets[12..].copy_from_slice(&self.octets());
         octets
     }
-    fn is_global(&self) -> bool {
-        if self.is_private()
-            || self.is_loopback()
-            || self.is_link_local()
-            || self.is_broadcast()
-            || self.is_documentation()
-            || self.is_shared()
-            || self.is_reserved()
-            || self.is_benchmarking()
-            || self.is_thisnet()
-        {
-            false
-        } else {
-            // TODO: handle 192.0.0.0/24
-            unimplemented!()
-        }
-    }
-    fn is_documentation(&self) -> bool {
-        matches!(
-            self.octets(),
-            [192, 0, 2, _] | [198, 51, 100, _] | [203, 0, 113, _]
-        )
-    }
 }
 
 // TODO: make methods `const fn`
-impl<P: AddressPrimitive<Ipv6>> ConcreteAddress<Ipv6, P> {
-    pub fn is_unicast(&self) -> bool {
-        !self.is_multicast()
-    }
-    pub fn is_unicast_global(&self) -> bool {
-        !(self.is_loopback()
-            || self.is_unicast_link_local()
-            || self.is_unique_local()
-            || self.is_unspecified()
-            || self.is_documentation())
-    }
+impl ConcreteAddress<Ipv6> {
     pub fn is_unicast_link_local(&self) -> bool {
-        matches!(self.octets(), [0xfe, 0x80..=0xbf, ..])
+        self.is_link_local()
     }
-    pub fn is_unique_local(&self) -> bool {
-        matches!(self.octets(), [0xfc..=0xfd, ..])
-    }
+
     pub fn multicast_scope(&self) -> Option<MulticastScope> {
         if self.is_multicast() {
-            match self.octets()[1] {
-                0x00 => Some(MulticastScope::Reserved),
-                0x01 => Some(MulticastScope::InterfaceLocal),
-                0x02 => Some(MulticastScope::LinkLocal),
-                0x03 => Some(MulticastScope::RealmLocal),
-                0x04 => Some(MulticastScope::AdminLocal),
-                0x05 => Some(MulticastScope::SiteLocal),
-                0x06..=0x07 => Some(MulticastScope::Unassigned),
-                0x08 => Some(MulticastScope::OrganizationLocal),
-                0x09..=0x0d => Some(MulticastScope::Unassigned),
-                0x0e => Some(MulticastScope::Global),
-                0x0f => Some(MulticastScope::Reserved),
-                0x10.. => unreachable!(),
+            match self.octets()[1] & 0x0f {
+                0x0 => Some(MulticastScope::Reserved),
+                0x1 => Some(MulticastScope::InterfaceLocal),
+                0x2 => Some(MulticastScope::LinkLocal),
+                0x3 => Some(MulticastScope::RealmLocal),
+                0x4 => Some(MulticastScope::AdminLocal),
+                0x5 => Some(MulticastScope::SiteLocal),
+                0x6..=0x07 => Some(MulticastScope::Unassigned),
+                0x8 => Some(MulticastScope::OrganizationLocal),
+                0x9..=0x0d => Some(MulticastScope::Unassigned),
+                0xe => Some(MulticastScope::Global),
+                0xf => Some(MulticastScope::Reserved),
+                _ => unreachable!(),
             }
         } else {
             None
         }
     }
+
     pub fn segments(&self) -> [u16; 8] {
         // SAFTEY: [u8; 16] is always safe to transmute to [u16; 8]
         let [a, b, c, d, e, f, g, h] = unsafe { mem::transmute::<_, [u16; 8]>(self.octets()) };
@@ -211,63 +116,50 @@ impl<P: AddressPrimitive<Ipv6>> ConcreteAddress<Ipv6, P> {
             u16::from_be(h),
         ]
     }
-    pub fn to_canonical<P4>(&self) -> AnyAddress<P4, P>
-    where
-        P4: AddressPrimitive<Ipv4>,
-    {
+
+    #[allow(clippy::wrong_self_convention)]
+    pub fn to_canonical(&self) -> AnyAddress {
         if let Some(ipv4_addr) = self.to_ipv4_mapped() {
             AnyAddress::Ipv4(ipv4_addr)
         } else {
             AnyAddress::Ipv6(*self)
         }
     }
-    pub fn to_ipv4<P4>(&self) -> Option<ConcreteAddress<Ipv4, P4>>
-    where
-        P4: AddressPrimitive<Ipv4>,
-    {
+
+    #[allow(clippy::wrong_self_convention)]
+    pub fn to_ipv4(&self) -> Option<ConcreteAddress<Ipv4>> {
         self.to_ipv4_mapped().or_else(|| match self.octets() {
-            [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, octets @ ..] => {
-                Some(ConcreteAddress::new(P4::from_be_bytes(octets)))
-            }
+            [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, octets @ ..] => Some(ConcreteAddress::new(
+                <Ipv4 as Afi>::AddressPrimitive::from_be_bytes(octets),
+            )),
             _ => None,
         })
     }
-    pub fn to_ipv4_mapped<P4>(&self) -> Option<ConcreteAddress<Ipv4, P4>>
-    where
-        P4: AddressPrimitive<Ipv4>,
-    {
+
+    #[allow(clippy::wrong_self_convention)]
+    pub fn to_ipv4_mapped(&self) -> Option<ConcreteAddress<Ipv4>> {
         match self.octets() {
-            [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0xff, 0xff, octets @ ..] => {
-                Some(ConcreteAddress::new(P4::from_be_bytes(octets)))
-            }
+            [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0xff, 0xff, octets @ ..] => Some(ConcreteAddress::new(
+                <Ipv4 as Afi>::AddressPrimitive::from_be_bytes(octets),
+            )),
             _ => None,
         }
     }
-    fn is_global(&self) -> bool {
-        self.is_unicast_global() || matches!(self.multicast_scope(), Some(MulticastScope::Global))
-    }
-    fn is_documentation(&self) -> bool {
-        matches!(self.octets(), [0x20, 0x01, 0x0d, 0xb8, ..])
-    }
 }
 
-impl<A: Afi, P: AddressPrimitive<A>> ConcreteAddress<A, P> {
+impl<A: Afi> ConcreteAddress<A> {
     pub fn octets(&self) -> A::Octets {
         self.into_primitive().to_be_bytes()
     }
 }
 
 #[derive(Clone, Copy, Debug, Hash, PartialEq, Eq, PartialOrd, Ord)]
-pub enum AnyAddress<P4 = DefaultPrimitive<Ipv4>, P6 = DefaultPrimitive<Ipv6>>
-where
-    P4: AddressPrimitive<Ipv4>,
-    P6: AddressPrimitive<Ipv6>,
-{
-    Ipv4(ConcreteAddress<Ipv4, P4>),
-    Ipv6(ConcreteAddress<Ipv6, P6>),
+pub enum AnyAddress {
+    Ipv4(ConcreteAddress<Ipv4>),
+    Ipv6(ConcreteAddress<Ipv6>),
 }
 
-impl<P4: AddressPrimitive<Ipv4>, P6: AddressPrimitive<Ipv6>> AnyAddress<P4, P6> {
+impl AnyAddress {
     pub fn is_ipv4(&self) -> bool {
         matches!(self, Self::Ipv4(_))
     }
@@ -276,6 +168,7 @@ impl<P4: AddressPrimitive<Ipv4>, P6: AddressPrimitive<Ipv6>> AnyAddress<P4, P6> 
         matches!(self, Self::Ipv6(_))
     }
 
+    #[allow(clippy::wrong_self_convention)]
     pub fn to_canonical(&self) -> Self {
         match self {
             Self::Ipv4(_) => *self,
@@ -285,37 +178,105 @@ impl<P4: AddressPrimitive<Ipv4>, P6: AddressPrimitive<Ipv6>> AnyAddress<P4, P6> 
 }
 
 pub trait AddressI {
+    fn is_broadcast(&self) -> bool;
+    fn is_link_local(&self) -> bool;
+    fn is_private(&self) -> bool;
+    fn is_reserved(&self) -> bool;
+    fn is_shared(&self) -> bool;
+    fn is_thisnet(&self) -> bool;
     fn is_benchmarking(&self) -> bool;
     fn is_documentation(&self) -> bool;
     fn is_global(&self) -> bool;
     fn is_loopback(&self) -> bool;
     fn is_multicast(&self) -> bool;
     fn is_unspecified(&self) -> bool;
+    fn is_unique_local(&self) -> bool;
+    fn is_unicast(&self) -> bool {
+        !self.is_multicast()
+    }
+    fn is_unicast_global(&self) -> bool {
+        self.is_unicast() && self.is_global()
+    }
 }
 
-impl<A: Afi, P: AddressPrimitive<A>> AddressI for ConcreteAddress<A, P> {
+impl<A: Afi> AddressI for ConcreteAddress<A> {
+    fn is_broadcast(&self) -> bool {
+        if let Some(broadcast) = A::AddressPrimitive::BROADCAST {
+            self.into_primitive() == broadcast
+        } else {
+            false
+        }
+    }
+    fn is_link_local(&self) -> bool {
+        AddressRange::from(&A::AddressPrimitive::LINK_LOCAL_RANGE).contains(self)
+    }
+
+    fn is_private(&self) -> bool {
+        if let Some(ranges) = A::AddressPrimitive::PRIVATE_RANGES {
+            ranges
+                .iter()
+                .any(|range| AddressRange::from(range).contains(self))
+        } else {
+            false
+        }
+    }
+
+    fn is_reserved(&self) -> bool {
+        if let Some(range) = A::AddressPrimitive::RESERVED_RANGE {
+            AddressRange::from(&range).contains(self)
+        } else {
+            false
+        }
+    }
+
+    fn is_shared(&self) -> bool {
+        if let Some(range) = A::AddressPrimitive::SHARED_RANGE {
+            AddressRange::from(&range).contains(self)
+        } else {
+            false
+        }
+    }
+
+    fn is_thisnet(&self) -> bool {
+        if let Some(range) = A::AddressPrimitive::THISNET_RANGE {
+            AddressRange::from(&range).contains(self)
+        } else {
+            false
+        }
+    }
+
     fn is_benchmarking(&self) -> bool {
-        ConcretePrefix::BENCHMARK.contains(*self)
+        AddressRange::from(&A::AddressPrimitive::BENCHMARK_RANGE).contains(self)
     }
 
     fn is_documentation(&self) -> bool {
-        self.is_documentation()
+        A::AddressPrimitive::DOCUMENTATION_RANGES
+            .iter()
+            .any(|range| AddressRange::from(range).contains(self))
     }
 
     fn is_global(&self) -> bool {
-        self.is_global()
+        self.into_primitive().is_global()
     }
 
     fn is_loopback(&self) -> bool {
-        ConcretePrefix::LOCALHOST.contains(*self)
+        AddressRange::from(&A::AddressPrimitive::LOCALHOST_RANGE).contains(self)
     }
 
     fn is_multicast(&self) -> bool {
-        ConcretePrefix::MULTICAST.contains(*self)
+        AddressRange::from(&A::AddressPrimitive::MULTICAST_RANGE).contains(self)
     }
 
     fn is_unspecified(&self) -> bool {
         self == &Self::UNSPECIFIED
+    }
+
+    fn is_unique_local(&self) -> bool {
+        if let Some(range) = A::AddressPrimitive::ULA_RANGE {
+            AddressRange::from(&range).contains(self)
+        } else {
+            false
+        }
     }
 }
 
@@ -332,29 +293,33 @@ macro_rules! delegate {
     }
 }
 
-impl<P4: AddressPrimitive<Ipv4>, P6: AddressPrimitive<Ipv6>> AddressI for AnyAddress<P4, P6> {
+impl AddressI for AnyAddress {
     delegate! {
+        fn is_broadcast(&self) -> bool;
+        fn is_link_local(&self) -> bool;
+        fn is_private(&self) -> bool;
+        fn is_reserved(&self) -> bool;
+        fn is_shared(&self) -> bool;
+        fn is_thisnet(&self) -> bool;
         fn is_benchmarking(&self) -> bool;
         fn is_documentation(&self) -> bool;
         fn is_global(&self) -> bool;
         fn is_loopback(&self) -> bool;
         fn is_multicast(&self) -> bool;
+        fn is_unicast(&self) -> bool;
         fn is_unspecified(&self) -> bool;
+        fn is_unique_local(&self) -> bool;
     }
 }
 
-impl<P4: AddressPrimitive<Ipv4>, P6: AddressPrimitive<Ipv6>> From<ConcreteAddress<Ipv4, P4>>
-    for AnyAddress<P4, P6>
-{
-    fn from(addr: ConcreteAddress<Ipv4, P4>) -> Self {
+impl From<ConcreteAddress<Ipv4>> for AnyAddress {
+    fn from(addr: ConcreteAddress<Ipv4>) -> Self {
         Self::Ipv4(addr)
     }
 }
 
-impl<P4: AddressPrimitive<Ipv4>, P6: AddressPrimitive<Ipv6>> From<ConcreteAddress<Ipv6, P6>>
-    for AnyAddress<P4, P6>
-{
-    fn from(addr: ConcreteAddress<Ipv6, P6>) -> Self {
+impl From<ConcreteAddress<Ipv6>> for AnyAddress {
+    fn from(addr: ConcreteAddress<Ipv6>) -> Self {
         Self::Ipv6(addr)
     }
 }
@@ -374,36 +339,30 @@ pub enum MulticastScope {
 
 /// Compute the length, as a [`PrefixLength<A>`], for the common prefixes of
 /// two [`Address<A>`].
-pub fn common_length<A, P>(
-    lhs: ConcreteAddress<A, P>,
-    rhs: ConcreteAddress<A, P>,
-) -> ConcretePrefixLength<A, P>
-where
-    A: Afi,
-    P: AddressPrimitive<A>,
-{
+pub fn common_length<A: Afi>(
+    lhs: ConcreteAddress<A>,
+    rhs: ConcreteAddress<A>,
+) -> ConcretePrefixLength<A> {
     lhs.common_length(rhs)
 }
 
-impl<A: Afi, P: AddressPrimitive<A>> ConcreteAddress<A, P> {
+impl<A: Afi> ConcreteAddress<A> {
     /// Compute the common length of `self` and another [`Address<A>`].
-    pub fn common_length(self, other: Self) -> ConcretePrefixLength<A, P> {
+    pub fn common_length(self, other: Self) -> ConcretePrefixLength<A> {
         // ok to unwrap here as long as primitive width invariants hold
-        ConcretePrefixLength::<A, P>::from_primitive((self ^ other).leading_zeros()).unwrap()
+        ConcretePrefixLength::<A>::from_primitive((self ^ other).leading_zeros()).unwrap()
     }
 }
 
-impl<A: Afi, P: AddressPrimitive<A>, T: mask::Type> BitAnd<ConcreteMask<T, A, P>>
-    for ConcreteAddress<A, P>
-{
+impl<A: Afi, T: mask::Type> BitAnd<ConcreteMask<T, A>> for ConcreteAddress<A> {
     type Output = Self;
 
-    fn bitand(self, mask: ConcreteMask<T, A, P>) -> Self::Output {
+    fn bitand(self, mask: ConcreteMask<T, A>) -> Self::Output {
         Self::new(self.into_primitive().bitand(mask.into_primitive()))
     }
 }
 
-impl<A: Afi, P: AddressPrimitive<A>, T> BitAndAssign<T> for ConcreteAddress<A, P>
+impl<A: Afi, T> BitAndAssign<T> for ConcreteAddress<A>
 where
     Self: BitAnd<T, Output = Self>,
 {
@@ -412,18 +371,16 @@ where
     }
 }
 
-impl<A: Afi, P: AddressPrimitive<A>, T: mask::Type> BitOr<ConcreteMask<T, A, P>>
-    for ConcreteAddress<A, P>
-{
+impl<A: Afi, T: mask::Type> BitOr<ConcreteMask<T, A>> for ConcreteAddress<A> {
     type Output = Self;
 
-    fn bitor(self, mask: ConcreteMask<T, A, P>) -> Self::Output {
+    fn bitor(self, mask: ConcreteMask<T, A>) -> Self::Output {
         Self::new(self.into_primitive().bitor(mask.into_primitive()))
     }
 }
 
-impl<A: Afi, P: AddressPrimitive<A>> BitXor<Self> for ConcreteAddress<A, P> {
-    type Output = P;
+impl<A: Afi> BitXor<Self> for ConcreteAddress<A> {
+    type Output = A::AddressPrimitive;
 
     fn bitxor(self, rhs: Self) -> Self::Output {
         self.into_primitive() ^ rhs.into_primitive()
@@ -437,11 +394,11 @@ mod parse {
 
     use crate::error::Error;
 
-    impl<A: Afi, P: AddressPrimitive<A>> FromStr for ConcreteAddress<A, P> {
-        type Err = Error<'static, A, P>;
+    impl<A: Afi> FromStr for ConcreteAddress<A> {
+        type Err = Error<'static, A>;
 
         fn from_str(s: &str) -> Result<Self, Self::Err> {
-            P::parse_addr(s).map(Self::new)
+            A::AddressPrimitive::parse_addr(s).map(Self::new)
         }
     }
 }
@@ -453,9 +410,9 @@ mod fmt {
 
     use crate::fmt::AddressDisplay;
 
-    impl<A: Afi, P: AddressPrimitive<A>> fmt::Display for ConcreteAddress<A, P>
+    impl<A: Afi> fmt::Display for ConcreteAddress<A>
     where
-        P: AddressDisplay<A>,
+        A::AddressPrimitive: AddressDisplay<A>,
     {
         fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
             self.into_primitive().fmt_addr(f)
@@ -471,19 +428,13 @@ mod convert {
 
     use crate::af::{Ipv4, Ipv6};
 
-    impl<P: AddressPrimitive<Ipv4>> From<Ipv4Addr> for ConcreteAddress<Ipv4, P>
-    where
-        P: From<Ipv4Addr>,
-    {
+    impl From<Ipv4Addr> for ConcreteAddress<Ipv4> {
         fn from(addr: Ipv4Addr) -> Self {
             Self::new(addr.into())
         }
     }
 
-    impl<P: AddressPrimitive<Ipv6>> From<Ipv6Addr> for ConcreteAddress<Ipv6, P>
-    where
-        P: From<Ipv6Addr>,
-    {
+    impl From<Ipv6Addr> for ConcreteAddress<Ipv6> {
         fn from(addr: Ipv6Addr) -> Self {
             Self::new(addr.into())
         }
@@ -499,17 +450,19 @@ mod arbitrary {
         strategy::{BoxedStrategy, Strategy},
     };
 
-    impl<A: Afi, P: AddressPrimitive<A>> Arbitrary for ConcreteAddress<A, P>
+    impl<A: Afi> Arbitrary for ConcreteAddress<A>
     where
         A: 'static,
-        P: Arbitrary + 'static,
-        StrategyFor<P>: 'static,
+        A::AddressPrimitive: Arbitrary + 'static,
+        StrategyFor<A::AddressPrimitive>: 'static,
     {
-        type Parameters = ParamsFor<P>;
+        type Parameters = ParamsFor<A::AddressPrimitive>;
         type Strategy = BoxedStrategy<Self>;
 
         fn arbitrary_with(params: Self::Parameters) -> Self::Strategy {
-            any_with::<P>(params).prop_map(Self::new).boxed()
+            any_with::<A::AddressPrimitive>(params)
+                .prop_map(Self::new)
+                .boxed()
         }
     }
 }

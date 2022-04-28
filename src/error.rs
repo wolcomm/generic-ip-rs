@@ -3,15 +3,15 @@ use core::fmt;
 use crate::{af::Afi, primitive::AddressPrimitive};
 
 #[derive(Debug)]
-pub struct Error<'a, A: Afi, P: AddressPrimitive<A>> {
-    kind: ErrorKind<A, P>,
+pub struct Error<'a, A: Afi> {
+    kind: ErrorKind<A>,
     msg: Option<&'a str>,
     source: Option<SourceError<'a>>,
 }
 
-impl<'a, A: Afi, P: AddressPrimitive<A>> Error<'a, A, P> {
+impl<'a, A: Afi> Error<'a, A> {
     pub(crate) fn new<S: AsRef<str> + ?Sized + 'a>(
-        kind: ErrorKind<A, P>,
+        kind: ErrorKind<A>,
         msg: Option<&'a S>,
         source: Option<SourceError<'a>>,
     ) -> Self {
@@ -23,7 +23,7 @@ impl<'a, A: Afi, P: AddressPrimitive<A>> Error<'a, A, P> {
     }
 }
 
-impl<A: Afi, P: AddressPrimitive<A>> fmt::Display for Error<'_, A, P> {
+impl<A: Afi> fmt::Display for Error<'_, A> {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         if let Some(msg) = self.msg {
             write!(f, "{}: {}", self.kind, msg)
@@ -34,26 +34,26 @@ impl<A: Afi, P: AddressPrimitive<A>> fmt::Display for Error<'_, A, P> {
 }
 
 #[cfg(feature = "std")]
-impl<A: Afi, P: AddressPrimitive<A>> std::error::Error for Error<'_, A, P> {
+impl<A: Afi> std::error::Error for Error<'_, A> {
     fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
         self.source
     }
 }
 
 #[cfg(not(feature = "std"))]
-impl<'a, A: Afi, P: AddressPrimitive<A>> Error<'a, A, P> {
+impl<'a, A: Afi> Error<'a, A> {
     pub fn source(&self) -> Option<SourceError<'a>> {
         self.source
     }
 }
 
 #[derive(Clone, Copy, Debug, Hash, Eq, PartialEq)]
-pub enum ErrorKind<A: Afi, P: AddressPrimitive<A>> {
-    PrefixLength(P::Width),
+pub enum ErrorKind<A: Afi> {
+    PrefixLength(<A::AddressPrimitive as AddressPrimitive<A>>::Width),
     ParserError,
 }
 
-impl<A: Afi, P: AddressPrimitive<A>> fmt::Display for ErrorKind<A, P> {
+impl<A: Afi> fmt::Display for ErrorKind<A> {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {
             Self::PrefixLength(len) => {

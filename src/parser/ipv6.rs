@@ -23,7 +23,7 @@ fn u16s_into_u128(from: [u16; 8]) -> u128 {
 }
 
 #[inline(always)]
-pub fn parse_addr(input: &str) -> Result<u128, Error<'static, Ipv6, u128>> {
+pub fn parse_addr(input: &str) -> Result<u128, Error<'static, Ipv6>> {
     Parser::new(input)
         .take_only(Parser::take_ipv6_octets)
         .ok_or_else(|| err!(ErrorKind::ParserError))
@@ -31,7 +31,7 @@ pub fn parse_addr(input: &str) -> Result<u128, Error<'static, Ipv6, u128>> {
 }
 
 #[inline(always)]
-pub fn parse_prefix(input: &str) -> Result<(u128, u8), Error<'static, Ipv6, u128>> {
+pub fn parse_prefix(input: &str) -> Result<(u128, u8), Error<'static, Ipv6>> {
     Parser::new(input)
         .take_with_length(Parser::take_ipv6_octets)
         .ok_or_else(|| err!(ErrorKind::ParserError))
