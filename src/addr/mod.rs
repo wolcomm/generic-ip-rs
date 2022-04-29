@@ -1,11 +1,10 @@
-use core::mem;
 use core::ops::{BitAnd, BitAndAssign, BitOr, BitXor};
 
 use crate::{
     af::{Afi, Ipv4, Ipv6},
     mask::{self, ConcreteMask},
     prefix::ConcretePrefixLength,
-    primitive::AddressPrimitive,
+    primitive::{AddressPrimitive, IntoIpv6Segments},
 };
 
 mod range;
@@ -103,18 +102,7 @@ impl ConcreteAddress<Ipv6> {
     }
 
     pub fn segments(&self) -> [u16; 8] {
-        // SAFTEY: [u8; 16] is always safe to transmute to [u16; 8]
-        let [a, b, c, d, e, f, g, h] = unsafe { mem::transmute::<_, [u16; 8]>(self.octets()) };
-        [
-            u16::from_be(a),
-            u16::from_be(b),
-            u16::from_be(c),
-            u16::from_be(d),
-            u16::from_be(e),
-            u16::from_be(f),
-            u16::from_be(g),
-            u16::from_be(h),
-        ]
+        self.into_primitive().into_segments()
     }
 
     #[allow(clippy::wrong_self_convention)]

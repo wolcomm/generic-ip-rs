@@ -1,7 +1,9 @@
 use core::fmt;
-use core::mem;
 
-use crate::af::{Afi, Ipv4, Ipv6};
+use crate::{
+    af::{Afi, Ipv4, Ipv6},
+    primitive::{AddressPrimitive, IntoIpv6Segments},
+};
 
 #[derive(Copy, Clone, Default)]
 struct Span {
@@ -26,76 +28,70 @@ pub trait AddressDisplay<A: Afi> {
     fn fmt_addr(&self, f: &mut fmt::Formatter) -> fmt::Result;
 }
 
-impl AddressDisplay<Ipv4> for u32 {
+impl<P: AddressPrimitive<Ipv4>> AddressDisplay<Ipv4> for P {
     fn fmt_addr(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        let [a, b, c, d] = self.to_be_bytes();
+        self.to_be_bytes().fmt_addr(f)
+    }
+}
+
+impl AddressDisplay<Ipv4> for <Ipv4 as Afi>::Octets {
+    fn fmt_addr(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        let [a, b, c, d] = self;
         write!(f, "{}.{}.{}.{}", a, b, c, d)
     }
 }
 
-impl AddressDisplay<Ipv6> for u128 {
+impl<P: AddressPrimitive<Ipv6>> AddressDisplay<Ipv6> for P {
     fn fmt_addr(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        if *self == 0 {
-            f.write_str("::")
-        } else if *self == 1 {
-            f.write_str("::1")
-        } else if *self <= 0x0000_0000_0000_0000_0000_0000_ffff_ffff {
-            f.write_str("::")?;
-            u32::try_from(*self).unwrap().fmt_addr(f)
-        } else if 0x0000_0000_0000_0000_0000_ffff_0000_0000 <= *self
-            && *self <= 0x0000_0000_0000_0000_0000_ffff_ffff_ffff
-        {
-            f.write_str("::ffff:")?;
-            u32::try_from(*self & 0x0000_0000_0000_0000_0000_0000_ffff_ffff)
-                .unwrap()
-                .fmt_addr(f)
-        } else {
-            let segments = {
-                // SAFTEY: [u8; 16] is always safe to transmute to [u16; 8]
-                let [a, b, c, d, e, f, g, h] =
-                    unsafe { mem::transmute::<_, [u16; 8]>(self.to_be_bytes()) };
-                [
-                    u16::from_be(a),
-                    u16::from_be(b),
-                    u16::from_be(c),
-                    u16::from_be(d),
-                    u16::from_be(e),
-                    u16::from_be(f),
-                    u16::from_be(g),
-                    u16::from_be(h),
-                ]
-            };
-            let (head, tail) = {
-                let mut longest = Span::default();
-                let mut current = Span::default();
-                segments.iter().enumerate().for_each(|(i, segment)| {
-                    if segment == &0 {
-                        if current.length == 0 {
-                            current.start = i;
-                        }
-                        current.length += 1;
-                        if current.length > longest.length {
-                            longest = current;
-                        }
-                    } else {
-                        current = Span::default();
-                    }
-                });
-                if longest.length > 1 {
-                    (
-                        &segments[0..longest.start],
-                        Some(&segments[longest.start + longest.length..]),
-                    )
-                } else {
-                    (&segments[..], None)
-                }
-            };
-            fmt_segments(head, ':', f)?;
-            if let Some(tail) = tail {
+        match self.into_segments() {
+            // TODO:
+            // Use `P::UNSPECIFIED` and `P::LOCALHOST` to derive const
+            // patterns here.
+            // Needs `const_trait_impl`.
+            [0, 0, 0, 0, 0, 0, 0, 0] => f.write_str("::"),
+            [0, 0, 0, 0, 0, 0, 0, 1] => f.write_str("::1"),
+            [0, 0, 0, 0, 0, mapped @ (0 | 0xffff), high, low] => {
                 f.write_str("::")?;
-                fmt_segments(tail, ':', f)?;
+                if mapped == 0xffff {
+                    f.write_str("ffff:")?;
+                }
+                let [a, b] = high.to_be_bytes();
+                let [c, d] = low.to_be_bytes();
+                ([a, b, c, d]).fmt_addr(f)
             }
-            Ok(())
+            segments => {
+                let (head, tail) = {
+                    let mut longest = Span::default();
+                    let mut current = Span::default();
+                    segments.iter().enumerate().for_each(|(i, segment)| {
+                        if segment == &0 {
+                            if current.length == 0 {
+                                current.start = i;
+                            }
+                            current.length += 1;
+                            if current.length > longest.length {
+                                longest = current;
+                            }
+                        } else {
+                            current = Span::default();
+                        }
+                    });
+                    if longest.length > 1 {
+                        (
+                            &segments[0..longest.start],
+                            Some(&segments[longest.start + longest.length..]),
+                        )
+                    } else {
+                        (&segments[..], None)
+                    }
+                };
+                fmt_segments(head, ':', f)?;
+                if let Some(tail) = tail {
+                    f.write_str("::")?;
+                    fmt_segments(tail, ':', f)?;
+                }
+                Ok(())
+            }
         }
     }
 }

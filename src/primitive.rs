@@ -1,5 +1,6 @@
 use core::fmt::{Debug, Display};
 use core::hash::Hash;
+use core::mem;
 use core::ops::{BitAnd, BitOr, BitXor, RangeInclusive, Shl, Shr, Sub};
 
 use crate::{
@@ -271,6 +272,28 @@ impl AddressPrimitive<Ipv6> for u128 {
         parser::ipv6::parse_prefix(s.as_ref())
     }
 }
+
+pub trait IntoIpv6Segments: AddressPrimitive<Ipv6> {
+    // TODO:
+    // const UNSPECIFIED_SEGMENTS: [u16; 8] = Self::UNSPECIFIED.into_segments();
+    // const LOCALHOST_SEGMENTS: [u16; 8] = Self::LOCALHOST.into_segments();
+
+    fn into_segments(self) -> [u16; 8] {
+        // SAFTEY: [u8; 16] is always safe to transmute to [u16; 8]
+        let [a, b, c, d, e, f, g, h] = unsafe { mem::transmute::<_, [u16; 8]>(self.to_be_bytes()) };
+        [
+            u16::from_be(a),
+            u16::from_be(b),
+            u16::from_be(c),
+            u16::from_be(d),
+            u16::from_be(e),
+            u16::from_be(f),
+            u16::from_be(g),
+            u16::from_be(h),
+        ]
+    }
+}
+impl<P: AddressPrimitive<Ipv6>> IntoIpv6Segments for P {}
 
 /// Underlying integer-like type used to respresent an IP prefix-length.
 pub trait WidthPrimitive: Copy + Clone + Debug + Display + Hash + Ord + Sub<Output = Self> {
