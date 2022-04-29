@@ -46,10 +46,6 @@ mod private {
 
 pub use self::private::ConcretePrefix;
 
-impl ConcretePrefix<Ipv4> {}
-impl ConcretePrefix<Ipv6> {}
-impl<A: Afi> ConcretePrefix<A> {}
-
 pub enum AnyPrefix {
     Ipv4(ConcretePrefix<Ipv4>),
     Ipv6(ConcretePrefix<Ipv6>),
