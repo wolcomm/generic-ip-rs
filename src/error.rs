@@ -49,7 +49,7 @@ impl<'a, A: Afi> Error<'a, A> {
 
 #[derive(Clone, Copy, Debug, Hash, Eq, PartialEq)]
 pub enum ErrorKind<A: Afi> {
-    PrefixLength(<A::AddressPrimitive as AddressPrimitive<A>>::Width),
+    PrefixLength(<A::Primitive as AddressPrimitive<A>>::Width),
     ParserError,
 }
 

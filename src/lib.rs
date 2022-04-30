@@ -7,19 +7,16 @@
 #[cfg(feature = "std")]
 extern crate std;
 
-/// IP address types and helper functions.
-mod addr;
+pub mod any;
+pub mod concrete;
+pub mod traits;
+
 /// IP address family traits and marker types.
 mod af;
 pub use self::af::{Afi, AfiClass, Any, Ipv4, Ipv6};
 
 /// IP address formatting traits
 mod fmt;
-/// IP address-mask types and helper functions.
-mod mask;
-/// IP prefix and prefix-length types.
-mod prefix;
-pub use self::prefix::Ordering as PrefixOrdering;
 
 /// Number-like primitives for IP address and prefix representation.
 mod primitive;

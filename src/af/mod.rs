@@ -2,14 +2,7 @@ use core::cmp::Ord;
 use core::fmt::{self, Debug};
 use core::hash::Hash;
 
-use crate::{
-    addr::{AddressI, AnyAddress, ConcreteAddress},
-    mask::{AnyHostmask, AnyNetmask, ConcreteHostmask, ConcreteNetmask, MaskI},
-    prefix::{
-        AnyPrefix, AnyPrefixLength, ConcretePrefix, ConcretePrefixLength, PrefixI, PrefixLengthI,
-    },
-    primitive::AddressPrimitive,
-};
+use crate::{any, concrete, primitive::AddressPrimitive, traits};
 
 #[derive(Clone, Copy, Debug, Hash, PartialEq, Eq, PartialOrd, Ord)]
 pub enum Ipv4 {}
@@ -37,21 +30,21 @@ impl fmt::Display for AfiEnum {
 /// Provides an interface for describing an IP address family.
 pub trait Afi: Copy + Debug + Hash + Ord {
     type Octets;
-    type AddressPrimitive: AddressPrimitive<Self>;
+    type Primitive: AddressPrimitive<Self>;
     /// Get the [`AfiEnum`] variant associated with `Self`.
     fn as_enum() -> AfiEnum;
 }
 
 impl Afi for Ipv4 {
     type Octets = [u8; 4];
-    type AddressPrimitive = u32;
+    type Primitive = u32;
     fn as_enum() -> AfiEnum {
         AfiEnum::Ipv4
     }
 }
 impl Afi for Ipv6 {
     type Octets = [u8; 16];
-    type AddressPrimitive = u128;
+    type Primitive = u128;
     fn as_enum() -> AfiEnum {
         AfiEnum::Ipv6
     }
@@ -59,23 +52,23 @@ impl Afi for Ipv6 {
 
 /// Provides an interface for describing a class of IP address families.
 pub trait AfiClass: Copy + Debug + Hash + Ord {
-    type Address: AddressI;
-    type PrefixLength: PrefixLengthI;
-    type Prefix: PrefixI;
-    type Netmask: MaskI;
-    type Hostmask: MaskI;
+    type Address: traits::Address;
+    type PrefixLength: traits::PrefixLength;
+    type Prefix: traits::Prefix;
+    type Netmask: traits::Mask;
+    type Hostmask: traits::Mask;
 }
 impl<A: Afi> AfiClass for A {
-    type Address = ConcreteAddress<A>;
-    type PrefixLength = ConcretePrefixLength<A>;
-    type Prefix = ConcretePrefix<A>;
-    type Netmask = ConcreteNetmask<A>;
-    type Hostmask = ConcreteHostmask<A>;
+    type Address = concrete::Address<A>;
+    type PrefixLength = concrete::PrefixLength<A>;
+    type Prefix = concrete::Prefix<A>;
+    type Netmask = concrete::Netmask<A>;
+    type Hostmask = concrete::Hostmask<A>;
 }
 impl AfiClass for Any {
-    type Address = AnyAddress;
-    type PrefixLength = AnyPrefixLength;
-    type Prefix = AnyPrefix;
-    type Netmask = AnyNetmask;
-    type Hostmask = AnyHostmask;
+    type Address = any::Address;
+    type PrefixLength = any::PrefixLength;
+    type Prefix = any::Prefix;
+    type Netmask = any::Netmask;
+    type Hostmask = any::Hostmask;
 }
