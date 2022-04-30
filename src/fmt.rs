@@ -2,7 +2,7 @@ use core::fmt;
 
 use crate::{
     af::{Afi, Ipv4, Ipv6},
-    primitive::{AddressPrimitive, IntoIpv6Segments},
+    traits::primitive::{self, IntoIpv6Segments as _},
 };
 
 #[derive(Copy, Clone, Default)]
@@ -28,7 +28,7 @@ pub trait AddressDisplay<A: Afi> {
     fn fmt_addr(&self, f: &mut fmt::Formatter) -> fmt::Result;
 }
 
-impl<P: AddressPrimitive<Ipv4>> AddressDisplay<Ipv4> for P {
+impl<P: primitive::Address<Ipv4>> AddressDisplay<Ipv4> for P {
     fn fmt_addr(&self, f: &mut fmt::Formatter) -> fmt::Result {
         self.to_be_bytes().fmt_addr(f)
     }
@@ -41,7 +41,7 @@ impl AddressDisplay<Ipv4> for <Ipv4 as Afi>::Octets {
     }
 }
 
-impl<P: AddressPrimitive<Ipv6>> AddressDisplay<Ipv6> for P {
+impl<P: primitive::Address<Ipv6>> AddressDisplay<Ipv6> for P {
     fn fmt_addr(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self.into_segments() {
             // TODO:

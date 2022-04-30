@@ -2,7 +2,12 @@ use core::cmp::min;
 use core::fmt;
 use core::str::FromStr;
 
-use crate::{af::Afi, error::Error, fmt::AddressDisplay, primitive::AddressPrimitive, traits};
+use crate::{
+    af::Afi,
+    error::Error,
+    fmt::AddressDisplay,
+    traits::{self, primitive::Address as _},
+};
 
 use super::{common_length, Address, Hostmask, Netmask};
 

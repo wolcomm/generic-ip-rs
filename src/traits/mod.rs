@@ -6,3 +6,5 @@ pub use self::mask::Mask;
 
 mod prefix;
 pub use self::prefix::{Prefix, PrefixLength};
+
+pub mod primitive;

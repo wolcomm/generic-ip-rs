@@ -1,6 +1,6 @@
 use core::marker::PhantomData;
 
-use crate::{af::Afi, primitive::AddressPrimitive};
+use crate::{af::Afi, traits::primitive::Address as _};
 
 use super::Type;
 

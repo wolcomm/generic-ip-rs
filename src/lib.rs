@@ -18,10 +18,6 @@ pub use self::af::{Afi, AfiClass, Any, Ipv4, Ipv6};
 /// IP address formatting traits
 mod fmt;
 
-/// Number-like primitives for IP address and prefix representation.
-mod primitive;
-pub use self::primitive::AddressPrimitive;
-
 mod parser;
 
 mod error;

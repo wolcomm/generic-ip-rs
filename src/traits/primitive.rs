@@ -10,7 +10,7 @@ use crate::{
 };
 
 /// Underlying integer-like type used to respresent an IP address.
-pub trait AddressPrimitive<A: Afi>:
+pub trait Address<A: Afi>:
     Copy
     + Debug
     + Default
@@ -19,20 +19,20 @@ pub trait AddressPrimitive<A: Afi>:
     + BitAnd<Self, Output = Self>
     + BitOr<Self, Output = Self>
     + BitXor<Self, Output = Self>
-    + Shl<Self::Width, Output = Self>
-    + Shr<Self::Width, Output = Self>
+    + Shl<Self::Length, Output = Self>
+    + Shr<Self::Length, Output = Self>
     + 'static
 {
     /// Underlying primitive type used to store bit-widths of `Self`.
-    type Width: WidthPrimitive;
+    type Length: Length;
 
     /// Minimum valid value of the underlying primitive value used to store
     /// prefix-lengths for this address-family.
-    const MIN_LENGTH: Self::Width = Self::Width::ZERO;
+    const MIN_LENGTH: Self::Length = Self::Length::ZERO;
 
     /// Maximum valid value of the underlying primitive value used to store
     /// prefix-lengths for this address-family.
-    const MAX_LENGTH: Self::Width;
+    const MAX_LENGTH: Self::Length;
 
     /// "All-zeros" IP address representation.
     const ZERO: Self;
@@ -55,7 +55,7 @@ pub trait AddressPrimitive<A: Afi>:
     const ULA_RANGE: Option<RangeInclusive<Self>>;
 
     /// Get the number of leading zeros in the binary representation of `self`.
-    fn leading_zeros(self) -> Self::Width;
+    fn leading_zeros(self) -> Self::Length;
 
     fn to_be_bytes(self) -> A::Octets;
 
@@ -79,7 +79,7 @@ pub trait AddressPrimitive<A: Afi>:
     /// This method is primarily intended for use via the
     /// [`FromStr`][core::str::FromStr] implementation for
     /// [`Prefix<A>`][crate::prefix::Prefix].
-    fn parse_prefix<S>(s: &S) -> Result<(Self, Self::Width), Error<'static, A>>
+    fn parse_prefix<S>(s: &S) -> Result<(Self, Self::Length), Error<'static, A>>
     where
         S: AsRef<str> + ?Sized;
 }
@@ -90,17 +90,17 @@ macro_rules! ipv4 {
     };
 }
 
-impl AddressPrimitive<Ipv4> for u32 {
-    type Width = u8;
+impl Address<Ipv4> for u32 {
+    type Length = u8;
 
-    const MAX_LENGTH: Self::Width = 32;
-    const ZERO: Self = 0x0000_0000;
-    const ONES: Self = 0xffff_ffff;
+    const MAX_LENGTH: Self::Length = 32;
+    const ZERO: Self = ipv4!(0, 0, 0, 0);
+    const ONES: Self = ipv4!(255, 255, 255, 255);
 
-    const BROADCAST: Option<Self> = Some(0xffff_ffff);
+    const BROADCAST: Option<Self> = Some(ipv4!(255, 255, 255, 255));
     // const LOCALHOST: Self = 0x7f00_0001;
     const LOCALHOST: Self = ipv4!(127, 0, 0, 1);
-    const UNSPECIFIED: Self = 0x0000_0000;
+    const UNSPECIFIED: Self = ipv4!(0, 0, 0, 0);
 
     const LOCALHOST_RANGE: RangeInclusive<Self> = ipv4!(127, 0, 0, 0)..=ipv4!(127, 255, 255, 255);
     const BENCHMARK_RANGE: RangeInclusive<Self> = ipv4!(198, 18, 0, 0)..=ipv4!(198, 19, 255, 255);
@@ -125,8 +125,8 @@ impl AddressPrimitive<Ipv4> for u32 {
         Some(ipv4!(0, 0, 0, 0)..=ipv4!(0, 255, 255, 255));
     const ULA_RANGE: Option<RangeInclusive<Self>> = None;
 
-    fn leading_zeros(self) -> Self::Width {
-        self.leading_zeros() as Self::Width
+    fn leading_zeros(self) -> Self::Length {
+        self.leading_zeros() as Self::Length
     }
 
     fn to_be_bytes(self) -> <Ipv4 as Afi>::Octets {
@@ -186,7 +186,7 @@ impl AddressPrimitive<Ipv4> for u32 {
         parser::ipv4::parse_addr(s.as_ref())
     }
 
-    fn parse_prefix<S>(s: &S) -> Result<(Self, Self::Width), Error<'static, Ipv4>>
+    fn parse_prefix<S>(s: &S) -> Result<(Self, Self::Length), Error<'static, Ipv4>>
     where
         S: AsRef<str> + ?Sized,
     {
@@ -194,10 +194,10 @@ impl AddressPrimitive<Ipv4> for u32 {
     }
 }
 
-impl AddressPrimitive<Ipv6> for u128 {
-    type Width = u8;
+impl Address<Ipv6> for u128 {
+    type Length = u8;
 
-    const MAX_LENGTH: Self::Width = 128;
+    const MAX_LENGTH: Self::Length = 128;
     const ZERO: Self = 0x0000_0000_0000_0000_0000_0000_0000_0000;
     const ONES: Self = 0xffff_ffff_ffff_ffff_ffff_ffff_ffff_ffff;
 
@@ -221,8 +221,8 @@ impl AddressPrimitive<Ipv6> for u128 {
     const ULA_RANGE: Option<RangeInclusive<Self>> =
         Some(0xfc00_0000_0000_0000_0000_0000_0000_0000..=0xfd00_0000_0000_0000_0000_0000_0000_0000);
 
-    fn leading_zeros(self) -> Self::Width {
-        self.leading_zeros() as Self::Width
+    fn leading_zeros(self) -> Self::Length {
+        self.leading_zeros() as Self::Length
     }
 
     fn to_be_bytes(self) -> <Ipv6 as Afi>::Octets {
@@ -265,7 +265,7 @@ impl AddressPrimitive<Ipv6> for u128 {
         parser::ipv6::parse_addr(s.as_ref())
     }
 
-    fn parse_prefix<S>(s: &S) -> Result<(Self, Self::Width), Error<'static, Ipv6>>
+    fn parse_prefix<S>(s: &S) -> Result<(Self, Self::Length), Error<'static, Ipv6>>
     where
         S: AsRef<str> + ?Sized,
     {
@@ -273,7 +273,7 @@ impl AddressPrimitive<Ipv6> for u128 {
     }
 }
 
-pub trait IntoIpv6Segments: AddressPrimitive<Ipv6> {
+pub(crate) trait IntoIpv6Segments: Address<Ipv6> {
     // TODO:
     // const UNSPECIFIED_SEGMENTS: [u16; 8] = Self::UNSPECIFIED.into_segments();
     // const LOCALHOST_SEGMENTS: [u16; 8] = Self::LOCALHOST.into_segments();
@@ -293,16 +293,16 @@ pub trait IntoIpv6Segments: AddressPrimitive<Ipv6> {
         ]
     }
 }
-impl<P: AddressPrimitive<Ipv6>> IntoIpv6Segments for P {}
+impl<P: Address<Ipv6>> IntoIpv6Segments for P {}
 
 /// Underlying integer-like type used to respresent an IP prefix-length.
-pub trait WidthPrimitive: Copy + Clone + Debug + Display + Hash + Ord + Sub<Output = Self> {
+pub trait Length: Copy + Clone + Debug + Display + Hash + Ord + Sub<Output = Self> {
     /// Additive identity value.
     const ZERO: Self;
     const ONE: Self;
 }
 
-impl WidthPrimitive for u8 {
+impl Length for u8 {
     const ZERO: Self = 0;
     const ONE: Self = 1;
 }

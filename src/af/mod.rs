@@ -2,7 +2,10 @@ use core::cmp::Ord;
 use core::fmt::{self, Debug};
 use core::hash::Hash;
 
-use crate::{any, concrete, primitive::AddressPrimitive, traits};
+use crate::{
+    any, concrete,
+    traits::{self, primitive},
+};
 
 #[derive(Clone, Copy, Debug, Hash, PartialEq, Eq, PartialOrd, Ord)]
 pub enum Ipv4 {}
@@ -30,7 +33,7 @@ impl fmt::Display for AfiEnum {
 /// Provides an interface for describing an IP address family.
 pub trait Afi: Copy + Debug + Hash + Ord {
     type Octets;
-    type Primitive: AddressPrimitive<Self>;
+    type Primitive: primitive::Address<Self>;
     /// Get the [`AfiEnum`] variant associated with `Self`.
     fn as_enum() -> AfiEnum;
 }

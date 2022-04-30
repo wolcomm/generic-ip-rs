@@ -4,8 +4,10 @@ use core::ops::Neg;
 use crate::{
     af::Afi,
     error::{err, Error, ErrorKind},
-    primitive::{AddressPrimitive, WidthPrimitive},
-    traits,
+    traits::{
+        self,
+        primitive::{self, Address as _, Length as _},
+    },
 };
 
 mod private {
@@ -14,7 +16,7 @@ mod private {
     /// An IP prefix length guaranteed to be within appropriate bounds for
     /// address family `A`.
     #[derive(Clone, Copy, Debug, Hash, PartialEq, Eq, PartialOrd, Ord)]
-    pub struct PrefixLength<A: Afi>(<A::Primitive as AddressPrimitive<A>>::Width);
+    pub struct PrefixLength<A: Afi>(<A::Primitive as primitive::Address<A>>::Length);
 
     impl<A: Afi> PrefixLength<A> {
         /// Maximum valid value of [`PrefixLength<A>`].
@@ -26,7 +28,7 @@ mod private {
         /// Fails if `n` is outside of the range [`Afi::MIN_LENGTH`] to
         /// [`Afi::MAX_LENGTH`] inclusive (for `A as Afi`).
         pub fn from_primitive(
-            n: <A::Primitive as AddressPrimitive<A>>::Width,
+            n: <A::Primitive as primitive::Address<A>>::Length,
         ) -> Result<Self, Error<'static, A>> {
             if A::Primitive::MIN_LENGTH <= n && n <= A::Primitive::MAX_LENGTH {
                 Ok(Self(n))
@@ -36,7 +38,7 @@ mod private {
         }
 
         /// Get the inner integer val, consuming `self`.
-        pub fn into_primitive(self) -> <A::Primitive as AddressPrimitive<A>>::Width {
+        pub fn into_primitive(self) -> <A::Primitive as primitive::Address<A>>::Length {
             self.0
         }
     }
@@ -47,7 +49,7 @@ pub use self::private::PrefixLength;
 impl<A: Afi> PrefixLength<A> {
     pub fn decrement(self) -> Result<Self, Error<'static, A>> {
         Self::from_primitive(
-            self.into_primitive() - <A::Primitive as AddressPrimitive<A>>::Width::ONE,
+            self.into_primitive() - <A::Primitive as primitive::Address<A>>::Length::ONE,
         )
     }
 }
@@ -82,9 +84,9 @@ mod arbitrary {
 
     impl<A: Afi> Arbitrary for PrefixLength<A>
     where
-        <A::Primitive as AddressPrimitive<A>>::Width: 'static,
-        RangeInclusive<<A::Primitive as AddressPrimitive<A>>::Width>:
-            Strategy<Value = <A::Primitive as AddressPrimitive<A>>::Width>,
+        <A::Primitive as primitive::Address<A>>::Length: 'static,
+        RangeInclusive<<A::Primitive as primitive::Address<A>>::Length>:
+            Strategy<Value = <A::Primitive as primitive::Address<A>>::Length>,
     {
         type Parameters = ();
         type Strategy = BoxedStrategy<Self>;
