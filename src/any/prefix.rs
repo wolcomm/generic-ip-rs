@@ -1,6 +1,6 @@
 use crate::{
-    af::{Ipv4, Ipv6},
-    concrete, traits,
+    concrete::{self, Ipv4, Ipv6},
+    traits,
 };
 
 use super::{Address, Hostmask, Netmask};

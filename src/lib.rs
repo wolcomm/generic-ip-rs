@@ -11,9 +11,9 @@ pub mod any;
 pub mod concrete;
 pub mod traits;
 
-/// IP address family traits and marker types.
-mod af;
-pub use self::af::{Afi, AfiClass, Any, Ipv4, Ipv6};
+pub use self::any::Any;
+pub use self::concrete::{Ipv4, Ipv6};
+pub use self::traits::{Afi, AfiClass};
 
 /// IP address formatting traits
 mod fmt;

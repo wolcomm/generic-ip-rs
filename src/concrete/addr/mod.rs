@@ -2,10 +2,9 @@ use core::fmt;
 use core::str::FromStr;
 
 use crate::{
-    af::Afi,
     error::Error,
     fmt::AddressDisplay,
-    traits::{self, primitive::Address as _},
+    traits::{self, primitive::Address as _, Afi},
 };
 
 use super::{AddressRange, PrefixLength};
@@ -139,7 +138,7 @@ mod convert {
 
     use std::net::{Ipv4Addr, Ipv6Addr};
 
-    use crate::af::{Ipv4, Ipv6};
+    use crate::concrete::{Ipv4, Ipv6};
 
     impl From<Ipv4Addr> for Address<Ipv4> {
         fn from(addr: Ipv4Addr) -> Self {

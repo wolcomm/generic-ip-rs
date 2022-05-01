@@ -1,6 +1,6 @@
 use crate::{
-    af::{Ipv4, Ipv6},
-    concrete, traits,
+    concrete::{self, Ipv4, Ipv6},
+    traits,
 };
 
 #[derive(Clone, Copy, Debug, Hash, PartialEq, Eq, PartialOrd, Ord)]

@@ -1,6 +1,6 @@
 use core::fmt;
 
-use crate::{af::Afi, traits::primitive};
+use crate::traits::{primitive, Afi};
 
 #[derive(Debug)]
 pub struct Error<'a, A: Afi> {
@@ -57,7 +57,7 @@ impl<A: Afi> fmt::Display for ErrorKind<A> {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {
             Self::PrefixLength(len) => {
-                write!(f, "{} prefix-length {} out of bounds", A::as_enum(), len)
+                write!(f, "{} prefix-length {} out of bounds", A::as_afi(), len)
             }
             Self::ParserError => write!(f, "parser error"),
         }

@@ -1,5 +1,5 @@
 use crate::{
-    af::Ipv4,
+    concrete::Ipv4,
     error::{err, Error, ErrorKind},
 };
 
@@ -62,7 +62,7 @@ mod tests {
 
         use proptest::{arbitrary::any, proptest};
 
-        use crate::addr::ConcreteAddress;
+        use crate::concrete::Address;
 
         use super::*;
 
@@ -79,7 +79,7 @@ mod tests {
             #[test]
             fn parse_any_utf8(s in r"\PC*") {
                 let stdlib: Option<Ipv4Addr> = s.parse().ok();
-                assert_eq!(parse_addr(&s).map(ConcreteAddress::new).ok(), stdlib.map(ConcreteAddress::from))
+                assert_eq!(parse_addr(&s).map(Address::new).ok(), stdlib.map(Address::from))
             }
         }
 

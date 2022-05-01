@@ -1,7 +1,7 @@
 use crate::{
-    af::{Afi, Ipv4, Ipv6},
     any,
-    traits::{primitive::IntoIpv6Segments as _, Address as _},
+    concrete::{Ipv4, Ipv6},
+    traits::{primitive::IntoIpv6Segments as _, Address as _, Afi},
 };
 
 use super::Address;

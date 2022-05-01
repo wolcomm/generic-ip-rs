@@ -1,7 +1,10 @@
 use core::fmt::{self};
 use core::ops::{Shl, Shr};
 
-use crate::{af::Afi, fmt::AddressDisplay, traits};
+use crate::{
+    fmt::AddressDisplay,
+    traits::{self, Afi},
+};
 
 use super::PrefixLength;
 

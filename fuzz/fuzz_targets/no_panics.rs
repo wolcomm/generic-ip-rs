@@ -4,11 +4,7 @@ use std::str::{from_utf8, FromStr};
 
 use libfuzzer_sys::fuzz_target;
 
-use ip::{
-    addr::Address,
-    af::{Ipv4, Ipv6},
-    prefix::Prefix,
-};
+use ip::{Address, Ipv4, Ipv6, Prefix};
 
 fuzz_target!(|data: &[u8]| {
     if let Ok(s) = from_utf8(data) {

@@ -1,6 +1,6 @@
 use core::ops::{BitAnd, BitAndAssign, BitOr, BitXor};
 
-use crate::af::Afi;
+use crate::traits::Afi;
 
 use super::{
     super::{mask_types::Type, Mask},

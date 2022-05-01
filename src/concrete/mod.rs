@@ -1,3 +1,6 @@
+mod af;
+pub use self::af::{Afi, Ipv4, Ipv6};
+
 mod addr;
 pub use self::addr::{common_length, Address};
 

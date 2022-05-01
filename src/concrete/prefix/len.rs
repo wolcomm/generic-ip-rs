@@ -2,11 +2,11 @@ use core::fmt;
 use core::ops::Neg;
 
 use crate::{
-    af::Afi,
     error::{err, Error, ErrorKind},
     traits::{
         self,
         primitive::{self, Address as _, Length as _},
+        Afi,
     },
 };
 

@@ -1,6 +1,6 @@
 use crate::{
-    af::{Afi, Ipv4},
-    traits::primitive::Address as _,
+    concrete::Ipv4,
+    traits::{primitive::Address as _, Afi},
 };
 
 /// An IP address.

@@ -1,3 +1,6 @@
+mod af;
+pub use self::af::{Afi, AfiClass};
+
 mod addr;
 pub use self::addr::Address;
 

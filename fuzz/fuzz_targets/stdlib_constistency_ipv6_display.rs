@@ -3,7 +3,7 @@ use std::net::Ipv6Addr;
 
 use libfuzzer_sys::fuzz_target;
 
-use ip::{addr::Address, af::Ipv6};
+use ip::{Address, Ipv6};
 
 fuzz_target!(|x: Ipv6Addr| {
     let y: Address<Ipv6> = x.into();

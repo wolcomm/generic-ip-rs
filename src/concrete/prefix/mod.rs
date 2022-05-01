@@ -3,10 +3,9 @@ use core::fmt;
 use core::str::FromStr;
 
 use crate::{
-    af::Afi,
     error::Error,
     fmt::AddressDisplay,
-    traits::{self, primitive::Address as _},
+    traits::{self, primitive::Address as _, Afi},
 };
 
 use super::{common_length, Address, Hostmask, Netmask};
@@ -141,7 +140,7 @@ where
 mod convert {
     use super::*;
 
-    use crate::af::{Ipv4, Ipv6};
+    use crate::concrete::{Ipv4, Ipv6};
 
     use ipnet::{Ipv4Net, Ipv6Net};
 

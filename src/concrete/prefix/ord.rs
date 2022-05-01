@@ -1,6 +1,6 @@
 use core::cmp::Ordering::{self, Equal, Greater, Less};
 
-use crate::af::Afi;
+use crate::traits::Afi;
 
 use super::{Address, Prefix};
 

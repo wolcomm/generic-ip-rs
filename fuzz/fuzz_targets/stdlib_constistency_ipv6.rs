@@ -5,11 +5,11 @@ use std::str::from_utf8;
 
 use libfuzzer_sys::fuzz_target;
 
-use ip::{addr::Address, af::Ipv6};
+use ip::{Address, Ipv6};
 
 fuzz_target!(|data: &[u8]| {
     if let Ok(s) = from_utf8(data) {
-        let x = s.parse::<Ipv6Addr>().map(Address::from).ok();
+        let x = s.parse::<Ipv6Addr>().map(Address::<Ipv6>::from).ok();
         let y = s.parse::<Address<Ipv6>>().ok();
         assert_eq!(x, y);
     }

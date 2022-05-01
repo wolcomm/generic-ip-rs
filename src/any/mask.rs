@@ -1,8 +1,8 @@
 use crate::{
-    af::{Ipv4, Ipv6},
     concrete::{
         self,
         mask_types::{Host, Net, Type},
+        Ipv4, Ipv6,
     },
     traits,
 };

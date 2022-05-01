@@ -1,8 +1,11 @@
 use core::fmt;
 
 use crate::{
-    af::{Afi, Ipv4, Ipv6},
-    traits::primitive::{self, IntoIpv6Segments as _},
+    concrete::{Ipv4, Ipv6},
+    traits::{
+        primitive::{self, IntoIpv6Segments as _},
+        Afi,
+    },
 };
 
 #[derive(Copy, Clone, Default)]

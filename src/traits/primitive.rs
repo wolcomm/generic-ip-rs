@@ -4,10 +4,12 @@ use core::mem;
 use core::ops::{BitAnd, BitOr, BitXor, RangeInclusive, Shl, Shr, Sub};
 
 use crate::{
-    af::{Afi, Ipv4, Ipv6},
+    concrete::{Ipv4, Ipv6},
     error::Error,
     parser,
 };
+
+use super::Afi;
 
 /// Underlying integer-like type used to respresent an IP address.
 pub trait Address<A: Afi>:

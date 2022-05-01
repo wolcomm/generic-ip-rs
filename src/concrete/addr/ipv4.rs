@@ -1,4 +1,7 @@
-use crate::af::{Afi, Ipv4, Ipv6};
+use crate::{
+    concrete::{Ipv4, Ipv6},
+    traits::Afi,
+};
 
 use super::Address;
 
