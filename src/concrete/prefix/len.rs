@@ -29,7 +29,7 @@ mod private {
         /// [`Afi::MAX_LENGTH`] inclusive (for `A as Afi`).
         pub fn from_primitive(
             n: <A::Primitive as primitive::Address<A>>::Length,
-        ) -> Result<Self, Error<'static, A>> {
+        ) -> Result<Self, Error<A>> {
             if A::Primitive::MIN_LENGTH <= n && n <= A::Primitive::MAX_LENGTH {
                 Ok(Self(n))
             } else {
@@ -47,7 +47,7 @@ mod private {
 pub use self::private::PrefixLength;
 
 impl<A: Afi> PrefixLength<A> {
-    pub fn decrement(self) -> Result<Self, Error<'static, A>> {
+    pub fn decrement(self) -> Result<Self, Error<A>> {
         Self::from_primitive(
             self.into_primitive() - <A::Primitive as primitive::Address<A>>::Length::ONE,
         )

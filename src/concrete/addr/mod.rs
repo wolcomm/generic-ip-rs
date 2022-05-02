@@ -117,7 +117,7 @@ impl<A: Afi> traits::Address for Address<A> {
 }
 
 impl<A: Afi> FromStr for Address<A> {
-    type Err = Error<'static, A>;
+    type Err = Error<A>;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         A::Primitive::parse_addr(s).map(Self::new)

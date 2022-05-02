@@ -71,7 +71,7 @@ pub trait Address<A: Afi>:
     /// This method is primarily intended for use via the
     /// [`FromStr`][core::str::FromStr] implementation for
     /// [`Address<A>`][crate::addr::Address].
-    fn parse_addr<S>(s: &S) -> Result<Self, Error<'static, A>>
+    fn parse_addr<S>(s: &S) -> Result<Self, Error<A>>
     where
         S: AsRef<str> + ?Sized;
 
@@ -81,7 +81,7 @@ pub trait Address<A: Afi>:
     /// This method is primarily intended for use via the
     /// [`FromStr`][core::str::FromStr] implementation for
     /// [`Prefix<A>`][crate::prefix::Prefix].
-    fn parse_prefix<S>(s: &S) -> Result<(Self, Self::Length), Error<'static, A>>
+    fn parse_prefix<S>(s: &S) -> Result<(Self, Self::Length), Error<A>>
     where
         S: AsRef<str> + ?Sized;
 }
@@ -181,14 +181,14 @@ impl Address<Ipv4> for u32 {
         true
     }
 
-    fn parse_addr<S>(s: &S) -> Result<Self, Error<'static, Ipv4>>
+    fn parse_addr<S>(s: &S) -> Result<Self, Error<Ipv4>>
     where
         S: AsRef<str> + ?Sized,
     {
         parser::ipv4::parse_addr(s.as_ref())
     }
 
-    fn parse_prefix<S>(s: &S) -> Result<(Self, Self::Length), Error<'static, Ipv4>>
+    fn parse_prefix<S>(s: &S) -> Result<(Self, Self::Length), Error<Ipv4>>
     where
         S: AsRef<str> + ?Sized,
     {
@@ -260,14 +260,14 @@ impl Address<Ipv6> for u128 {
         true
     }
 
-    fn parse_addr<S>(s: &S) -> Result<Self, Error<'static, Ipv6>>
+    fn parse_addr<S>(s: &S) -> Result<Self, Error<Ipv6>>
     where
         S: AsRef<str> + ?Sized,
     {
         parser::ipv6::parse_addr(s.as_ref())
     }
 
-    fn parse_prefix<S>(s: &S) -> Result<(Self, Self::Length), Error<'static, Ipv6>>
+    fn parse_prefix<S>(s: &S) -> Result<(Self, Self::Length), Error<Ipv6>>
     where
         S: AsRef<str> + ?Sized,
     {

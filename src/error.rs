@@ -1,19 +1,19 @@
 use core::fmt;
 
-use crate::traits::{primitive, Afi};
+use crate::traits::{primitive, Afi, AfiClass};
 
 #[derive(Debug)]
-pub struct Error<'a, A: Afi> {
+pub struct Error<A: Afi> {
     kind: ErrorKind<A>,
-    msg: Option<&'a str>,
-    source: Option<SourceError<'a>>,
+    msg: Option<&'static str>,
+    source: Option<SourceError>,
 }
 
-impl<'a, A: Afi> Error<'a, A> {
-    pub(crate) fn new<S: AsRef<str> + ?Sized + 'a>(
+impl<A: Afi> Error<A> {
+    pub(crate) fn new<S: AsRef<str> + ?Sized + 'static>(
         kind: ErrorKind<A>,
-        msg: Option<&'a S>,
-        source: Option<SourceError<'a>>,
+        msg: Option<&'static S>,
+        source: Option<SourceError>,
     ) -> Self {
         Self {
             kind,
@@ -23,7 +23,7 @@ impl<'a, A: Afi> Error<'a, A> {
     }
 }
 
-impl<A: Afi> fmt::Display for Error<'_, A> {
+impl<A: Afi> fmt::Display for Error<A> {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         if let Some(msg) = self.msg {
             write!(f, "{}: {}", self.kind, msg)
@@ -34,15 +34,15 @@ impl<A: Afi> fmt::Display for Error<'_, A> {
 }
 
 #[cfg(feature = "std")]
-impl<A: Afi> std::error::Error for Error<'_, A> {
+impl<A: Afi> std::error::Error for Error<A> {
     fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
         self.source
     }
 }
 
 #[cfg(not(feature = "std"))]
-impl<'a, A: Afi> Error<'a, A> {
-    pub fn source(&self) -> Option<SourceError<'a>> {
+impl<A: Afi> Error<A> {
+    pub fn source(&self) -> Option<SourceError> {
         self.source
     }
 }
@@ -65,9 +65,9 @@ impl<A: Afi> fmt::Display for ErrorKind<A> {
 }
 
 #[cfg(feature = "std")]
-type SourceError<'a> = &'a (dyn std::error::Error + 'static);
+type SourceError = &(dyn std::error::Error + 'static);
 #[cfg(not(feature = "std"))]
-type SourceError<'a> = &'a (dyn core::any::Any);
+type SourceError = &'static (dyn core::any::Any);
 
 macro_rules! err {
     ( $kind:expr ) => {
