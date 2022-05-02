@@ -281,8 +281,9 @@ pub(crate) trait IntoIpv6Segments: Address<Ipv6> {
     // const LOCALHOST_SEGMENTS: [u16; 8] = Self::LOCALHOST.into_segments();
 
     fn into_segments(self) -> [u16; 8] {
-        // SAFTEY: [u8; 16] is always safe to transmute to [u16; 8]
-        let [a, b, c, d, e, f, g, h] = unsafe { mem::transmute::<_, [u16; 8]>(self.to_be_bytes()) };
+        // Safety:
+        // it is always safe to transmute `[u8; 16]` to `[u16; 8]`
+        let [a, b, c, d, e, f, g, h]: [u16; 8] = unsafe { mem::transmute(self.to_be_bytes()) };
         [
             u16::from_be(a),
             u16::from_be(b),
@@ -295,14 +296,22 @@ pub(crate) trait IntoIpv6Segments: Address<Ipv6> {
         ]
     }
 
+    #[inline(always)]
     fn from_segments(segments: [u16; 8]) -> Self {
-        let mut octets = [0u8; 16];
-        segments.iter().enumerate().for_each(|(i, segment)| {
-            let j = 2 * i;
-            let [high, low] = segment.to_be_bytes();
-            octets[j] = high;
-            octets[j + 1] = low;
-        });
+        // Safety:
+        // it is always safe to transmute `[u16; 8]` to `[u8; 16]`
+        let octets = unsafe {
+            core::mem::transmute([
+                segments[0].to_be(),
+                segments[1].to_be(),
+                segments[2].to_be(),
+                segments[3].to_be(),
+                segments[4].to_be(),
+                segments[5].to_be(),
+                segments[6].to_be(),
+                segments[7].to_be(),
+            ])
+        };
         Self::from_be_bytes(octets)
     }
 }

@@ -1,41 +1,25 @@
 use crate::{
     concrete::Ipv6,
     error::{err, Error, ErrorKind},
+    traits::primitive::IntoIpv6Segments as _,
 };
 
 use super::Parser;
 
-fn u16s_into_u128(from: [u16; 8]) -> u128 {
-    // Safety: it is always safe to transmute `[u16; N]` to `[u8; N * 2]`.
-    let octets = unsafe {
-        core::mem::transmute::<[u16; 8], _>([
-            from[0].to_be(),
-            from[1].to_be(),
-            from[2].to_be(),
-            from[3].to_be(),
-            from[4].to_be(),
-            from[5].to_be(),
-            from[6].to_be(),
-            from[7].to_be(),
-        ])
-    };
-    u128::from_be_bytes(octets)
-}
-
 #[inline(always)]
 pub fn parse_addr(input: &str) -> Result<u128, Error<Ipv6>> {
     Parser::new(input)
-        .take_only(Parser::take_ipv6_octets)
+        .take_only(Parser::take_ipv6_segments)
         .ok_or_else(|| err!(ErrorKind::ParserError))
-        .map(u16s_into_u128)
+        .map(u128::from_segments)
 }
 
 #[inline(always)]
 pub fn parse_prefix(input: &str) -> Result<(u128, u8), Error<Ipv6>> {
     Parser::new(input)
-        .take_with_length(Parser::take_ipv6_octets)
+        .take_with_length(Parser::take_ipv6_segments)
         .ok_or_else(|| err!(ErrorKind::ParserError))
-        .map(|(octets, len)| (u16s_into_u128(octets), len))
+        .map(|(segments, len)| (u128::from_segments(segments), len))
 }
 
 #[cfg(test)]

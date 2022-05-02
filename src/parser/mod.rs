@@ -155,7 +155,7 @@ impl<'a> Parser<'a> {
         (taken, took_ipv4)
     }
 
-    fn take_ipv6_octets(&mut self) -> Option<[u16; 8]> {
+    fn take_ipv6_segments(&mut self) -> Option<[u16; 8]> {
         let mut buf = [0; 8];
         let (head, took_ipv4) = self.take_ipv6_parts(&mut buf);
         if head == 8 {
