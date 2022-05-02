@@ -294,6 +294,17 @@ pub(crate) trait IntoIpv6Segments: Address<Ipv6> {
             u16::from_be(h),
         ]
     }
+
+    fn from_segments(segments: [u16; 8]) -> Self {
+        let mut octets = [0u8; 16];
+        segments.iter().enumerate().for_each(|(i, segment)| {
+            let j = 2 * i;
+            let [high, low] = segment.to_be_bytes();
+            octets[j] = high;
+            octets[j + 1] = low;
+        });
+        Self::from_be_bytes(octets)
+    }
 }
 impl<P: Address<Ipv6>> IntoIpv6Segments for P {}
 

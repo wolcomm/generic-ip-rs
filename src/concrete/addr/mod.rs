@@ -12,6 +12,7 @@ use super::{AddressRange, PrefixLength};
 mod private;
 pub use self::private::Address;
 
+mod convert;
 mod ops;
 
 mod ipv4;
@@ -129,27 +130,6 @@ where
 {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         self.into_primitive().fmt_addr(f)
-    }
-}
-
-#[cfg(feature = "std")]
-mod convert {
-    use super::*;
-
-    use std::net::{Ipv4Addr, Ipv6Addr};
-
-    use crate::concrete::{Ipv4, Ipv6};
-
-    impl From<Ipv4Addr> for Address<Ipv4> {
-        fn from(addr: Ipv4Addr) -> Self {
-            Self::new(addr.into())
-        }
-    }
-
-    impl From<Ipv6Addr> for Address<Ipv6> {
-        fn from(addr: Ipv6Addr) -> Self {
-            Self::new(addr.into())
-        }
     }
 }
 

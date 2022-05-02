@@ -1,3 +1,4 @@
+use core::borrow::Borrow;
 use core::cmp::Ord;
 use core::fmt::Debug;
 use core::hash::Hash;
@@ -10,7 +11,9 @@ use super::primitive;
 
 /// Provides an interface for describing an IP address family.
 pub trait Afi: Copy + Debug + Hash + Ord {
-    type Octets;
+    // This bound required to satisfy coherence rules when implementing
+    // `From<A::Octets> for Address<A>`
+    type Octets: Borrow<[u8]>;
     type Primitive: primitive::Address<Self>;
 
     /// Get the [`concrete::Afi`] variant associated with `Self`.
