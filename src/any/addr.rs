@@ -1,6 +1,9 @@
+use core::str::FromStr;
+
 use crate::{
     concrete::{self, Ipv4, Ipv6},
-    traits,
+    error::Error,
+    traits::{self, primitive::Address as _, Afi},
 };
 
 #[derive(Clone, Copy, Debug, Hash, PartialEq, Eq, PartialOrd, Ord)]
@@ -69,5 +72,18 @@ impl From<concrete::Address<Ipv4>> for Address {
 impl From<concrete::Address<Ipv6>> for Address {
     fn from(addr: concrete::Address<Ipv6>) -> Self {
         Self::Ipv6(addr)
+    }
+}
+
+impl FromStr for Address {
+    type Err = Error;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        <Ipv4 as Afi>::Primitive::parse_addr(s)
+            .map(|p| Self::Ipv4(concrete::Address::new(p)))
+            .or_else(|_| {
+                <Ipv6 as Afi>::Primitive::parse_addr(s)
+                    .map(|p| Self::Ipv6(concrete::Address::new(p)))
+            })
     }
 }
