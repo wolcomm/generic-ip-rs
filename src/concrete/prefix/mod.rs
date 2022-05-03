@@ -115,7 +115,7 @@ impl<A: Afi> From<Address<A>> for Prefix<A> {
 }
 
 impl<A: Afi> FromStr for Prefix<A> {
-    type Err = Error<A>;
+    type Err = Error;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         A::Primitive::parse_prefix(s).and_then(|(addr, len)| {

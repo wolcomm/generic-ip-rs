@@ -1,12 +1,9 @@
-use crate::{
-    concrete::Ipv4,
-    error::{err, Error, ErrorKind},
-};
+use crate::error::{err, Error, ErrorKind};
 
 use super::Parser;
 
 #[inline(always)]
-pub fn parse_addr(input: &str) -> Result<u32, Error<Ipv4>> {
+pub fn parse_addr(input: &str) -> Result<u32, Error> {
     Parser::new(input)
         .take_only(Parser::take_ipv4_octets)
         .ok_or_else(|| err!(ErrorKind::ParserError))
@@ -14,7 +11,7 @@ pub fn parse_addr(input: &str) -> Result<u32, Error<Ipv4>> {
 }
 
 #[inline(always)]
-pub fn parse_prefix(input: &str) -> Result<(u32, u8), Error<Ipv4>> {
+pub fn parse_prefix(input: &str) -> Result<(u32, u8), Error> {
     Parser::new(input)
         .take_with_length(Parser::take_ipv4_octets)
         .ok_or_else(|| err!(ErrorKind::ParserError))

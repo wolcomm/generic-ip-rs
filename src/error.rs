@@ -1,17 +1,15 @@
 use core::fmt;
 
-use crate::traits::{primitive, Afi, AfiClass};
-
 #[derive(Debug)]
-pub struct Error<A: Afi> {
-    kind: ErrorKind<A>,
+pub struct Error {
+    kind: ErrorKind,
     msg: Option<&'static str>,
     source: Option<SourceError>,
 }
 
-impl<A: Afi> Error<A> {
+impl Error {
     pub(crate) fn new<S: AsRef<str> + ?Sized + 'static>(
-        kind: ErrorKind<A>,
+        kind: ErrorKind,
         msg: Option<&'static S>,
         source: Option<SourceError>,
     ) -> Self {
@@ -23,7 +21,7 @@ impl<A: Afi> Error<A> {
     }
 }
 
-impl<A: Afi> fmt::Display for Error<A> {
+impl fmt::Display for Error {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         if let Some(msg) = self.msg {
             write!(f, "{}: {}", self.kind, msg)
@@ -34,30 +32,30 @@ impl<A: Afi> fmt::Display for Error<A> {
 }
 
 #[cfg(feature = "std")]
-impl<A: Afi> std::error::Error for Error<A> {
+impl std::error::Error for Error {
     fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
         self.source
     }
 }
 
 #[cfg(not(feature = "std"))]
-impl<A: Afi> Error<A> {
+impl Error {
     pub fn source(&self) -> Option<SourceError> {
         self.source
     }
 }
 
 #[derive(Clone, Copy, Debug, Hash, Eq, PartialEq)]
-pub enum ErrorKind<A: Afi> {
-    PrefixLength(<A::Primitive as primitive::Address<A>>::Length),
+pub enum ErrorKind {
+    PrefixLength,
     ParserError,
 }
 
-impl<A: Afi> fmt::Display for ErrorKind<A> {
+impl fmt::Display for ErrorKind {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {
-            Self::PrefixLength(len) => {
-                write!(f, "{} prefix-length {} out of bounds", A::as_afi(), len)
+            Self::PrefixLength => {
+                write!(f, "prefix-length out of bounds")
             }
             Self::ParserError => write!(f, "parser error"),
         }
@@ -65,7 +63,7 @@ impl<A: Afi> fmt::Display for ErrorKind<A> {
 }
 
 #[cfg(feature = "std")]
-type SourceError = &(dyn std::error::Error + 'static);
+type SourceError = &'static (dyn std::error::Error + 'static);
 #[cfg(not(feature = "std"))]
 type SourceError = &'static (dyn core::any::Any);
 
