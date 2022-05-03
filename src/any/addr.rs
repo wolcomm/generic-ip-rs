@@ -112,23 +112,44 @@ impl From<[u16; 8]> for Address {
     }
 }
 
-impl From<<Ipv4 as Afi>::Octets> for Address {
-    fn from(octets: <Ipv4 as Afi>::Octets) -> Self {
-        <Ipv4 as Afi>::Primitive::from_be_bytes(octets).into()
-    }
-}
+macro_rules! impl_partial_cmp {
+    ( $( $af:ident ),* $(,)? ) => {
+        $(
+            impl PartialEq<concrete::Address<$af>> for Address {
+                fn eq(&self, other: &concrete::Address<$af>) -> bool {
+                    if let Self::$af(addr) = self {
+                        addr.eq(other)
+                    } else {
+                        false
+                    }
+                }
+            }
 
-impl From<<Ipv6 as Afi>::Octets> for Address {
-    fn from(octets: <Ipv6 as Afi>::Octets) -> Self {
-        <Ipv6 as Afi>::Primitive::from_be_bytes(octets).into()
-    }
-}
+            impl PartialEq<Address> for concrete::Address<$af> {
+                fn eq(&self, other: &Address) -> bool {
+                    other.eq(self)
+                }
+            }
 
-impl From<[u16; 8]> for Address {
-    fn from(segments: [u16; 8]) -> Self {
-        <Ipv6 as Afi>::Primitive::from_segments(segments).into()
+            impl PartialOrd<concrete::Address<$af>> for Address {
+                fn partial_cmp(&self, other: &concrete::Address<$af>) -> Option<core::cmp::Ordering> {
+                    if let Self::$af(addr) = self {
+                        addr.partial_cmp(other)
+                    } else {
+                        None
+                    }
+                }
+            }
+
+            impl PartialOrd<Address> for concrete::Address<$af> {
+                fn partial_cmp(&self, other: &Address) -> Option<core::cmp::Ordering> {
+                    other.partial_cmp(self)
+                }
+            }
+        )*
     }
 }
+impl_partial_cmp!(Ipv4, Ipv6);
 
 impl FromStr for Address {
     type Err = Error;
