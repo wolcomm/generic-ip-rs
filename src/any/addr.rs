@@ -67,27 +67,48 @@ impl traits::Address for Address {
     }
 }
 
-impl From<concrete::Address<Ipv4>> for Address {
-    fn from(addr: concrete::Address<Ipv4>) -> Self {
-        Self::Ipv4(addr)
+macro_rules! impl_from_address {
+    ( $( $af:ident ),* $(,)? ) => {
+        $(
+            impl From<concrete::Address<$af>> for Address {
+                fn from(addr: concrete::Address<$af>) -> Self {
+                    Self::$af(addr)
+                }
+            }
+        )*
     }
 }
+impl_from_address!(Ipv4, Ipv6);
 
-impl From<concrete::Address<Ipv6>> for Address {
-    fn from(addr: concrete::Address<Ipv6>) -> Self {
-        Self::Ipv6(addr)
+macro_rules! impl_from_primitive {
+    ( $( $af:ident ),* $(,)? ) => {
+        $(
+            impl From<<$af as Afi>::Primitive> for Address {
+                fn from(primitive: <$af as Afi>::Primitive) -> Self {
+                    concrete::Address::<$af>::new(primitive).into()
+                }
+            }
+        )*
     }
 }
+impl_from_primitive!(Ipv4, Ipv6);
 
-impl From<<Ipv4 as Afi>::Primitive> for Address {
-    fn from(primitive: <Ipv4 as Afi>::Primitive) -> Self {
-        concrete::Address::<Ipv4>::new(primitive).into()
+macro_rules! impl_from_octets {
+    ( $( $af:ident ),* $(,)? ) => {
+        $(
+            impl From<<$af as Afi>::Octets> for Address {
+                fn from(octets: <$af as Afi>::Octets) -> Self {
+                    <$af as Afi>::Primitive::from_be_bytes(octets).into()
+                }
+            }
+        )*
     }
 }
+impl_from_octets!(Ipv4, Ipv6);
 
-impl From<<Ipv6 as Afi>::Primitive> for Address {
-    fn from(primitive: <Ipv6 as Afi>::Primitive) -> Self {
-        concrete::Address::<Ipv6>::new(primitive).into()
+impl From<[u16; 8]> for Address {
+    fn from(segments: [u16; 8]) -> Self {
+        <Ipv6 as Afi>::Primitive::from_segments(segments).into()
     }
 }
 
