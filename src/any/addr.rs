@@ -3,7 +3,11 @@ use core::str::FromStr;
 use crate::{
     concrete::{self, Ipv4, Ipv6},
     error::Error,
-    traits::{self, primitive::Address as _, Afi},
+    traits::{
+        self,
+        primitive::{Address as _, IntoIpv6Segments as _},
+        Afi,
+    },
 };
 
 #[derive(Clone, Copy, Debug, Hash, PartialEq, Eq, PartialOrd, Ord)]
@@ -75,15 +79,42 @@ impl From<concrete::Address<Ipv6>> for Address {
     }
 }
 
+impl From<<Ipv4 as Afi>::Primitive> for Address {
+    fn from(primitive: <Ipv4 as Afi>::Primitive) -> Self {
+        concrete::Address::<Ipv4>::new(primitive).into()
+    }
+}
+
+impl From<<Ipv6 as Afi>::Primitive> for Address {
+    fn from(primitive: <Ipv6 as Afi>::Primitive) -> Self {
+        concrete::Address::<Ipv6>::new(primitive).into()
+    }
+}
+
+impl From<<Ipv4 as Afi>::Octets> for Address {
+    fn from(octets: <Ipv4 as Afi>::Octets) -> Self {
+        <Ipv4 as Afi>::Primitive::from_be_bytes(octets).into()
+    }
+}
+
+impl From<<Ipv6 as Afi>::Octets> for Address {
+    fn from(octets: <Ipv6 as Afi>::Octets) -> Self {
+        <Ipv6 as Afi>::Primitive::from_be_bytes(octets).into()
+    }
+}
+
+impl From<[u16; 8]> for Address {
+    fn from(segments: [u16; 8]) -> Self {
+        <Ipv6 as Afi>::Primitive::from_segments(segments).into()
+    }
+}
+
 impl FromStr for Address {
     type Err = Error;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         <Ipv4 as Afi>::Primitive::parse_addr(s)
-            .map(|p| Self::Ipv4(concrete::Address::new(p)))
-            .or_else(|_| {
-                <Ipv6 as Afi>::Primitive::parse_addr(s)
-                    .map(|p| Self::Ipv6(concrete::Address::new(p)))
-            })
+            .map(Self::from)
+            .or_else(|_| <Ipv6 as Afi>::Primitive::parse_addr(s).map(Self::from))
     }
 }
