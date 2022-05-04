@@ -1,6 +1,9 @@
+use core::fmt::Debug;
+use core::hash::Hash;
+
 use super::{Address, Mask};
 
-pub trait Prefix: Sized {
+pub trait Prefix: Sized + Copy + Clone + Debug + Hash + PartialEq + Eq + PartialOrd {
     type Address: Address;
     type PrefixLength: PrefixLength;
     type Hostmask: Mask;
@@ -39,4 +42,4 @@ pub trait Prefix: Sized {
     // ) -> Result<Self::Subnets, Error<'static, A, P>>;
 }
 
-pub trait PrefixLength {}
+pub trait PrefixLength: Copy + Clone + Debug + Hash + PartialEq + Eq + PartialOrd {}

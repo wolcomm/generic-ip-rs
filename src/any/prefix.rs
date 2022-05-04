@@ -5,6 +5,7 @@ use crate::{
 
 use super::{Address, Hostmask, Netmask};
 
+#[derive(Clone, Copy, Debug, Hash, PartialEq, Eq, PartialOrd)]
 pub enum Prefix {
     Ipv4(concrete::Prefix<Ipv4>),
     Ipv6(concrete::Prefix<Ipv6>),

@@ -1,4 +1,7 @@
-pub trait Address {
+use core::fmt::Debug;
+use core::hash::Hash;
+
+pub trait Address: Clone + Copy + Debug + Hash + PartialEq + Eq + PartialOrd {
     fn is_broadcast(&self) -> bool;
     fn is_link_local(&self) -> bool;
     fn is_private(&self) -> bool;

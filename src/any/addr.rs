@@ -10,7 +10,7 @@ use crate::{
     },
 };
 
-#[derive(Clone, Copy, Debug, Hash, PartialEq, Eq, PartialOrd, Ord)]
+#[derive(Clone, Copy, Debug, Hash, PartialEq, Eq, PartialOrd)]
 pub enum Address {
     Ipv4(concrete::Address<Ipv4>),
     Ipv6(concrete::Address<Ipv6>),
