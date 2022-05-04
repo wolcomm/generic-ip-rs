@@ -10,6 +10,10 @@ readme = "README.md"
 keywords = ["ip", "network", "cidr", "prefix", "subnet"]
 categories = ["network-programming"]
 
+[package.metadata.docs.rs]
+rustdoc-args = ["--cfg", "docsrs"]
+all-features = true
+
 [lib]
 name = "ip"
 

@@ -1,5 +1,5 @@
 use core::fmt;
-use core::ops::Neg;
+use core::ops::{Neg, RangeInclusive};
 
 use crate::{
     error::{err, Error, ErrorKind},
@@ -72,28 +72,23 @@ impl<A: Afi> Neg for PrefixLength<A> {
 }
 
 #[cfg(any(test, feature = "arbitrary"))]
-mod arbitrary {
-    use super::*;
+use proptest::{
+    arbitrary::Arbitrary,
+    strategy::{BoxedStrategy, Strategy},
+};
 
-    use core::ops::RangeInclusive;
-
-    use proptest::{
-        arbitrary::Arbitrary,
-        strategy::{BoxedStrategy, Strategy},
-    };
-
-    impl<A: Afi> Arbitrary for PrefixLength<A>
-    where
-        <A::Primitive as primitive::Address<A>>::Length: 'static,
-        RangeInclusive<<A::Primitive as primitive::Address<A>>::Length>:
-            Strategy<Value = <A::Primitive as primitive::Address<A>>::Length>,
-    {
-        type Parameters = ();
-        type Strategy = BoxedStrategy<Self>;
-        fn arbitrary_with(_: Self::Parameters) -> Self::Strategy {
-            (A::Primitive::MIN_LENGTH..=A::Primitive::MAX_LENGTH)
-                .prop_map(|l| Self::from_primitive(l).unwrap())
-                .boxed()
-        }
+#[cfg(any(test, feature = "arbitrary"))]
+impl<A: Afi> Arbitrary for PrefixLength<A>
+where
+    <A::Primitive as primitive::Address<A>>::Length: 'static,
+    RangeInclusive<<A::Primitive as primitive::Address<A>>::Length>:
+        Strategy<Value = <A::Primitive as primitive::Address<A>>::Length>,
+{
+    type Parameters = ();
+    type Strategy = BoxedStrategy<Self>;
+    fn arbitrary_with(_: Self::Parameters) -> Self::Strategy {
+        (A::Primitive::MIN_LENGTH..=A::Primitive::MAX_LENGTH)
+            .prop_map(|l| Self::from_primitive(l).unwrap())
+            .boxed()
     }
 }

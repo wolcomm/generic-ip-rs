@@ -134,25 +134,22 @@ where
 }
 
 #[cfg(any(test, feature = "arbitrary"))]
-mod arbitrary {
-    use super::*;
+use proptest::{
+    arbitrary::{any_with, Arbitrary, ParamsFor, StrategyFor},
+    strategy::{BoxedStrategy, Strategy},
+};
 
-    use proptest::{
-        arbitrary::{any_with, Arbitrary, ParamsFor, StrategyFor},
-        strategy::{BoxedStrategy, Strategy},
-    };
+#[cfg(any(test, feature = "arbitrary"))]
+impl<A: Afi> Arbitrary for Address<A>
+where
+    A: 'static,
+    A::Primitive: Arbitrary + 'static,
+    StrategyFor<A::Primitive>: 'static,
+{
+    type Parameters = ParamsFor<A::Primitive>;
+    type Strategy = BoxedStrategy<Self>;
 
-    impl<A: Afi> Arbitrary for Address<A>
-    where
-        A: 'static,
-        A::Primitive: Arbitrary + 'static,
-        StrategyFor<A::Primitive>: 'static,
-    {
-        type Parameters = ParamsFor<A::Primitive>;
-        type Strategy = BoxedStrategy<Self>;
-
-        fn arbitrary_with(params: Self::Parameters) -> Self::Strategy {
-            any_with::<A::Primitive>(params).prop_map(Self::new).boxed()
-        }
+    fn arbitrary_with(params: Self::Parameters) -> Self::Strategy {
+        any_with::<A::Primitive>(params).prop_map(Self::new).boxed()
     }
 }

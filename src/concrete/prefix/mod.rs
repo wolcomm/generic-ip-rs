@@ -137,58 +137,48 @@ where
 }
 
 #[cfg(feature = "ipnet")]
-mod convert {
-    use super::*;
-
-    use crate::concrete::{Ipv4, Ipv6};
-
-    use ipnet::{Ipv4Net, Ipv6Net};
-
-    impl From<Ipv4Net> for Prefix<Ipv4> {
-        fn from(net: Ipv4Net) -> Self {
-            let prefix = net.network().into();
-            let length = PrefixLength::from_primitive(net.prefix_len())
-                .expect("we trusted `ipnet` to enforce length bounds");
-            Self::new(prefix, length)
-        }
+impl From<ipnet::Ipv4Net> for Prefix<super::Ipv4> {
+    fn from(net: ipnet::Ipv4Net) -> Self {
+        let prefix = net.network().into();
+        let length = PrefixLength::from_primitive(net.prefix_len())
+            .expect("we trusted `ipnet` to enforce length bounds");
+        Self::new(prefix, length)
     }
+}
 
-    impl From<Ipv6Net> for Prefix<Ipv6> {
-        fn from(net: Ipv6Net) -> Self {
-            let prefix = net.network().into();
-            let length = PrefixLength::from_primitive(net.prefix_len())
-                .expect("we trusted `ipnet` to enforce length bounds");
-            Self::new(prefix, length)
-        }
+#[cfg(feature = "ipnet")]
+impl From<ipnet::Ipv6Net> for Prefix<super::Ipv6> {
+    fn from(net: ipnet::Ipv6Net) -> Self {
+        let prefix = net.network().into();
+        let length = PrefixLength::from_primitive(net.prefix_len())
+            .expect("we trusted `ipnet` to enforce length bounds");
+        Self::new(prefix, length)
     }
 }
 
 #[cfg(any(test, feature = "arbitrary"))]
-mod arbitrary {
-    use super::*;
+use proptest::{
+    arbitrary::{any_with, Arbitrary, ParamsFor, StrategyFor},
+    strategy::{BoxedStrategy, Strategy},
+};
 
-    use proptest::{
-        arbitrary::{any_with, Arbitrary, ParamsFor, StrategyFor},
-        strategy::{BoxedStrategy, Strategy},
-    };
+#[cfg(any(test, feature = "arbitrary"))]
+impl<A: Afi> Arbitrary for Prefix<A>
+where
+    Address<A>: Arbitrary,
+    StrategyFor<Address<A>>: 'static,
+    PrefixLength<A>: Arbitrary,
+    StrategyFor<PrefixLength<A>>: 'static,
+{
+    type Parameters = ParamsFor<(Address<A>, PrefixLength<A>)>;
+    type Strategy = BoxedStrategy<Self>;
 
-    impl<A: Afi> Arbitrary for Prefix<A>
-    where
-        Address<A>: Arbitrary,
-        StrategyFor<Address<A>>: 'static,
-        PrefixLength<A>: Arbitrary,
-        StrategyFor<PrefixLength<A>>: 'static,
-    {
-        type Parameters = ParamsFor<(Address<A>, PrefixLength<A>)>;
-        type Strategy = BoxedStrategy<Self>;
-
-        fn arbitrary_with(params: Self::Parameters) -> Self::Strategy {
-            (
-                any_with::<Address<A>>(params.0),
-                any_with::<PrefixLength<A>>(params.1),
-            )
-                .prop_map(|(prefix, length)| Self::new(prefix, length))
-                .boxed()
-        }
+    fn arbitrary_with(params: Self::Parameters) -> Self::Strategy {
+        (
+            any_with::<Address<A>>(params.0),
+            any_with::<PrefixLength<A>>(params.1),
+        )
+            .prop_map(|(prefix, length)| Self::new(prefix, length))
+            .boxed()
     }
 }

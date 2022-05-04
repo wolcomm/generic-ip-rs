@@ -1,8 +1,11 @@
 //! Types and traits for working with IP addresses and prefixes generically
 //! over address families.
+//!
+//! The IP address types in `std` ([`std::net::Ipv4Addr`], [`Ipv6Addr`] and [`IpAddr`])
 #![doc(html_root_url = "https://docs.rs/generic-ip/0.1.0-alpha.2")]
 #![no_std]
-// #![warn(missing_docs)]
+#![warn(missing_docs)]
+#![cfg_attr(docsrs, feature(doc_auto_cfg))]
 
 #[cfg(feature = "std")]
 extern crate std;

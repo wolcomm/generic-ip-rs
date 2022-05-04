@@ -68,30 +68,27 @@ where
 }
 
 #[cfg(any(test, feature = "arbitrary"))]
-mod arbitrary {
-    use super::*;
+use proptest::{
+    arbitrary::{any_with, Arbitrary, ParamsFor, StrategyFor},
+    strategy::{BoxedStrategy, Strategy},
+};
 
-    use proptest::{
-        arbitrary::{any_with, Arbitrary, ParamsFor, StrategyFor},
-        strategy::{BoxedStrategy, Strategy},
-    };
+#[cfg(any(test, feature = "arbitrary"))]
+impl<A: Afi, T: Type> Arbitrary for Mask<T, A>
+where
+    A: 'static,
+    A::Primitive: 'static,
+    T: 'static,
+    Self: From<PrefixLength<A>>,
+    PrefixLength<A>: Arbitrary,
+    StrategyFor<PrefixLength<A>>: 'static,
+{
+    type Parameters = ParamsFor<PrefixLength<A>>;
+    type Strategy = BoxedStrategy<Self>;
 
-    impl<A: Afi, T: Type> Arbitrary for Mask<T, A>
-    where
-        A: 'static,
-        A::Primitive: 'static,
-        T: 'static,
-        Self: From<PrefixLength<A>>,
-        PrefixLength<A>: Arbitrary,
-        StrategyFor<PrefixLength<A>>: 'static,
-    {
-        type Parameters = ParamsFor<PrefixLength<A>>;
-        type Strategy = BoxedStrategy<Self>;
-
-        fn arbitrary_with(params: Self::Parameters) -> Self::Strategy {
-            any_with::<PrefixLength<A>>(params)
-                .prop_map(Mask::from)
-                .boxed()
-        }
+    fn arbitrary_with(params: Self::Parameters) -> Self::Strategy {
+        any_with::<PrefixLength<A>>(params)
+            .prop_map(Mask::from)
+            .boxed()
     }
 }

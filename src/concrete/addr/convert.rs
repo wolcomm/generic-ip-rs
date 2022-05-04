@@ -48,22 +48,15 @@ impl From<[u16; 8]> for Address<Ipv6> {
 }
 
 #[cfg(feature = "std")]
-mod stdlib {
-    use super::*;
-
-    use std::net::{Ipv4Addr, Ipv6Addr};
-
-    use crate::concrete::{Ipv4, Ipv6};
-
-    impl From<Ipv4Addr> for Address<Ipv4> {
-        fn from(addr: Ipv4Addr) -> Self {
-            Self::new(addr.into())
-        }
+impl From<std::net::Ipv4Addr> for Address<Ipv4> {
+    fn from(addr: std::net::Ipv4Addr) -> Self {
+        Self::new(addr.into())
     }
+}
 
-    impl From<Ipv6Addr> for Address<Ipv6> {
-        fn from(addr: Ipv6Addr) -> Self {
-            Self::new(addr.into())
-        }
+#[cfg(feature = "std")]
+impl From<std::net::Ipv6Addr> for Address<Ipv6> {
+    fn from(addr: std::net::Ipv6Addr) -> Self {
+        Self::new(addr.into())
     }
 }
