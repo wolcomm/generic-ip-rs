@@ -41,8 +41,8 @@ impl<A: Afi> PartialOrd<Self> for Prefix<A> {
     fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
         match self.compare(*other) {
             PrefixOrdering::Equal => Some(Equal),
-            PrefixOrdering::Subprefix(_) => Some(Less),
-            PrefixOrdering::Superprefix(_) => Some(Greater),
+            PrefixOrdering::Subprefix(_) => Some(Greater),
+            PrefixOrdering::Superprefix(_) => Some(Less),
             PrefixOrdering::Divergent(_) => None,
         }
     }
@@ -62,5 +62,71 @@ impl<A: Afi> PartialOrd<Address<A>> for Prefix<A> {
 
 #[cfg(test)]
 mod tests {
-    // TODO: check Eq invariants for Prefix<A>
+    use super::*;
+
+    use crate::{Ipv4, Ipv6};
+
+    mod ipv4 {
+        use super::*;
+
+        #[test]
+        fn equal() {
+            let x = "10.0.0.0/8".parse::<Prefix<Ipv4>>().unwrap();
+            let y = "10.0.0.0/8".parse::<Prefix<Ipv4>>().unwrap();
+            assert!(x == y);
+        }
+
+        #[test]
+        fn lt() {
+            let x = "10.0.0.0/16".parse::<Prefix<Ipv4>>().unwrap();
+            let y = "10.0.0.0/8".parse::<Prefix<Ipv4>>().unwrap();
+            assert!(x < y);
+        }
+
+        #[test]
+        fn gt() {
+            let x = "10.0.0.0/16".parse::<Prefix<Ipv4>>().unwrap();
+            let y = "10.0.0.0/24".parse::<Prefix<Ipv4>>().unwrap();
+            assert!(x > y);
+        }
+
+        #[test]
+        fn divergent() {
+            let x = "10.0.0.0/16".parse::<Prefix<Ipv4>>().unwrap();
+            let y = "10.1.0.0/16".parse::<Prefix<Ipv4>>().unwrap();
+            assert!(matches!(x.partial_cmp(&y), None));
+        }
+    }
+
+    mod ipv6 {
+        use super::*;
+
+        #[test]
+        fn equal() {
+            let x = "2001:db8::/32".parse::<Prefix<Ipv6>>().unwrap();
+            let y = "2001:db8::/32".parse::<Prefix<Ipv6>>().unwrap();
+            assert!(x == y);
+        }
+
+        #[test]
+        fn lt() {
+            let x = "2001:db8::/48".parse::<Prefix<Ipv6>>().unwrap();
+            let y = "2001:db8::/32".parse::<Prefix<Ipv6>>().unwrap();
+            assert!(x < y);
+        }
+
+        #[test]
+        fn gt() {
+            let x = "2001:db8::/48".parse::<Prefix<Ipv6>>().unwrap();
+            let y = "2001:db8::/64".parse::<Prefix<Ipv6>>().unwrap();
+            assert!(x > y);
+        }
+
+        #[test]
+        fn divergent() {
+            let x = "2001:db8:f::/48".parse::<Prefix<Ipv6>>().unwrap();
+            let y = "2001:db8:a::/48".parse::<Prefix<Ipv6>>().unwrap();
+            assert!(matches!(x.partial_cmp(&y), None));
+        }
+    }
 }
