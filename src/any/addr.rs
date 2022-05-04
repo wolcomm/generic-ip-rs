@@ -112,6 +112,30 @@ impl From<[u16; 8]> for Address {
     }
 }
 
+#[cfg(feature = "std")]
+impl From<std::net::Ipv4Addr> for Address {
+    fn from(addr: std::net::Ipv4Addr) -> Self {
+        concrete::Address::from(addr).into()
+    }
+}
+
+#[cfg(feature = "std")]
+impl From<std::net::Ipv6Addr> for Address {
+    fn from(addr: std::net::Ipv6Addr) -> Self {
+        concrete::Address::from(addr).into()
+    }
+}
+
+#[cfg(feature = "std")]
+impl From<std::net::IpAddr> for Address {
+    fn from(addr: std::net::IpAddr) -> Self {
+        match addr {
+            std::net::IpAddr::V4(addr) => addr.into(),
+            std::net::IpAddr::V6(addr) => addr.into(),
+        }
+    }
+}
+
 macro_rules! impl_partial_cmp {
     ( $( $af:ident ),* $(,)? ) => {
         $(
