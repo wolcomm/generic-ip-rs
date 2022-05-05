@@ -1,3 +1,4 @@
+use core::cmp::Ordering;
 use core::fmt;
 use core::str::FromStr;
 
@@ -13,7 +14,7 @@ use crate::{
 
 use super::delegate;
 
-#[derive(Clone, Copy, Debug, Hash, PartialEq, Eq, PartialOrd)]
+#[derive(Clone, Copy, Hash, PartialEq, Eq)]
 pub enum Address {
     Ipv4(concrete::Address<Ipv4>),
     Ipv6(concrete::Address<Ipv6>),
@@ -125,6 +126,16 @@ impl From<std::net::IpAddr> for Address {
     }
 }
 
+impl PartialOrd for Address {
+    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+        match (self, other) {
+            (Self::Ipv4(addr), Self::Ipv4(other)) => addr.partial_cmp(other),
+            (Self::Ipv6(addr), Self::Ipv6(other)) => addr.partial_cmp(other),
+            _ => None,
+        }
+    }
+}
+
 macro_rules! impl_partial_cmp {
     ( $( $af:ident ),* $(,)? ) => {
         $(
@@ -145,7 +156,7 @@ macro_rules! impl_partial_cmp {
             }
 
             impl PartialOrd<concrete::Address<$af>> for Address {
-                fn partial_cmp(&self, other: &concrete::Address<$af>) -> Option<core::cmp::Ordering> {
+                fn partial_cmp(&self, other: &concrete::Address<$af>) -> Option<Ordering> {
                     if let Self::$af(addr) = self {
                         addr.partial_cmp(other)
                     } else {
@@ -155,8 +166,8 @@ macro_rules! impl_partial_cmp {
             }
 
             impl PartialOrd<Address> for concrete::Address<$af> {
-                fn partial_cmp(&self, other: &Address) -> Option<core::cmp::Ordering> {
-                    other.partial_cmp(self)
+                fn partial_cmp(&self, other: &Address) -> Option<Ordering> {
+                    other.partial_cmp(self).map(Ordering::reverse)
                 }
             }
         )*
@@ -189,6 +200,153 @@ impl fmt::Debug for Address {
         match self {
             Self::Ipv4(addr) => write!(f, "Ipv4({})", addr),
             Self::Ipv6(addr) => write!(f, "Ipv6({})", addr),
+        }
+    }
+}
+
+#[cfg(any(test, feature = "arbitrary"))]
+use proptest::{
+    arbitrary::{any, Arbitrary},
+    prop_oneof,
+    strategy::{BoxedStrategy, Strategy},
+};
+
+#[cfg(any(test, feature = "arbitrary"))]
+impl Arbitrary for Address {
+    type Parameters = ();
+    type Strategy = BoxedStrategy<Self>;
+
+    fn arbitrary_with(_: Self::Parameters) -> Self::Strategy {
+        prop_oneof![
+            any::<concrete::Address<Ipv4>>().prop_map(Self::Ipv4),
+            any::<concrete::Address<Ipv6>>().prop_map(Self::Ipv6),
+        ]
+        .boxed()
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    use proptest::{arbitrary::any, proptest};
+
+    #[cfg(feature = "std")]
+    proptest! {
+        #[test]
+        fn parse_any_display(addr in any::<Address>()) {
+            use std::string::ToString as _;
+            let parsed = addr.to_string().parse::<Address>().unwrap();
+            assert_eq!(addr, parsed);
+        }
+    }
+
+    proptest! {
+        #[test]
+        fn symmetric_eq((a, b) in any::<(Address, Address)>()) {
+            assert_eq!(a.eq(&b), b.eq(&a))
+        }
+
+        #[test]
+        fn symmetric_eq_ipv4(a in any::<Address>(), b in any::<concrete::Address<Ipv4>>()) {
+            assert_eq!(a.eq(&b), b.eq(&a))
+        }
+
+        #[test]
+        fn symmetric_eq_ipv6(a in any::<Address>(), b in any::<concrete::Address<Ipv6>>()) {
+            assert_eq!(a.eq(&b), b.eq(&a))
+        }
+
+        #[test]
+        fn transitive_eq((a, b, c) in any::<(Address, Address, Address)>()) {
+            assert_eq!(a == b && b == c, a == c)
+        }
+
+        #[test]
+        fn transitive_eq_ipv4(
+            (a, c) in any::<(Address, Address)>(),
+            b in any::<concrete::Address<Ipv4>>(),
+        ) {
+            assert_eq!(a == b && b == c, a == c)
+        }
+
+        #[test]
+        fn transitive_eq_ipv6(
+            (a, c) in any::<(Address, Address)>(),
+            b in any::<concrete::Address<Ipv6>>(),
+        ) {
+            assert_eq!(a == b && b == c, a == c)
+        }
+    }
+
+    proptest! {
+        #[test]
+        fn dual_cmp((a, b) in any::<(Address, Address)>()) {
+            assert_eq!(a.partial_cmp(&b), b.partial_cmp(&a).map(Ordering::reverse))
+        }
+
+        #[test]
+        fn dual_cmp_ipv4(a in any::<Address>(), b in any::<concrete::Address<Ipv4>>()) {
+            assert_eq!(a.partial_cmp(&b), b.partial_cmp(&a).map(Ordering::reverse))
+        }
+
+        #[test]
+        fn dual_cmp_ipv6(a in any::<Address>(), b in any::<concrete::Address<Ipv6>>()) {
+            assert_eq!(a.partial_cmp(&b), b.partial_cmp(&a).map(Ordering::reverse))
+        }
+
+        #[test]
+        fn transitive_le((a, b, c) in any::<(Address, Address, Address)>()) {
+            if a < b && b < c {
+                assert!(a < c)
+            }
+        }
+
+        #[test]
+        fn transitive_le_ipv4(
+            (a, c) in any::<(Address, Address)>(),
+            b in any::<concrete::Address<Ipv4>>(),
+        ) {
+            if a < b && b < c {
+                assert!(a < c)
+            }
+        }
+
+        #[test]
+        fn transitive_le_ipv6(
+            (a, c) in any::<(Address, Address)>(),
+            b in any::<concrete::Address<Ipv6>>(),
+        ) {
+            if a < b && b < c {
+                assert!(a < c)
+            }
+        }
+
+        #[test]
+        fn transitive_ge((a, b, c) in any::<(Address, Address, Address)>()) {
+            if a > b && b > c {
+                assert!(a > c)
+            }
+        }
+
+        #[test]
+        fn transitive_ge_ipv4(
+            (a, c) in any::<(Address, Address)>(),
+            b in any::<concrete::Address<Ipv4>>(),
+        ) {
+            if a > b && b > c {
+                assert!(a > c)
+            }
+        }
+
+        #[test]
+        fn transitive_ge_ipv6(
+            (a, c) in any::<(Address, Address)>(),
+            b in any::<concrete::Address<Ipv6>>(),
+        ) {
+            if a > b && b > c {
+                assert!(a > c)
+            }
         }
     }
 }
