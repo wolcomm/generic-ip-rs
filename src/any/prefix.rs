@@ -3,7 +3,7 @@ use crate::{
     traits,
 };
 
-use super::{Address, Hostmask, Netmask};
+use super::{delegate, Address, Hostmask, Netmask};
 
 #[derive(Clone, Copy, Debug, Hash, PartialEq, Eq, PartialOrd)]
 pub enum Prefix {
@@ -11,19 +11,6 @@ pub enum Prefix {
     Ipv6(concrete::Prefix<Ipv6>),
 }
 
-// TODO: de-duplicate
-macro_rules! delegate {
-    ( $( fn $fn:ident(&self) -> $ret_ty:ty; )* ) => {
-        $(
-            fn $fn(&self) -> $ret_ty {
-                match self {
-                    Self::Ipv4(prefix) => prefix.$fn().into(),
-                    Self::Ipv6(prefix) => prefix.$fn().into(),
-                }
-            }
-        )*
-    }
-}
 impl traits::Prefix for Prefix {
     type Address = Address;
     type PrefixLength = PrefixLength;

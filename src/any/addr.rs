@@ -10,6 +10,8 @@ use crate::{
     },
 };
 
+use super::delegate;
+
 #[derive(Clone, Copy, Debug, Hash, PartialEq, Eq, PartialOrd)]
 pub enum Address {
     Ipv4(concrete::Address<Ipv4>),
@@ -31,20 +33,6 @@ impl Address {
             Self::Ipv4(_) => *self,
             Self::Ipv6(ipv6_addr) => ipv6_addr.to_canonical(),
         }
-    }
-}
-
-// TODO: deduplicate
-macro_rules! delegate {
-    ( $( fn $fn:ident(&self) -> $ret_ty:ty; )* ) => {
-        $(
-            fn $fn(&self) -> $ret_ty {
-                match self {
-                    Self::Ipv4(addr) => addr.$fn(),
-                    Self::Ipv6(addr) => addr.$fn(),
-                }
-            }
-        )*
     }
 }
 

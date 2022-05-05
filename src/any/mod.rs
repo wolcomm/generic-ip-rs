@@ -9,3 +9,17 @@ pub use self::mask::{Hostmask, Mask, Netmask};
 
 mod prefix;
 pub use self::prefix::{Prefix, PrefixLength};
+
+macro_rules! delegate {
+    ( $( fn $fn:ident(&self) -> $ret_ty:ty; )* ) => {
+        $(
+            fn $fn(&self) -> $ret_ty {
+                match self {
+                    Self::Ipv4(prefix) => prefix.$fn().into(),
+                    Self::Ipv6(prefix) => prefix.$fn().into(),
+                }
+            }
+        )*
+    }
+}
+pub(self) use delegate;
