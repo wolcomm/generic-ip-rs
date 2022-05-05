@@ -4,7 +4,7 @@ use crate::{
 };
 
 /// An IP address.
-#[derive(Clone, Copy, Debug, Default, Hash, PartialEq, Eq, PartialOrd, Ord)]
+#[derive(Clone, Copy, Default, Hash, PartialEq, Eq, PartialOrd, Ord)]
 pub struct Address<A: Afi>(A::Primitive);
 
 impl<A: Afi> Address<A> {

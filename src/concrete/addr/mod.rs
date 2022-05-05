@@ -124,12 +124,15 @@ impl<A: Afi> FromStr for Address<A> {
     }
 }
 
-impl<A: Afi> fmt::Display for Address<A>
-where
-    A::Primitive: AddressDisplay<A>,
-{
+impl<A: Afi> fmt::Display for Address<A> {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         self.into_primitive().fmt_addr(f)
+    }
+}
+
+impl<A: Afi> fmt::Debug for Address<A> {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "Address<{:?}>({})", A::as_afi(), self)
     }
 }
 

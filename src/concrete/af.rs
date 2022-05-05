@@ -37,6 +37,7 @@ impl<A: traits::Afi> traits::AfiClass for A {
     }
 }
 
+#[derive(Clone, Copy, Debug, Hash, PartialEq, Eq)]
 pub enum Afi {
     Ipv4,
     Ipv6,
