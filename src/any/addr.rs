@@ -1,3 +1,4 @@
+use core::fmt;
 use core::str::FromStr;
 
 use crate::{
@@ -170,5 +171,24 @@ impl FromStr for Address {
         <Ipv4 as Afi>::Primitive::parse_addr(s)
             .map(Self::from)
             .or_else(|_| <Ipv6 as Afi>::Primitive::parse_addr(s).map(Self::from))
+    }
+}
+
+impl fmt::Display for Address {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        match self {
+            Self::Ipv4(addr) => addr.fmt(f),
+            Self::Ipv6(addr) => addr.fmt(f),
+        }
+    }
+}
+
+impl fmt::Debug for Address {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "Address<Any>::")?;
+        match self {
+            Self::Ipv4(addr) => write!(f, "Ipv4({})", addr),
+            Self::Ipv6(addr) => write!(f, "Ipv6({})", addr),
+        }
     }
 }
