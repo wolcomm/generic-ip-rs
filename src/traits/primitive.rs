@@ -49,6 +49,7 @@ pub trait Address<A: Afi>:
     const BENCHMARK_RANGE: RangeInclusive<Self>;
     const MULTICAST_RANGE: RangeInclusive<Self>;
     const LINK_LOCAL_RANGE: RangeInclusive<Self>;
+    const PROTOCOL_ASSIGNMENTS_RANGE: RangeInclusive<Self>;
     const DOCUMENTATION_RANGES: &'static [RangeInclusive<Self>];
     const PRIVATE_RANGES: Option<&'static [RangeInclusive<Self>]>;
     const RESERVED_RANGE: Option<RangeInclusive<Self>>;
@@ -109,6 +110,8 @@ impl Address<Ipv4> for u32 {
     const MULTICAST_RANGE: RangeInclusive<Self> = ipv4!(224, 0, 0, 0)..=ipv4!(239, 255, 255, 255);
     const LINK_LOCAL_RANGE: RangeInclusive<Self> =
         ipv4!(169, 254, 0, 0)..=ipv4!(169, 254, 255, 255);
+    const PROTOCOL_ASSIGNMENTS_RANGE: RangeInclusive<Self> =
+        ipv4!(192, 0, 0, 0)..=ipv4!(192, 0, 0, 255);
     const DOCUMENTATION_RANGES: &'static [RangeInclusive<Self>] = &[
         ipv4!(192, 0, 2, 0)..=ipv4!(192, 0, 2, 255),
         ipv4!(198, 51, 100, 0)..=ipv4!(198, 51, 100, 255),
@@ -174,9 +177,19 @@ impl Address<Ipv4> for u32 {
                 return false;
             }
         }
-        // TODO: handle 192.0.0.0/24
-        if (ipv4!(192, 0, 0, 0)..=ipv4!(192, 0, 0, 255)).contains(self) {
-            todo!()
+        // non-global multicast
+        if Self::MULTICAST_RANGE.contains(self)
+            && !(ipv4!(224, 0, 1, 0)..=ipv4!(238, 255, 255, 255)).contains(self)
+        {
+            return false;
+        }
+        if Self::PROTOCOL_ASSIGNMENTS_RANGE.contains(self)
+            // Port Control Protocol Anycast
+            && self != &ipv4!(192, 0, 0, 9)
+            // TURN Anycast
+            && self != &ipv4!(192, 0, 0, 10)
+        {
+            return false;
         }
         true
     }
@@ -214,6 +227,8 @@ impl Address<Ipv6> for u128 {
         0xff00_0000_0000_0000_0000_0000_0000_0000..=0xffff_ffff_ffff_ffff_ffff_ffff_ffff_ffff;
     const LINK_LOCAL_RANGE: RangeInclusive<Self> =
         0xfe80_0000_0000_0000_0000_0000_0000_0000..=0xfebf_ffff_ffff_ffff_ffff_ffff_ffff_ffff;
+    const PROTOCOL_ASSIGNMENTS_RANGE: RangeInclusive<Self> =
+        0x2001_0000_0000_0000_0000_0000_0000_0000..=0x2001_01ff_ffff_ffff_ffff_ffff_ffff_ffff;
     const DOCUMENTATION_RANGES: &'static [RangeInclusive<Self>] =
         &[(0x2001_0db8_0000_0000_0000_0000_0000_0000..=0x2001_0db8_ffff_ffff_ffff_ffff_ffff_ffff)];
     const PRIVATE_RANGES: Option<&'static [RangeInclusive<Self>]> = None;
@@ -239,6 +254,7 @@ impl Address<Ipv6> for u128 {
         if Self::LOCALHOST_RANGE.contains(self)
             || Self::LINK_LOCAL_RANGE.contains(self)
             || self == &Self::UNSPECIFIED
+            || Self::BENCHMARK_RANGE.contains(self)
             || Self::DOCUMENTATION_RANGES
                 .iter()
                 .any(|range| range.contains(self))
@@ -254,6 +270,22 @@ impl Address<Ipv6> for u128 {
         if Self::MULTICAST_RANGE.contains(self)
             && self & 0x000f_0000_0000_0000_0000_0000_0000_0000
                 != 0x000e_0000_0000_0000_0000_0000_0000_0000
+        {
+            return false;
+        }
+        if Self::PROTOCOL_ASSIGNMENTS_RANGE.contains(self)
+            // TEREDO
+            && !(0x2001_0000_0000_0000_0000_0000_0000_0000..=0x2001_0000_ffff_ffff_ffff_ffff_ffff_ffff).contains(self)
+            // Port Control Protocol Anycast
+            && self != &0x2001_0001_0000_0000_0000_0000_0000_0001
+            // TURN Anycast
+            && self != &0x2001_0001_0000_0000_0000_0000_0000_0002
+            // AMT
+            && !(0x2001_0003_0000_0000_0000_0000_0000_0000..=0x2001_0003_ffff_ffff_ffff_ffff_ffff_ffff).contains(self)
+            // AS112
+            && !(0x2001_0004_0112_0000_0000_0000_0000_0000..=0x2001_0004_0112_ffff_ffff_ffff_ffff_ffff).contains(self)
+            // ORCHIDv2
+            && !(0x2001_0020_0000_0000_0000_0000_0000_0000..=0x2001_002f_ffff_ffff_ffff_ffff_ffff_ffff).contains(self)
         {
             return false;
         }
