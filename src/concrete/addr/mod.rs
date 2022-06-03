@@ -19,6 +19,10 @@ mod ipv4;
 mod ipv6;
 
 impl<A: Afi> Address<A> {
+    pub fn from_octets(octets: A::Octets) -> Self {
+        Self::new(A::Primitive::from_be_bytes(octets))
+    }
+
     pub fn octets(&self) -> A::Octets {
         self.into_primitive().to_be_bytes()
     }
