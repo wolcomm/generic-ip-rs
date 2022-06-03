@@ -59,7 +59,9 @@ impl<A: Afi> traits::Address for Address<A> {
 
     fn is_reserved(&self) -> bool {
         if let Some(range) = A::Primitive::RESERVED_RANGE {
-            AddressRange::from(&range).contains(self)
+            // TODO: this should compare to `Self::BROADCAST`, but that is
+            // currently defined only for `Address<Ipv4>`.
+            AddressRange::from(&range).contains(self) && self.into_primitive() != A::Primitive::ONES
         } else {
             false
         }
