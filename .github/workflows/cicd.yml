@@ -40,6 +40,57 @@ jobs:
           command: check
           args: --all-features --verbose
 
+  fmt:
+    name: fmt
+    needs: [audit]
+    runs-on: ubuntu-latest
+    continue-on-error: ${{ matrix.rust == 'nightly' }}
+    strategy:
+      fail-fast: false
+      matrix:
+        rust: [stable, nightly]
+    steps:
+      - name: checkout
+        uses: actions/checkout@v2
+      - name: install rust
+        uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          toolchain: ${{ matrix.rust }}
+          override: true
+          components: rustfmt
+      - name: rustfmt
+        uses: actions-rs/cargo@v1
+        with:
+          command: fmt
+          args: --all -- --check
+
+  clippy:
+    name: clippy
+    needs: [audit]
+    runs-on: ubuntu-latest
+    continue-on-error: ${{ matrix.rust == 'nightly' }}
+    strategy:
+      fail-fast: false
+      matrix:
+        rust: [stable, nightly]
+    steps:
+      - name: checkout
+        uses: actions/checkout@v2
+      - name: install rust
+        uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          toolchain: ${{ matrix.rust }}
+          override: true
+          components: clippy
+      - name: clippy
+        uses: actions-rs/clippy-check@v1
+        with:
+          name: ${{ matrix.rust }}
+          token: ${{ secrets.GITHUB_TOKEN }}
+          args: --all-features -- -D warnings
+
   test:
     name: test
     needs: [audit]
@@ -68,39 +119,9 @@ jobs:
           command: test
           args: --all-features ${{ matrix.args }}
 
-  lint:
-    name: lint
-    needs: [audit]
-    runs-on: ubuntu-latest
-    continue-on-error: ${{ matrix.rust == 'nightly' }}
-    strategy:
-      fail-fast: false
-      matrix:
-        rust: [stable, nightly]
-    steps:
-      - name: checkout
-        uses: actions/checkout@v2
-      - name: install rust
-        uses: actions-rs/toolchain@v1
-        with:
-          profile: minimal
-          toolchain: ${{ matrix.rust }}
-          override: true
-          components: rustfmt, clippy
-      - name: rustfmt
-        uses: actions-rs/cargo@v1
-        with:
-          command: fmt
-          args: --all -- --check
-      - name: clippy
-        uses: actions-rs/clippy-check@v1
-        with:
-          name: ${{ matrix.rust }}
-          token: ${{ secrets.GITHUB_TOKEN }}
-
   coverage:
     name: coverage
-    needs: [check, test, lint]
+    needs: [check, test]
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
