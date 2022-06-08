@@ -1,0 +1,6 @@
+format_code_in_doc_comments = true
+group_imports = "StdExternalCrate"
+report_todo = "Unnumbered"
+report_fixme = "Unnumbered"
+use_field_init_shorthand = true
+wrap_comments = true
