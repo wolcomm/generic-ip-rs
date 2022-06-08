@@ -91,8 +91,8 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
           args: --all-features -- -D warnings
 
-  test_v2:
-    name: test_v2
+  test:
+    name: test
     needs: [audit]
     runs-on: ubuntu-latest
     continue-on-error: ${{ matrix.rust == 'nightly' }}
@@ -133,92 +133,12 @@ jobs:
         with:
           files: coverage.lcov
           fail_ci_if_error: true
-          dry_run: true
-
-
-  test:
-    name: test
-    needs: [audit]
-    runs-on: ubuntu-latest
-    continue-on-error: ${{ matrix.rust == 'nightly' }}
-    strategy:
-      fail-fast: false
-      matrix:
-        rust: [stable, nightly]
-        args:
-          - --lib
-          - --doc
-          - --test versions
-    steps:
-      - name: checkout
-        uses: actions/checkout@v2
-      - name: install rust
-        uses: actions-rs/toolchain@v1
-        with:
-          profile: minimal
-          toolchain: ${{ matrix.rust }}
-          override: true
-      - name: cargo test
-        uses: actions-rs/cargo@v1
-        with:
-          command: test
-          args: --all-features ${{ matrix.args }}
-
-  coverage:
-    name: coverage
-    needs: [check, test]
-    runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - suite: unit-tests
-            args: --lib
-    steps:
-      - name: checkout
-        uses: actions/checkout@v2
-      - name: install rust
-        uses: actions-rs/toolchain@v1
-        with:
-          profile: minimal
-          toolchain: nightly
-          override: true
-          components: llvm-tools-preview
-      - name: test
-        uses: actions-rs/cargo@v1
-        with:
-          command: test
-          args: ${{ matrix.args }}
-        env:
-          RUSTFLAGS: "-Zinstrument-coverage"
-      - name: install grcov
-        uses: actions-rs/install@v0.1
-        with:
-          crate: grcov
-          use-tool-cache: true
-      - name: gather
-        run: "grcov . --binary-path target/debug/ \
-                      --source-dir . \
-                      --branch \
-                      --ignore-not-existing \
-                      --output-type lcov \
-                      --output-path coverage.lcov \
-                      --prefix-dir /home/user/build/ \
-                      --ignore '/*' \
-                      --excl-line 'panic!'"
-      - name: upload
-        uses: codecov/codecov-action@v2
-        with:
-          token: ${{ secrets.CODECOV_TOKEN }}
-          flags: ${{ matrix.suite }}
-          files: coverage.lcov
 
   publish:
     name: publish
     if: ${{ github.event_name == 'push' &&
             startsWith(github.ref, 'refs/tag') }}
-    needs:
-      - coverage
+    needs: [check, fmt, clippy, test]
     runs-on: ubuntu-latest
     steps:
       - name: checkout
