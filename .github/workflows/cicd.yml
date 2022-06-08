@@ -128,7 +128,7 @@ jobs:
           command: llvm-cov
           args: --all-features --lcov --output-path coverage.lcov ${{ matrix.args }}
       - name: upload coverage data
-        if: ${{ hashFiles(coverage.lcov) != ''}}
+        if: ${{ hashFiles('coverage.lcov') != ''}}
         uses: codecov/codecov-action@v2
         with:
           files: coverage.lcov
