@@ -1,5 +1,8 @@
+use core::str::FromStr;
+
 use crate::{
     concrete::{self, Ipv4, Ipv6},
+    error::Error,
     traits,
 };
 
@@ -56,8 +59,17 @@ impl From<concrete::Prefix<Ipv6>> for Prefix {
     }
 }
 
+impl FromStr for Prefix {
+    type Err = Error;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        concrete::Prefix::<Ipv4>::from_str(s)
+            .map(Self::from)
+            .or_else(|_| concrete::Prefix::<Ipv6>::from_str(s).map(Self::from))
+    }
+}
+
 // TODO: impl Display for Prefix
-// TODO: impl FromStr for Prefix
 // TODO: impl Arbitrary for Prefix
 
 #[derive(Clone, Copy, Debug, Hash, PartialEq, Eq, PartialOrd)]
