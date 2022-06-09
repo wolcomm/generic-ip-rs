@@ -245,4 +245,9 @@ pub trait Prefix: Sized + Copy + Clone + Debug + Hash + PartialEq + Eq + Partial
     // ) -> Result<Self::Subnets, Error<'static, A, P>>;
 }
 
+/// Address-family independent interface for IP prefix-lengths
+///
+/// See also [`concrete::PrefixLength<A>`][crate::concrete::PrefixLength] and
+/// [`any::PrefixLength`][crate::any::PrefixLength] for address-family specific
+/// items.
 pub trait PrefixLength: Copy + Clone + Debug + Hash + PartialEq + Eq + PartialOrd {}
