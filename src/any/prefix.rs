@@ -8,6 +8,8 @@ use crate::{
 
 use super::{delegate, Address, Hostmask, Netmask};
 
+// TODO: document memory inefficiency due to variant size differences
+#[allow(variant_size_differences)]
 #[derive(Clone, Copy, Debug, Hash, PartialEq, Eq, PartialOrd)]
 pub enum Prefix {
     Ipv4(concrete::Prefix<Ipv4>),

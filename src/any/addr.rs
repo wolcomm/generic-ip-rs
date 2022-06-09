@@ -14,6 +14,8 @@ use crate::{
 
 use super::delegate;
 
+// TODO: document memory inefficiency due to variant size differences
+#[allow(variant_size_differences)]
 #[derive(Clone, Copy, Hash, PartialEq, Eq)]
 pub enum Address {
     Ipv4(concrete::Address<Ipv4>),
@@ -21,15 +23,18 @@ pub enum Address {
 }
 
 impl Address {
+    #[must_use]
     pub fn is_ipv4(&self) -> bool {
         matches!(self, Self::Ipv4(_))
     }
 
+    #[must_use]
     pub fn is_ipv6(&self) -> bool {
         matches!(self, Self::Ipv6(_))
     }
 
     #[allow(clippy::wrong_self_convention)]
+    #[must_use]
     pub fn to_canonical(&self) -> Self {
         match self {
             Self::Ipv4(_) => *self,
@@ -186,7 +191,7 @@ impl FromStr for Address {
 }
 
 impl fmt::Display for Address {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             Self::Ipv4(addr) => addr.fmt(f),
             Self::Ipv6(addr) => addr.fmt(f),
@@ -195,7 +200,7 @@ impl fmt::Display for Address {
 }
 
 impl fmt::Debug for Address {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "Address<Any>::")?;
         match self {
             Self::Ipv4(addr) => write!(f, "Ipv4({})", addr),
@@ -246,22 +251,22 @@ mod tests {
     proptest! {
         #[test]
         fn symmetric_eq((a, b) in any::<(Address, Address)>()) {
-            assert_eq!(a.eq(&b), b.eq(&a))
+            assert_eq!(a.eq(&b), b.eq(&a));
         }
 
         #[test]
         fn symmetric_eq_ipv4(a in any::<Address>(), b in any::<concrete::Address<Ipv4>>()) {
-            assert_eq!(a.eq(&b), b.eq(&a))
+            assert_eq!(a.eq(&b), b.eq(&a));
         }
 
         #[test]
         fn symmetric_eq_ipv6(a in any::<Address>(), b in any::<concrete::Address<Ipv6>>()) {
-            assert_eq!(a.eq(&b), b.eq(&a))
+            assert_eq!(a.eq(&b), b.eq(&a));
         }
 
         #[test]
         fn transitive_eq((a, b, c) in any::<(Address, Address, Address)>()) {
-            assert_eq!(a == b && b == c, a == c)
+            assert_eq!(a == b && b == c, a == c);
         }
 
         #[test]
@@ -269,7 +274,7 @@ mod tests {
             (a, c) in any::<(Address, Address)>(),
             b in any::<concrete::Address<Ipv4>>(),
         ) {
-            assert_eq!(a == b && b == c, a == c)
+            assert_eq!(a == b && b == c, a == c);
         }
 
         #[test]
@@ -277,30 +282,30 @@ mod tests {
             (a, c) in any::<(Address, Address)>(),
             b in any::<concrete::Address<Ipv6>>(),
         ) {
-            assert_eq!(a == b && b == c, a == c)
+            assert_eq!(a == b && b == c, a == c);
         }
     }
 
     proptest! {
         #[test]
         fn dual_cmp((a, b) in any::<(Address, Address)>()) {
-            assert_eq!(a.partial_cmp(&b), b.partial_cmp(&a).map(Ordering::reverse))
+            assert_eq!(a.partial_cmp(&b), b.partial_cmp(&a).map(Ordering::reverse));
         }
 
         #[test]
         fn dual_cmp_ipv4(a in any::<Address>(), b in any::<concrete::Address<Ipv4>>()) {
-            assert_eq!(a.partial_cmp(&b), b.partial_cmp(&a).map(Ordering::reverse))
+            assert_eq!(a.partial_cmp(&b), b.partial_cmp(&a).map(Ordering::reverse));
         }
 
         #[test]
         fn dual_cmp_ipv6(a in any::<Address>(), b in any::<concrete::Address<Ipv6>>()) {
-            assert_eq!(a.partial_cmp(&b), b.partial_cmp(&a).map(Ordering::reverse))
+            assert_eq!(a.partial_cmp(&b), b.partial_cmp(&a).map(Ordering::reverse));
         }
 
         #[test]
         fn transitive_le((a, b, c) in any::<(Address, Address, Address)>()) {
             if a < b && b < c {
-                assert!(a < c)
+                assert!(a < c);
             }
         }
 
@@ -310,7 +315,7 @@ mod tests {
             b in any::<concrete::Address<Ipv4>>(),
         ) {
             if a < b && b < c {
-                assert!(a < c)
+                assert!(a < c);
             }
         }
 
@@ -320,14 +325,14 @@ mod tests {
             b in any::<concrete::Address<Ipv6>>(),
         ) {
             if a < b && b < c {
-                assert!(a < c)
+                assert!(a < c);
             }
         }
 
         #[test]
         fn transitive_ge((a, b, c) in any::<(Address, Address, Address)>()) {
             if a > b && b > c {
-                assert!(a > c)
+                assert!(a > c);
             }
         }
 
@@ -337,7 +342,7 @@ mod tests {
             b in any::<concrete::Address<Ipv4>>(),
         ) {
             if a > b && b > c {
-                assert!(a > c)
+                assert!(a > c);
             }
         }
 
@@ -347,7 +352,7 @@ mod tests {
             b in any::<concrete::Address<Ipv6>>(),
         ) {
             if a > b && b > c {
-                assert!(a > c)
+                assert!(a > c);
             }
         }
     }
@@ -442,7 +447,7 @@ mod tests {
 
     #[test]
     fn ipv6_unspecified_is_not_thisnet() {
-        assert!(!"::".parse::<Address>().unwrap().is_thisnet())
+        assert!(!"::".parse::<Address>().unwrap().is_thisnet());
     }
 
     #[test]

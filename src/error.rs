@@ -1,6 +1,6 @@
 use core::fmt;
 
-#[derive(Debug)]
+#[derive(Clone, Copy, Debug)]
 pub struct Error {
     kind: ErrorKind,
     msg: Option<&'static str>,
@@ -19,10 +19,15 @@ impl Error {
             source,
         }
     }
+
+    #[must_use]
+    pub const fn kind(&self) -> ErrorKind {
+        self.kind
+    }
 }
 
 impl fmt::Display for Error {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         if let Some(msg) = self.msg {
             write!(f, "{}: {}", self.kind, msg)
         } else {
@@ -33,13 +38,14 @@ impl fmt::Display for Error {
 
 #[cfg(feature = "std")]
 impl std::error::Error for Error {
-    fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
+    fn source(&self) -> Option<SourceError> {
         self.source
     }
 }
 
 #[cfg(not(feature = "std"))]
 impl Error {
+    #[must_use]
     pub fn source(&self) -> Option<SourceError> {
         self.source
     }
@@ -52,7 +58,7 @@ pub enum ErrorKind {
 }
 
 impl fmt::Display for ErrorKind {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             Self::PrefixLength => {
                 write!(f, "prefix-length out of bounds")

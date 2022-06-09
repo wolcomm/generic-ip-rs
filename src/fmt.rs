@@ -14,7 +14,7 @@ struct Span {
     length: usize,
 }
 
-fn fmt_segments(segments: &[u16], sep: char, f: &mut fmt::Formatter) -> fmt::Result {
+fn fmt_segments(segments: &[u16], sep: char, f: &mut fmt::Formatter<'_>) -> fmt::Result {
     if let Some((first, tail)) = segments.split_first() {
         write!(f, "{:x}", first)?;
         tail.iter()
@@ -28,24 +28,26 @@ fn fmt_segments(segments: &[u16], sep: char, f: &mut fmt::Formatter) -> fmt::Res
 pub trait AddressDisplay<A: Afi> {
     /// Format `Self` using the canical respresentation for IP addresses of
     /// address-family `A`.
-    fn fmt_addr(&self, f: &mut fmt::Formatter) -> fmt::Result;
+    fn fmt_addr(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result;
 }
 
 impl<P: primitive::Address<Ipv4>> AddressDisplay<Ipv4> for P {
-    fn fmt_addr(&self, f: &mut fmt::Formatter) -> fmt::Result {
+    fn fmt_addr(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         self.to_be_bytes().fmt_addr(f)
     }
 }
 
+#[allow(clippy::many_single_char_names)]
 impl AddressDisplay<Ipv4> for <Ipv4 as Afi>::Octets {
-    fn fmt_addr(&self, f: &mut fmt::Formatter) -> fmt::Result {
+    fn fmt_addr(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let [a, b, c, d] = self;
         write!(f, "{}.{}.{}.{}", a, b, c, d)
     }
 }
 
+#[allow(clippy::many_single_char_names)]
 impl<P: primitive::Address<Ipv6>> AddressDisplay<Ipv6> for P {
-    fn fmt_addr(&self, f: &mut fmt::Formatter) -> fmt::Result {
+    fn fmt_addr(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self.into_segments() {
             // TODO:
             // Use `P::UNSPECIFIED` and `P::LOCALHOST` to derive const
@@ -121,7 +123,7 @@ mod tests {
     }
 
     impl<A: Afi, T: AddressDisplay<A>> fmt::Display for FmtWrapper<A, T> {
-        fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
             self.inner.fmt_addr(f)
         }
     }
@@ -136,12 +138,12 @@ mod tests {
             Self { buf, cursor: 0 }
         }
 
-        fn len(&self) -> usize {
+        const fn len(&self) -> usize {
             self.cursor
         }
     }
 
-    impl fmt::Write for Writer<'_> {
+    impl Write for Writer<'_> {
         fn write_str(&mut self, s: &str) -> fmt::Result {
             let bytes = s.as_bytes();
             let tail = &mut self.buf[self.cursor..];

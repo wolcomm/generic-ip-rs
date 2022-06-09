@@ -27,6 +27,7 @@ impl<A: Afi> Address<A> {
         self.into_primitive().to_be_bytes()
     }
 
+    #[allow(clippy::missing_panics_doc)]
     /// Compute the common length of `self` and another [`Address<A>`].
     pub fn common_length(self, other: Self) -> PrefixLength<A> {
         // ok to unwrap here as long as primitive width invariants hold
@@ -40,6 +41,7 @@ pub fn common_length<A: Afi>(lhs: Address<A>, rhs: Address<A>) -> PrefixLength<A
 }
 
 impl<A: Afi> traits::Address for Address<A> {
+    #[allow(clippy::option_if_let_else)]
     fn is_broadcast(&self) -> bool {
         if let Some(broadcast) = A::Primitive::BROADCAST {
             self.into_primitive() == broadcast
@@ -47,10 +49,12 @@ impl<A: Afi> traits::Address for Address<A> {
             false
         }
     }
+
     fn is_link_local(&self) -> bool {
         AddressRange::from(&A::Primitive::LINK_LOCAL_RANGE).contains(self)
     }
 
+    #[allow(clippy::option_if_let_else)]
     fn is_private(&self) -> bool {
         if let Some(ranges) = A::Primitive::PRIVATE_RANGES {
             ranges
@@ -61,6 +65,7 @@ impl<A: Afi> traits::Address for Address<A> {
         }
     }
 
+    #[allow(clippy::option_if_let_else)]
     fn is_reserved(&self) -> bool {
         if let Some(range) = A::Primitive::RESERVED_RANGE {
             // TODO: this should compare to `Self::BROADCAST`, but that is
@@ -71,6 +76,7 @@ impl<A: Afi> traits::Address for Address<A> {
         }
     }
 
+    #[allow(clippy::option_if_let_else)]
     fn is_shared(&self) -> bool {
         if let Some(range) = A::Primitive::SHARED_RANGE {
             AddressRange::from(&range).contains(self)
@@ -79,6 +85,7 @@ impl<A: Afi> traits::Address for Address<A> {
         }
     }
 
+    #[allow(clippy::option_if_let_else)]
     fn is_thisnet(&self) -> bool {
         if let Some(range) = A::Primitive::THISNET_RANGE {
             AddressRange::from(&range).contains(self)
@@ -113,6 +120,7 @@ impl<A: Afi> traits::Address for Address<A> {
         self == &Self::UNSPECIFIED
     }
 
+    #[allow(clippy::option_if_let_else)]
     fn is_unique_local(&self) -> bool {
         if let Some(range) = A::Primitive::ULA_RANGE {
             AddressRange::from(&range).contains(self)
@@ -131,13 +139,13 @@ impl<A: Afi> FromStr for Address<A> {
 }
 
 impl<A: Afi> fmt::Display for Address<A> {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         self.into_primitive().fmt_addr(f)
     }
 }
 
 impl<A: Afi> fmt::Debug for Address<A> {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "Address<{:?}>({})", A::as_afi(), self)
     }
 }
@@ -274,7 +282,7 @@ mod tests {
 
     #[test]
     fn ipv6_unspecified_is_not_thisnet() {
-        assert!(!Address::<Ipv6>::UNSPECIFIED.is_thisnet())
+        assert!(!Address::<Ipv6>::UNSPECIFIED.is_thisnet());
     }
 
     #[test]

@@ -44,7 +44,7 @@ pub enum Afi {
 }
 
 impl fmt::Display for Afi {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             Self::Ipv4 => f.write_str("ipv4"),
             Self::Ipv6 => f.write_str("ipv6"),

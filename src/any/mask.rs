@@ -7,6 +7,8 @@ use crate::{
     traits,
 };
 
+// TODO: document memory inefficiency due to variant size differences
+#[allow(variant_size_differences)]
 #[derive(Clone, Copy, Debug, Hash, PartialEq, Eq)]
 pub enum Mask<T: Type> {
     Ipv4(concrete::Mask<T, Ipv4>),

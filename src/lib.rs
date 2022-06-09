@@ -175,10 +175,12 @@
 //! assert_eq!(filter(anys), filtered);
 //! ```
 #![doc(html_root_url = "https://docs.rs/generic-ip/0.1.0-alpha.2")]
-// lints
+// clippy lints
 #![warn(clippy::pedantic)]
-#![warn(clippy::nursery)]
 #![warn(clippy::cargo)]
+#![warn(clippy::nursery)]
+#![allow(clippy::redundant_pub_crate)]
+// rustc lints
 #![warn(absolute_paths_not_starting_with_crate)]
 #![warn(box_pointers)]
 #![warn(deprecated_in_future)]

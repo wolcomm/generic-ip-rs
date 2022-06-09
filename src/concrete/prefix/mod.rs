@@ -16,6 +16,7 @@ pub use self::len::PrefixLength;
 mod ord;
 pub use self::ord::PrefixOrdering;
 
+#[allow(clippy::wildcard_imports)]
 mod private {
     use super::*;
 
@@ -36,12 +37,12 @@ mod private {
         }
 
         /// Get the network address of this prefix.
-        pub fn prefix(&self) -> Address<A> {
+        pub const fn prefix(&self) -> Address<A> {
             self.prefix
         }
 
         /// Get the length of this prefix.
-        pub fn length(&self) -> PrefixLength<A> {
+        pub const fn length(&self) -> PrefixLength<A> {
             self.length
         }
     }
@@ -131,7 +132,7 @@ impl<A: Afi> fmt::Display for Prefix<A>
 where
     A::Primitive: AddressDisplay<A>,
 {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{}/{}", self.prefix(), self.length())
     }
 }

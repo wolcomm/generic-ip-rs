@@ -5,16 +5,18 @@ use crate::{
 
 use super::Parser;
 
+#[allow(clippy::inline_always)]
 #[inline(always)]
-pub fn parse_addr(input: &str) -> Result<u128, Error> {
+pub(crate) fn parse_addr(input: &str) -> Result<u128, Error> {
     Parser::new(input)
         .take_only(Parser::take_ipv6_segments)
         .ok_or_else(|| err!(ErrorKind::ParserError))
         .map(u128::from_segments)
 }
 
+#[allow(clippy::inline_always)]
 #[inline(always)]
-pub fn parse_prefix(input: &str) -> Result<(u128, u8), Error> {
+pub(crate) fn parse_prefix(input: &str) -> Result<(u128, u8), Error> {
     Parser::new(input)
         .take_with_length(Parser::take_ipv6_segments)
         .ok_or_else(|| err!(ErrorKind::ParserError))
@@ -29,42 +31,42 @@ mod tests {
     fn simple() {
         let input = "2001:db8:0:0:0:0:0:1";
         let addr = parse_addr(input).unwrap();
-        assert_eq!(addr, 0x2001_0db8_0000_0000_0000_0000_0000_0001)
+        assert_eq!(addr, 0x2001_0db8_0000_0000_0000_0000_0000_0001);
     }
 
     #[test]
     fn simple_elided() {
         let input = "2001:db8::";
         let addr = parse_addr(input).unwrap();
-        assert_eq!(addr, 0x2001_0db8_0000_0000_0000_0000_0000_0000)
+        assert_eq!(addr, 0x2001_0db8_0000_0000_0000_0000_0000_0000);
     }
 
     #[test]
     fn complex_elided() {
         let input = "2001:db8::dead:beef";
         let addr = parse_addr(input).unwrap();
-        assert_eq!(addr, 0x2001_0db8_0000_0000_0000_0000_dead_beef)
+        assert_eq!(addr, 0x2001_0db8_0000_0000_0000_0000_dead_beef);
     }
 
     #[test]
     fn ipv4_mapped() {
         let input = "::ffff:192.0.2.1";
         let addr = parse_addr(input).unwrap();
-        assert_eq!(addr, 0x0000_0000_0000_0000_0000_ffff_c000_0201)
+        assert_eq!(addr, 0x0000_0000_0000_0000_0000_ffff_c000_0201);
     }
 
     #[test]
     fn trailing_elided() {
         let input = "::1";
         let addr = parse_addr(input).unwrap();
-        assert_eq!(addr, 0x0000_0000_0000_0000_0000_0000_0000_0001)
+        assert_eq!(addr, 0x0000_0000_0000_0000_0000_0000_0000_0001);
     }
 
     #[test]
     fn explicit_ipv4_mapped() {
         let input = "0:0:0:0:0:ffff:192.0.2.1";
         let addr = parse_addr(input).unwrap();
-        assert_eq!(addr, 0x0000_0000_0000_0000_0000_ffff_c000_0201)
+        assert_eq!(addr, 0x0000_0000_0000_0000_0000_ffff_c000_0201);
     }
 
     #[test]
@@ -106,14 +108,14 @@ mod tests {
     fn simple_prefix() {
         let input = "2001:db8::/32";
         let addr = parse_prefix(input).unwrap();
-        assert_eq!(addr, (0x2001_0db8_0000_0000_0000_0000_0000_0000, 32))
+        assert_eq!(addr, (0x2001_0db8_0000_0000_0000_0000_0000_0000, 32));
     }
 
     #[test]
     fn ipv4_mapped_prefix() {
         let input = "::ffff:192.0.0.0/112";
         let addr = parse_prefix(input).unwrap();
-        assert_eq!(addr, (0x0000_0000_0000_0000_0000_ffff_c000_0000, 112))
+        assert_eq!(addr, (0x0000_0000_0000_0000_0000_ffff_c000_0000, 112));
     }
 
     #[cfg(feature = "std")]

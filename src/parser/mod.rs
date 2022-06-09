@@ -1,5 +1,5 @@
-pub mod ipv4;
-pub mod ipv6;
+pub(crate) mod ipv4;
+pub(crate) mod ipv6;
 
 trait Number: Eq + Sized {
     const ZERO: Self;
@@ -37,13 +37,13 @@ struct Parser<'a> {
 }
 
 impl<'a> Parser<'a> {
-    fn new(input: &'a str) -> Self {
+    const fn new(input: &'a str) -> Self {
         Self {
             state: input.as_bytes(),
         }
     }
 
-    fn is_eof(&self) -> bool {
+    const fn is_eof(&self) -> bool {
         self.state.is_empty()
     }
 
@@ -108,10 +108,10 @@ impl<'a> Parser<'a> {
         F: FnMut(&mut Self, usize) -> Option<(usize, bool)>,
     {
         let mut count = 0;
-        (0..lim).try_for_each(|i| {
+        let _ = (0..lim).try_for_each(|i| {
             self.atomically(|p| {
                 if i > 0 {
-                    p.skip(sep)?;
+                    let _ = p.skip(sep)?;
                 }
                 f(p, i)
             })
@@ -137,7 +137,7 @@ impl<'a> Parser<'a> {
         let limit = buf.len();
         let taken = self.take_separated(b":", limit, |p, i| {
             match (i < limit - 1)
-                .then(|| p.atomically(|p| p.take_ipv4_octets()))
+                .then(|| p.atomically(Self::take_ipv4_octets))
                 .flatten()
             {
                 Some([a, b, c, d]) => {
@@ -163,7 +163,7 @@ impl<'a> Parser<'a> {
         } else if took_ipv4 {
             None
         } else {
-            self.skip(b"::")?;
+            let _ = self.skip(b"::")?;
             let mut addtional = [0; 7];
             let limit = 7 - head;
             let (tail, _) = self.take_ipv6_parts(&mut addtional[..limit]);

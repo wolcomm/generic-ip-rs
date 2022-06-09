@@ -1,5 +1,5 @@
 use core::fmt;
-use core::ops::{Neg, RangeInclusive};
+use core::ops::Neg;
 
 use crate::{
     error::{err, Error, ErrorKind},
@@ -10,6 +10,7 @@ use crate::{
     },
 };
 
+#[allow(clippy::wildcard_imports)]
 mod private {
     use super::*;
 
@@ -25,6 +26,8 @@ mod private {
         /// Construct a new [`PrefixLength<A>`] from an integer primitive
         /// appropriate to `A`.
         ///
+        /// # Errors
+        ///
         /// Fails if `n` is outside of the range [`Afi::MIN_LENGTH`] to
         /// [`Afi::MAX_LENGTH`] inclusive (for `A as Afi`).
         pub fn from_primitive(
@@ -38,7 +41,7 @@ mod private {
         }
 
         /// Get the inner integer val, consuming `self`.
-        pub fn into_primitive(self) -> <A::Primitive as primitive::Address<A>>::Length {
+        pub const fn into_primitive(self) -> <A::Primitive as primitive::Address<A>>::Length {
             self.0
         }
     }
@@ -60,7 +63,7 @@ impl<A: Afi> PrefixLength<A> {
 impl<A: Afi> traits::PrefixLength for PrefixLength<A> {}
 
 impl<A: Afi> fmt::Display for PrefixLength<A> {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         self.into_primitive().fmt(f)
     }
 }
@@ -84,7 +87,7 @@ use proptest::{
 impl<A: Afi> Arbitrary for PrefixLength<A>
 where
     <A::Primitive as primitive::Address<A>>::Length: 'static,
-    RangeInclusive<<A::Primitive as primitive::Address<A>>::Length>:
+    core::ops::RangeInclusive<<A::Primitive as primitive::Address<A>>::Length>:
         Strategy<Value = <A::Primitive as primitive::Address<A>>::Length>,
 {
     type Parameters = ();

@@ -72,6 +72,11 @@ pub trait Address<A: Afi>:
     /// This method is primarily intended for use via the
     /// [`FromStr`][core::str::FromStr] implementation for
     /// [`Address<A>`][crate::addr::Address].
+    ///
+    /// # Errors
+    ///
+    /// Fails if the string does not conform to the textual address
+    /// representation rules for `A`.
     fn parse_addr<S>(s: &S) -> Result<Self, Error>
     where
         S: AsRef<str> + ?Sized;
@@ -82,6 +87,11 @@ pub trait Address<A: Afi>:
     /// This method is primarily intended for use via the
     /// [`FromStr`][core::str::FromStr] implementation for
     /// [`Prefix<A>`][crate::prefix::Prefix].
+    ///
+    /// # Errors
+    ///
+    /// Fails if the string does not conform to the textual address
+    /// representation rules for `A`.
     fn parse_prefix<S>(s: &S) -> Result<(Self, Self::Length), Error>
     where
         S: AsRef<str> + ?Sized;
@@ -130,6 +140,7 @@ impl Address<Ipv4> for u32 {
         Some(ipv4!(0, 0, 0, 0)..=ipv4!(0, 255, 255, 255));
     const ULA_RANGE: Option<RangeInclusive<Self>> = None;
 
+    #[allow(clippy::cast_possible_truncation)]
     fn leading_zeros(self) -> Self::Length {
         self.leading_zeros() as Self::Length
     }
@@ -138,6 +149,9 @@ impl Address<Ipv4> for u32 {
         self.to_be_bytes()
     }
 
+    // TODO: remove `allow` once https://github.com/rust-lang/rust-clippy/pull/8804
+    // is merged
+    #[allow(clippy::only_used_in_recursion)]
     fn from_be_bytes(bytes: <Ipv4 as Afi>::Octets) -> Self {
         Self::from_be_bytes(bytes)
     }
@@ -238,6 +252,7 @@ impl Address<Ipv6> for u128 {
     const ULA_RANGE: Option<RangeInclusive<Self>> =
         Some(0xfc00_0000_0000_0000_0000_0000_0000_0000..=0xfd00_0000_0000_0000_0000_0000_0000_0000);
 
+    #[allow(clippy::cast_possible_truncation)]
     fn leading_zeros(self) -> Self::Length {
         self.leading_zeros() as Self::Length
     }
@@ -312,6 +327,7 @@ pub(crate) trait IntoIpv6Segments: Address<Ipv6> {
     // const UNSPECIFIED_SEGMENTS: [u16; 8] = Self::UNSPECIFIED.into_segments();
     // const LOCALHOST_SEGMENTS: [u16; 8] = Self::LOCALHOST.into_segments();
 
+    #[allow(unsafe_code)]
     fn into_segments(self) -> [u16; 8] {
         // Safety:
         // it is always safe to transmute `[u8; 16]` to `[u16; 8]`
@@ -328,6 +344,8 @@ pub(crate) trait IntoIpv6Segments: Address<Ipv6> {
         ]
     }
 
+    #[allow(unsafe_code)]
+    #[allow(clippy::inline_always)]
     #[inline(always)]
     fn from_segments(segments: [u16; 8]) -> Self {
         // Safety:
@@ -353,6 +371,7 @@ impl<P: Address<Ipv6>> IntoIpv6Segments for P {}
 pub trait Length: Copy + Clone + Debug + Display + Hash + Ord + Sub<Output = Self> {
     /// Additive identity value.
     const ZERO: Self;
+    /// Additive unit value.
     const ONE: Self;
 }
 

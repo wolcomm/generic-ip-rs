@@ -2,16 +2,18 @@ use crate::error::{err, Error, ErrorKind};
 
 use super::Parser;
 
+#[allow(clippy::inline_always)]
 #[inline(always)]
-pub fn parse_addr(input: &str) -> Result<u32, Error> {
+pub(crate) fn parse_addr(input: &str) -> Result<u32, Error> {
     Parser::new(input)
         .take_only(Parser::take_ipv4_octets)
         .ok_or_else(|| err!(ErrorKind::ParserError))
         .map(u32::from_be_bytes)
 }
 
+#[allow(clippy::inline_always)]
 #[inline(always)]
-pub fn parse_prefix(input: &str) -> Result<(u32, u8), Error> {
+pub(crate) fn parse_prefix(input: &str) -> Result<(u32, u8), Error> {
     Parser::new(input)
         .take_with_length(Parser::take_ipv4_octets)
         .ok_or_else(|| err!(ErrorKind::ParserError))
@@ -26,7 +28,7 @@ mod tests {
     fn parse_ipv4_addr() {
         let input = "10.1.1.1";
         let addr = parse_addr(input).unwrap();
-        assert_eq!(addr, 0x0a01_0101)
+        assert_eq!(addr, 0x0a01_0101);
     }
 
     #[test]

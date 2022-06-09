@@ -62,7 +62,7 @@ impl<A: Afi, T: Type> fmt::Display for Mask<T, A>
 where
     A::Primitive: AddressDisplay<A>,
 {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         self.into_primitive().fmt_addr(f)
     }
 }
@@ -88,7 +88,7 @@ where
 
     fn arbitrary_with(params: Self::Parameters) -> Self::Strategy {
         any_with::<PrefixLength<A>>(params)
-            .prop_map(Mask::from)
+            .prop_map(Self::from)
             .boxed()
     }
 }
