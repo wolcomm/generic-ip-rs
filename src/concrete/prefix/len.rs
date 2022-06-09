@@ -48,9 +48,12 @@ pub use self::private::PrefixLength;
 
 impl<A: Afi> PrefixLength<A> {
     pub fn decrement(self) -> Result<Self, Error> {
-        Self::from_primitive(
-            self.into_primitive() - <A::Primitive as primitive::Address<A>>::Length::ONE,
-        )
+        let l = self.into_primitive();
+        if l > <A::Primitive as primitive::Address<A>>::Length::ZERO {
+            Self::from_primitive(l - <A::Primitive as primitive::Address<A>>::Length::ONE)
+        } else {
+            Err(err!(ErrorKind::PrefixLength))
+        }
     }
 }
 
