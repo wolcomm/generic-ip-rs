@@ -3,7 +3,7 @@ use core::ops::{Shl, Shr};
 
 use crate::{
     fmt::AddressDisplay,
-    traits::{self, Afi},
+    traits::{self, primitive::Address as _, Afi},
 };
 
 use super::PrefixLength;
@@ -11,6 +11,7 @@ use super::PrefixLength;
 mod private;
 pub use self::private::Mask;
 
+/// Types of IP address mask.
 pub mod types;
 use self::types::{Host, Net, Type};
 
@@ -19,6 +20,14 @@ pub type Netmask<A> = Mask<Net, A>;
 
 /// An IP Hostmask.
 pub type Hostmask<A> = Mask<Host, A>;
+
+impl<A: Afi, T: Type> Mask<T, A> {
+    /// The "all-zeros" mask.
+    pub const ZEROS: Self = Self::new(A::Primitive::ZERO);
+
+    /// The "all-ones" mask.
+    pub const ONES: Self = Self::new(A::Primitive::ONES);
+}
 
 impl<A: Afi> From<PrefixLength<A>> for Netmask<A> {
     fn from(len: PrefixLength<A>) -> Self {
@@ -33,6 +42,8 @@ impl<A: Afi> From<PrefixLength<A>> for Hostmask<A> {
 }
 
 impl<T: Type, A: Afi> traits::Mask for Mask<T, A> {}
+impl<A: Afi> traits::Netmask for Netmask<A> {}
+impl<A: Afi> traits::Hostmask for Hostmask<A> {}
 
 impl<A: Afi, T: Type> Shl<PrefixLength<A>> for Mask<T, A> {
     type Output = Self;

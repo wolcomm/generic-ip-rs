@@ -1,5 +1,5 @@
 use crate::{
-    error::{err, Error, ErrorKind},
+    error::{err, Error, Kind},
     traits::primitive::IntoIpv6Segments as _,
 };
 
@@ -10,7 +10,7 @@ use super::Parser;
 pub(crate) fn parse_addr(input: &str) -> Result<u128, Error> {
     Parser::new(input)
         .take_only(Parser::take_ipv6_segments)
-        .ok_or_else(|| err!(ErrorKind::ParserError))
+        .ok_or_else(|| err!(Kind::ParserError))
         .map(u128::from_segments)
 }
 
@@ -19,7 +19,7 @@ pub(crate) fn parse_addr(input: &str) -> Result<u128, Error> {
 pub(crate) fn parse_prefix(input: &str) -> Result<(u128, u8), Error> {
     Parser::new(input)
         .take_with_length(Parser::take_ipv6_segments)
-        .ok_or_else(|| err!(ErrorKind::ParserError))
+        .ok_or_else(|| err!(Kind::ParserError))
         .map(|(segments, len)| (u128::from_segments(segments), len))
 }
 

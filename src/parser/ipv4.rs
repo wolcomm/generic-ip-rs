@@ -1,4 +1,4 @@
-use crate::error::{err, Error, ErrorKind};
+use crate::error::{err, Error, Kind};
 
 use super::Parser;
 
@@ -7,7 +7,7 @@ use super::Parser;
 pub(crate) fn parse_addr(input: &str) -> Result<u32, Error> {
     Parser::new(input)
         .take_only(Parser::take_ipv4_octets)
-        .ok_or_else(|| err!(ErrorKind::ParserError))
+        .ok_or_else(|| err!(Kind::ParserError))
         .map(u32::from_be_bytes)
 }
 
@@ -16,7 +16,7 @@ pub(crate) fn parse_addr(input: &str) -> Result<u32, Error> {
 pub(crate) fn parse_prefix(input: &str) -> Result<(u32, u8), Error> {
     Parser::new(input)
         .take_with_length(Parser::take_ipv4_octets)
-        .ok_or_else(|| err!(ErrorKind::ParserError))
+        .ok_or_else(|| err!(Kind::ParserError))
         .map(|(octets, len)| (u32::from_be_bytes(octets), len))
 }
 

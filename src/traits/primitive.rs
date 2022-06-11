@@ -41,30 +41,72 @@ pub trait Address<A: Afi>:
     /// "All-ones" IP address representation.
     const ONES: Self;
 
+    /// The primitive value of the subnet-local broadcast address, if it is
+    /// defined for the address family.
     const BROADCAST: Option<Self>;
+
+    /// The primitive value of the `localhost` address for this address family.
     const LOCALHOST: Self;
+
+    /// The primitive value of the "unspecified" address for this address family.
     const UNSPECIFIED: Self;
 
-    const LOCALHOST_RANGE: RangeInclusive<Self>;
+    /// The range of primitive address values defined for "loopback" use for
+    /// this address family.
+    const LOOPBACK_RANGE: RangeInclusive<Self>;
+
+    /// The range of primitive address values defined for "benchmarking" use for
+    /// this address family.
     const BENCHMARK_RANGE: RangeInclusive<Self>;
+
+    /// The range of primitive address values defined for "multicast" use for
+    /// this address family.
     const MULTICAST_RANGE: RangeInclusive<Self>;
+
+    /// The range of primitive address values defined for "link-local" use for
+    /// this address family.
     const LINK_LOCAL_RANGE: RangeInclusive<Self>;
+
+    /// The range of primitive address values reserved for IETF protocol
+    /// assignments for this address family.
     const PROTOCOL_ASSIGNMENTS_RANGE: RangeInclusive<Self>;
+
+    /// The range of primitive address values defined for "documentation" use
+    /// for this address family.
     const DOCUMENTATION_RANGES: &'static [RangeInclusive<Self>];
+
+    /// The range of primitive address values defined for "private" use, if
+    /// that is defined for this address family.
     const PRIVATE_RANGES: Option<&'static [RangeInclusive<Self>]>;
+
+    /// The range of primitive address values reserved for future use, if that
+    /// is defined for this address family.
     const RESERVED_RANGE: Option<RangeInclusive<Self>>;
+
+    /// The range of primitive address values reserved for "shared" use, if that
+    /// is defined for this address family.
     const SHARED_RANGE: Option<RangeInclusive<Self>>;
+
+    /// The range of primitive address values having "this network" semantics,
+    /// if that is defined for this address family.
     const THISNET_RANGE: Option<RangeInclusive<Self>>;
+
+    /// The range of primitive address values defined as "unique local
+    /// addresses", if that is defined for this address family.
     const ULA_RANGE: Option<RangeInclusive<Self>>;
 
     /// Get the number of leading zeros in the binary representation of `self`.
     fn leading_zeros(self) -> Self::Length;
 
+    /// Convert `self` to big-endian [`A::Octets`][Afi::Octets].
     fn to_be_bytes(self) -> A::Octets;
 
+    /// Construct `Self` from big-endian [`A::Octets`][Afi::Octets].
     fn from_be_bytes(bytes: A::Octets) -> Self;
 
     // TODO: This really is a horrible hack. Will do better.
+    /// Returns [`true`] if this primitive value respresents a "globally
+    /// routable" address, according to the address family semantics.
     fn is_global(&self) -> bool;
 
     /// Parse an `impl AsRef<str>` into a [`Self::Addr`].
@@ -115,7 +157,7 @@ impl Address<Ipv4> for u32 {
     const LOCALHOST: Self = ipv4!(127, 0, 0, 1);
     const UNSPECIFIED: Self = ipv4!(0, 0, 0, 0);
 
-    const LOCALHOST_RANGE: RangeInclusive<Self> = ipv4!(127, 0, 0, 0)..=ipv4!(127, 255, 255, 255);
+    const LOOPBACK_RANGE: RangeInclusive<Self> = ipv4!(127, 0, 0, 0)..=ipv4!(127, 255, 255, 255);
     const BENCHMARK_RANGE: RangeInclusive<Self> = ipv4!(198, 18, 0, 0)..=ipv4!(198, 19, 255, 255);
     const MULTICAST_RANGE: RangeInclusive<Self> = ipv4!(224, 0, 0, 0)..=ipv4!(239, 255, 255, 255);
     const LINK_LOCAL_RANGE: RangeInclusive<Self> =
@@ -157,7 +199,7 @@ impl Address<Ipv4> for u32 {
     }
 
     fn is_global(&self) -> bool {
-        if Self::LOCALHOST_RANGE.contains(self)
+        if Self::LOOPBACK_RANGE.contains(self)
             || Self::LINK_LOCAL_RANGE.contains(self)
             || Self::BENCHMARK_RANGE.contains(self)
             || Self::DOCUMENTATION_RANGES
@@ -234,7 +276,7 @@ impl Address<Ipv6> for u128 {
     const LOCALHOST: Self = 0x0000_0000_0000_0000_0000_0000_0000_0001;
     const UNSPECIFIED: Self = Self::ZERO;
 
-    const LOCALHOST_RANGE: RangeInclusive<Self> = 0x1..=0x1;
+    const LOOPBACK_RANGE: RangeInclusive<Self> = 0x1..=0x1;
     const BENCHMARK_RANGE: RangeInclusive<Self> =
         0x2001_0002_0000_0000_0000_0000_0000_0000..=0x2001_0002_0000_ffff_ffff_ffff_ffff_ffff;
     const MULTICAST_RANGE: RangeInclusive<Self> =
@@ -266,7 +308,7 @@ impl Address<Ipv6> for u128 {
     }
 
     fn is_global(&self) -> bool {
-        if Self::LOCALHOST_RANGE.contains(self)
+        if Self::LOOPBACK_RANGE.contains(self)
             || Self::LINK_LOCAL_RANGE.contains(self)
             || self == &Self::UNSPECIFIED
             || Self::BENCHMARK_RANGE.contains(self)

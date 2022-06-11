@@ -1,13 +1,22 @@
 use crate::{
     concrete::{Ipv4, Ipv6},
-    traits::Afi,
+    traits::{primitive::Address as _, Afi},
 };
 
 use super::Address;
 
 // TODO: make methods `const fn`
 impl Address<Ipv4> {
+    pub const BROADCAST: Self = {
+        if let Some(inner) = <Ipv4 as Afi>::Primitive::BROADCAST {
+            Self::new(inner)
+        } else {
+            panic!("failed to get BROADCAST address value")
+        }
+    };
+
     #[allow(clippy::wrong_self_convention)]
+    #[must_use]
     pub fn to_ipv6_compatible(&self) -> Address<Ipv6> {
         Address::new(<Ipv6 as Afi>::Primitive::from_be_bytes(
             self.to_ipv6_lo_octets(),
@@ -15,6 +24,7 @@ impl Address<Ipv4> {
     }
 
     #[allow(clippy::wrong_self_convention)]
+    #[must_use]
     pub fn to_ipv6_mapped(&self) -> Address<Ipv6> {
         let mut octets = self.to_ipv6_lo_octets();
         octets[10..12].copy_from_slice(&[0xffu8, 0xffu8]);

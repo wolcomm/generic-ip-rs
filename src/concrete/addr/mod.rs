@@ -19,6 +19,8 @@ mod ipv4;
 mod ipv6;
 
 impl<A: Afi> Address<A> {
+    pub const LOCALHOST: Self = Self::new(A::Primitive::LOCALHOST);
+    pub const UNSPECIFIED: Self = Self::new(A::Primitive::UNSPECIFIED);
     pub fn from_octets(octets: A::Octets) -> Self {
         Self::new(A::Primitive::from_be_bytes(octets))
     }
@@ -109,7 +111,7 @@ impl<A: Afi> traits::Address for Address<A> {
     }
 
     fn is_loopback(&self) -> bool {
-        AddressRange::from(&A::Primitive::LOCALHOST_RANGE).contains(self)
+        AddressRange::from(&A::Primitive::LOOPBACK_RANGE).contains(self)
     }
 
     fn is_multicast(&self) -> bool {

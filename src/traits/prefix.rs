@@ -19,7 +19,7 @@ pub trait Prefix: Sized + Copy + Clone + Debug + Hash + PartialEq + Eq + Partial
     type Address: Address;
 
     /// The type used to respresent lengths for this IP prefix type.
-    type PrefixLength: PrefixLength;
+    type PrefixLength: Length;
 
     /// The type of IP hostmask corresponding to this prefix type.
     type Hostmask: Mask;
@@ -250,4 +250,4 @@ pub trait Prefix: Sized + Copy + Clone + Debug + Hash + PartialEq + Eq + Partial
 /// See also [`concrete::PrefixLength<A>`][crate::concrete::PrefixLength] and
 /// [`any::PrefixLength`][crate::any::PrefixLength] for address-family specific
 /// items.
-pub trait PrefixLength: Copy + Clone + Debug + Hash + PartialEq + Eq + PartialOrd {}
+pub trait Length: Copy + Clone + Debug + Hash + PartialEq + Eq + PartialOrd {}

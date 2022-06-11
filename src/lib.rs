@@ -221,26 +221,41 @@
 #[cfg(feature = "std")]
 extern crate std;
 
+/// Types for working with IP objects of either address family.
 pub mod any;
-pub mod concrete;
-pub mod traits;
-
 pub use self::any::Any;
+
+/// Types for working with IP objects of a specific address family.
+pub mod concrete;
 pub use self::concrete::{Ipv4, Ipv6};
+
+/// Traits describing address family independent interfaces for IP objects.
+pub mod traits;
 pub use self::traits::{Afi, AfiClass};
+
+/// Error types.
+pub mod error;
+pub use self::error::Error;
 
 /// IP address formatting traits
 mod fmt;
 
+/// Parsers for IP object textual representations.
 mod parser;
 
-mod error;
-pub use self::error::Error;
-
+/// Convenience alias to name types implementing [`traits::Address`].
 pub type Address<A> = <A as AfiClass>::Address;
+
+/// Convenience alias to name types implementing [`traits::PrefixLength`].
 pub type PrefixLength<A> = <A as AfiClass>::PrefixLength;
+
+/// Convenience alias to name types implementing [`traits::Prefix`].
 pub type Prefix<A> = <A as AfiClass>::Prefix;
+
+/// Convenience alias to name types implementing [`traits::Netmask`].
 pub type Netmask<A> = <A as AfiClass>::Netmask;
+
+/// Convenience alias to name types implementing [`traits::Hostmask`].
 pub type Hostmask<A> = <A as AfiClass>::Hostmask;
 
 #[cfg(test)]

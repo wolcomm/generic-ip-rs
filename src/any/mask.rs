@@ -20,6 +20,8 @@ pub type Netmask = Mask<Net>;
 pub type Hostmask = Mask<Host>;
 
 impl<T: Type> traits::Mask for Mask<T> {}
+impl traits::Netmask for Netmask {}
+impl traits::Hostmask for Hostmask {}
 
 impl<T: Type> From<concrete::Mask<T, Ipv4>> for Mask<T> {
     fn from(mask: concrete::Mask<T, Ipv4>) -> Self {

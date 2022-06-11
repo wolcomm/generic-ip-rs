@@ -1,15 +1,16 @@
 use core::fmt;
 
+/// An error describing a failed operation on an IP object.
 #[derive(Clone, Copy, Debug)]
 pub struct Error {
-    kind: ErrorKind,
+    kind: Kind,
     msg: Option<&'static str>,
     source: Option<SourceError>,
 }
 
 impl Error {
     pub(crate) fn new<S: AsRef<str> + ?Sized + 'static>(
-        kind: ErrorKind,
+        kind: Kind,
         msg: Option<&'static S>,
         source: Option<SourceError>,
     ) -> Self {
@@ -20,8 +21,18 @@ impl Error {
         }
     }
 
+    /// Returns the [`Kind`] of error.
+    ///
+    /// # Examples
+    ///
+    /// ``` rust
+    /// use ip::{Address, Ipv4, error::Kind};
+    ///
+    /// let err = "10.0.0.256".parse::<Address<Ipv4>>().unwrap_err();
+    /// assert_eq!(err.kind(), Kind::ParserError);
+    /// ```
     #[must_use]
-    pub const fn kind(&self) -> ErrorKind {
+    pub const fn kind(&self) -> Kind {
         self.kind
     }
 }
@@ -45,19 +56,26 @@ impl std::error::Error for Error {
 
 #[cfg(not(feature = "std"))]
 impl Error {
+    /// Returns the underyling source error, if it exists.
+    ///
+    /// This method is provided for interface compatibility with
+    /// `std::error::Error` in a `no_std` environment.
     #[must_use]
     pub fn source(&self) -> Option<SourceError> {
         self.source
     }
 }
 
+/// The "kind" of an [`Error`].
 #[derive(Clone, Copy, Debug, Hash, Eq, PartialEq)]
-pub enum ErrorKind {
+pub enum Kind {
+    /// An [`Error`] resulting from an operation on a prefix-length.
     PrefixLength,
+    /// An [`Error`] resulting from a parser failure.
     ParserError,
 }
 
-impl fmt::Display for ErrorKind {
+impl fmt::Display for Kind {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             Self::PrefixLength => {
