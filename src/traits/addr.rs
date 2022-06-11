@@ -17,9 +17,9 @@ pub trait Address: Clone + Copy + Debug + Hash + PartialEq + Eq + PartialOrd {
     /// (`255.255.255.255`). Returns [`false`] for all IPv6 addresses.
     ///
     /// An IPv4 broadcast address has all octets set to `255` as defined in
-    /// [IETF RFC 919].
+    /// [RFC 919].
     ///
-    /// [IETF RFC 919]: https://tools.ietf.org/html/rfc919
+    /// [RFC 919]: https://tools.ietf.org/html/rfc919
     ///
     /// # [`std::net`] Compatibility
     ///
@@ -85,13 +85,13 @@ pub trait Address: Clone + Copy + Debug + Hash + PartialEq + Eq + PartialOrd {
     /// Returns [`true`] if this is a private IPv4 address. Returns [`false`]
     /// for all IPv6 addresses.
     ///
-    /// The private address ranges are defined in [IETF RFC 1918] and include:
+    /// The private address ranges are defined in [RFC 1918] and include:
     ///
     ///  - `10.0.0.0/8`
     ///  - `172.16.0.0/12`
     ///  - `192.168.0.0/16`
     ///
-    /// [IETF RFC 1918]: https://tools.ietf.org/html/rfc1918
+    /// [RFC 1918]: https://tools.ietf.org/html/rfc1918
     ///
     /// # [`std::net`] Compatibility
     ///
