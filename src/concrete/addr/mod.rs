@@ -19,12 +19,54 @@ mod ipv4;
 mod ipv6;
 
 impl<A: Afi> Address<A> {
+    /// The `localhost` address for address family `A`.
     pub const LOCALHOST: Self = Self::new(A::Primitive::LOCALHOST);
+
+    /// The "unspecified" address for address family `A`.
     pub const UNSPECIFIED: Self = Self::new(A::Primitive::UNSPECIFIED);
+
+    /// Construct a new [`Address<A>`] from a big-endian byte-array.
+    ///
+    /// # Examples
+    ///
+    /// ``` rust
+    /// use ip::{Address, Ipv4, Ipv6};
+    ///
+    /// assert_eq!(
+    ///     Address::<Ipv4>::from_octets([10, 0, 0, 1]),
+    ///     "10.0.0.1".parse::<Address<Ipv4>>()?,
+    /// );
+    ///
+    /// assert_eq!(
+    ///     Address::<Ipv6>::from_octets([
+    ///         0x20, 0x01, 0x0d, 0xb8, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1,
+    ///     ]),
+    ///     "2001:db8::1".parse::<Address<Ipv6>>()?,
+    /// );
+    /// # Ok::<(), ip::Error>(())
+    /// ```
     pub fn from_octets(octets: A::Octets) -> Self {
         Self::new(A::Primitive::from_be_bytes(octets))
     }
 
+    /// Returns a big-endian byte-array respresenting the value of `self`.
+    ///
+    /// # Examples
+    ///
+    /// ``` rust
+    /// use ip::{Address, Ipv4, Ipv6};
+    ///
+    /// assert_eq!(
+    ///     "10.0.0.1".parse::<Address<Ipv4>>()?.octets(),
+    ///     [10, 0, 0, 1],
+    /// );
+    ///
+    /// assert_eq!(
+    ///     "2001:db8::1".parse::<Address<Ipv6>>()?.octets(),
+    ///     [0x20, 0x01, 0x0d, 0xb8, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0x01],
+    /// );
+    /// # Ok::<(), ip::Error>(())
+    /// ```
     pub fn octets(&self) -> A::Octets {
         self.into_primitive().to_be_bytes()
     }
