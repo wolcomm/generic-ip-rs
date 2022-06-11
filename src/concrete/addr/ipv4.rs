@@ -18,9 +18,7 @@ impl Address<Ipv4> {
     #[allow(clippy::wrong_self_convention)]
     #[must_use]
     pub fn to_ipv6_compatible(&self) -> Address<Ipv6> {
-        Address::new(<Ipv6 as Afi>::Primitive::from_be_bytes(
-            self.to_ipv6_lo_octets(),
-        ))
+        Address::from_octets(self.to_ipv6_lo_octets())
     }
 
     #[allow(clippy::wrong_self_convention)]
@@ -28,7 +26,7 @@ impl Address<Ipv4> {
     pub fn to_ipv6_mapped(&self) -> Address<Ipv6> {
         let mut octets = self.to_ipv6_lo_octets();
         octets[10..12].copy_from_slice(&[0xffu8, 0xffu8]);
-        Address::new(<Ipv6 as Afi>::Primitive::from_be_bytes(octets))
+        Address::from_octets(octets)
     }
 
     fn to_ipv6_lo_octets(self) -> <Ipv6 as Afi>::Octets {
