@@ -4,9 +4,11 @@ use crate::{any, traits};
 
 use super::{Address, Hostmask, Netmask, Prefix, PrefixLength};
 
+/// The IPv4 address family.
 #[derive(Clone, Copy, Debug, Hash, PartialEq, Eq, PartialOrd, Ord)]
 pub enum Ipv4 {}
 
+/// The IPv6 address family.
 #[derive(Clone, Copy, Debug, Hash, PartialEq, Eq, PartialOrd, Ord)]
 pub enum Ipv6 {}
 
@@ -37,9 +39,12 @@ impl<A: traits::Afi> traits::AfiClass for A {
     }
 }
 
+/// Enumeration of concrete address families.
 #[derive(Clone, Copy, Debug, Hash, PartialEq, Eq)]
 pub enum Afi {
+    /// Variant respresenting the IPv4 address family.
     Ipv4,
+    /// Variant respresenting the IPv6 address family.
     Ipv6,
 }
 

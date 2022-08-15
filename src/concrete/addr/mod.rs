@@ -17,6 +17,7 @@ mod ops;
 
 mod ipv4;
 mod ipv6;
+pub use self::ipv6::MulticastScope as Ipv6MulticastScope;
 
 impl<A: Afi> Address<A> {
     /// The `localhost` address for address family `A`.
@@ -73,6 +74,8 @@ impl<A: Afi> Address<A> {
 
     #[allow(clippy::missing_panics_doc)]
     /// Compute the common length of `self` and another [`Address<A>`].
+    ///
+    /// See also [`common_length()`].
     pub fn common_length(self, other: Self) -> PrefixLength<A> {
         // ok to unwrap here as long as primitive width invariants hold
         PrefixLength::<A>::from_primitive((self ^ other).leading_zeros()).unwrap()
@@ -80,6 +83,29 @@ impl<A: Afi> Address<A> {
 }
 /// Compute the length, as a [`PrefixLength<A>`], for the common prefixes of
 /// two [`Address<A>`].
+///
+/// # Examples
+///
+/// ``` rust
+/// use ip::{Address, PrefixLength, Ipv4, Ipv6, concrete::common_length};
+///
+/// assert_eq!(
+///     common_length(
+///         "192.168.1.255".parse::<Address<Ipv4>>()?,
+///         "192.168.128.1".parse::<Address<Ipv4>>()?,
+///     ),
+///     PrefixLength::<Ipv4>::from_primitive(16)?,
+/// );
+///
+/// assert_eq!(
+///     common_length(
+///         "2001:db8:dead::1".parse::<Address<Ipv6>>()?,
+///         "2001:db8:beef::1".parse::<Address<Ipv6>>()?,
+///     ),
+///     PrefixLength::<Ipv6>::from_primitive(33)?,
+/// );
+/// # Ok::<(), ip::Error>(())
+/// ```
 pub fn common_length<A: Afi>(lhs: Address<A>, rhs: Address<A>) -> PrefixLength<A> {
     lhs.common_length(rhs)
 }

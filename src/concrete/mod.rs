@@ -2,7 +2,7 @@ mod af;
 pub use self::af::{Afi, Ipv4, Ipv6};
 
 mod addr;
-pub use self::addr::{common_length, Address};
+pub use self::addr::{common_length, Address, Ipv6MulticastScope};
 
 mod mask;
 pub use self::mask::{types as mask_types, Hostmask, Mask, Netmask};
