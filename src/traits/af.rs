@@ -5,7 +5,7 @@ use core::hash::Hash;
 
 use crate::{any, concrete, fmt};
 
-use super::{Address, Hostmask, Netmask, Prefix, PrefixLength};
+use super::{Address, Hostmask, Interface, Netmask, Prefix, PrefixLength};
 
 use super::primitive;
 
@@ -29,6 +29,9 @@ pub trait Afi: Copy + Debug + Hash + Ord {
 pub trait AfiClass: Copy + Debug + Hash + Ord {
     /// The type respresenting IP address values of this address family class.
     type Address: Address;
+
+    /// The type respresenting IP interface values of this address family class.
+    type Interface: Interface;
 
     /// The type respresenting IP prefix values of this address family class.
     type Prefix: Prefix;

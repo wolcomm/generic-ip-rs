@@ -48,8 +48,8 @@
 //!
 //! ## Orientation
 //!
-//! Names such as `Address`, `Prefix` or `Afi` are re-used in various different
-//! modules within the crate.
+//! Names such as `Address`, `Interface`, `Prefix` or `Afi` are re-used in
+//! various different modules within the crate.
 //! For example `Address` is used to name:
 //! - the type alias [`ip::Address<A>`][crate::Address]
 //! - the types [`ip::concrete::Address<A>`][crate::concrete::Address] and
@@ -120,7 +120,7 @@
 //! assert_eq!(longer_any(x4.into(), y6.into()), None);
 //! ```
 //!
-//! Occassionally, however, one may need a datastructure that may
+//! Occassionally, however, one may need a data structure that may
 //! sometimes contain a mix of address-families, but at other times must
 //! contain only a single address-family.
 //!
@@ -245,6 +245,9 @@ mod parser;
 
 /// Convenience alias to name types implementing [`traits::Address`].
 pub type Address<A> = <A as AfiClass>::Address;
+
+/// Convenience alias to name types implementing [`traits::Interface`].
+pub type Interface<A> = <A as AfiClass>::Interface;
 
 /// Convenience alias to name types implementing [`traits::PrefixLength`].
 pub type PrefixLength<A> = <A as AfiClass>::PrefixLength;

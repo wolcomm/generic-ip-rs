@@ -2,7 +2,7 @@ use core::fmt;
 
 use crate::{any, traits};
 
-use super::{Address, Hostmask, Netmask, Prefix, PrefixLength};
+use super::{Address, Hostmask, Interface, Netmask, Prefix, PrefixLength};
 
 /// The IPv4 address family.
 #[derive(Clone, Copy, Debug, Hash, PartialEq, Eq, PartialOrd, Ord)]
@@ -29,6 +29,7 @@ impl traits::Afi for Ipv6 {
 
 impl<A: traits::Afi> traits::AfiClass for A {
     type Address = Address<A>;
+    type Interface = Interface<A>;
     type PrefixLength = PrefixLength<A>;
     type Prefix = Prefix<A>;
     type Netmask = Netmask<A>;

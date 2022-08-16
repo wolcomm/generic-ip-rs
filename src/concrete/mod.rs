@@ -7,6 +7,9 @@ pub use self::addr::{common_length, Address, Ipv6MulticastScope};
 mod mask;
 pub use self::mask::{types as mask_types, Hostmask, Mask, Netmask};
 
+mod interface;
+pub use self::interface::Interface;
+
 mod prefix;
 pub use self::prefix::{Prefix, PrefixLength, PrefixOrdering};
 

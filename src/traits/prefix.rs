@@ -55,11 +55,6 @@ pub trait Prefix: Sized + Copy + Clone + Debug + Hash + PartialEq + Eq + Partial
     /// ```
     fn network(&self) -> Self::Address;
 
-    // TODO: remove from Prefix, add to `Interface`
-    fn addr(&self) -> Self::Address;
-    // TODO: remove from Prefix, add to `Interface`
-    fn trunc(&self) -> Self;
-
     /// Returns the hostmask of the IP subnet respresented by this prefix.
     ///
     /// # Examples

@@ -2,7 +2,7 @@ use core::cmp::Ordering;
 
 use crate::{concrete, traits};
 
-use super::{Address, Hostmask, Netmask, Prefix, PrefixLength};
+use super::{Address, Hostmask, Interface, Netmask, Prefix, PrefixLength};
 
 /// The class of address families consisting of `{ IPv4, IPv6 }`.
 #[derive(Clone, Copy, Debug, Hash, PartialEq, Eq, PartialOrd, Ord)]
@@ -10,6 +10,7 @@ pub enum Any {}
 
 impl traits::AfiClass for Any {
     type Address = Address;
+    type Interface = Interface;
     type PrefixLength = PrefixLength;
     type Prefix = Prefix;
     type Netmask = Netmask;

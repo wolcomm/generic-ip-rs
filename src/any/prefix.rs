@@ -45,8 +45,6 @@ impl traits::Prefix for Prefix {
 
     delegate! {
         fn network(&self) -> Self::Address;
-        fn addr(&self) -> Self::Address;
-        fn trunc(&self) -> Self;
         fn hostmask(&self) -> Self::Hostmask;
         fn netmask(&self) -> Self::Netmask;
         fn max_prefix_len(&self) -> Self::PrefixLength;

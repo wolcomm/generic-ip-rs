@@ -8,7 +8,7 @@ use crate::{
     traits::{self, primitive::Address as _, Afi},
 };
 
-use super::{common_length, Address, Hostmask, Netmask};
+use super::{common_length, Address, Hostmask, Interface, Netmask};
 
 mod len;
 pub use self::len::PrefixLength;
@@ -69,14 +69,6 @@ impl<A: Afi> traits::Prefix for Prefix<A> {
         self.prefix()
     }
 
-    fn addr(&self) -> Self::Address {
-        self.prefix()
-    }
-
-    fn trunc(&self) -> Self {
-        *self
-    }
-
     fn hostmask(&self) -> Self::Hostmask {
         self.length().into()
     }
@@ -112,6 +104,12 @@ impl<A: Afi> traits::Prefix for Prefix<A> {
 impl<A: Afi> From<Address<A>> for Prefix<A> {
     fn from(addr: Address<A>) -> Self {
         Self::new(addr, PrefixLength::MAX)
+    }
+}
+
+impl<A: Afi> From<Interface<A>> for Prefix<A> {
+    fn from(interface: Interface<A>) -> Self {
+        Self::new(interface.address(), interface.length())
     }
 }
 
