@@ -102,11 +102,11 @@ use proptest::{
 };
 
 #[cfg(any(test, feature = "arbitrary"))]
-impl<A: Afi, T: Type> Arbitrary for Mask<T, A>
+impl<A, T> Arbitrary for Mask<T, A>
 where
-    A: 'static,
+    A: Afi + 'static,
     A::Primitive: 'static,
-    T: 'static,
+    T: Type + 'static,
     Self: From<PrefixLength<A>>,
     PrefixLength<A>: Arbitrary,
     StrategyFor<PrefixLength<A>>: 'static,

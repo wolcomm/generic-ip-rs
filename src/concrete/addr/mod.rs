@@ -230,9 +230,9 @@ use proptest::{
 };
 
 #[cfg(any(test, feature = "arbitrary"))]
-impl<A: Afi> Arbitrary for Address<A>
+impl<A> Arbitrary for Address<A>
 where
-    A: 'static,
+    A: Afi + 'static,
     A::Primitive: Arbitrary + 'static,
     StrategyFor<A::Primitive>: 'static,
 {
