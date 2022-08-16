@@ -14,25 +14,94 @@ use crate::{
 
 use super::delegate;
 
-// TODO: document memory inefficiency due to variant size differences
+/// Either an IPv4 or IPv6 address.
+///
+/// # Memory Use
+///
+/// Rust enums are sized to accomodate their largest variant, with smaller
+/// variants being padded to fill up any unused space.
+///
+/// As a result, users should avoid using this type in a context where only
+/// [`Address::Ipv4`] variants are expected.
+///
+/// # Examples
+///
+/// ``` rust
+/// use ip::{Address, Any, traits::Address as _};
+///
+/// let addr = "2001:db8::1".parse::<Address<Any>>()?;
+///
+/// assert!(addr.is_documentation());
+/// # Ok::<(), ip::Error>(())
+/// ```
 #[allow(variant_size_differences)]
 #[derive(Clone, Copy, Hash, PartialEq, Eq)]
 pub enum Address {
+    /// IPv4 address variant.
     Ipv4(concrete::Address<Ipv4>),
+    /// IPv6 address variant.
     Ipv6(concrete::Address<Ipv6>),
 }
 
 impl Address {
+    /// Returns [`true`] if this is an IPv4 address.
+    ///
+    /// # Examples
+    ///
+    /// ``` rust
+    /// use ip::{Address, Any, traits::Address as _};
+    ///
+    /// let ipv4_addr = "192.0.2.1".parse::<Address<Any>>()?;
+    /// let ipv6_addr = "2001:db8::1".parse::<Address<Any>>()?;
+    ///
+    /// assert!(ipv4_addr.is_ipv4());
+    /// assert!(!ipv6_addr.is_ipv4());
+    /// # Ok::<(), ip::Error>(())
+    /// ```
     #[must_use]
-    pub fn is_ipv4(&self) -> bool {
+    pub const fn is_ipv4(&self) -> bool {
         matches!(self, Self::Ipv4(_))
     }
 
+    /// Returns [`true`] if this is an IPv6 address.
+    ///
+    /// # Examples
+    ///
+    /// ``` rust
+    /// use ip::{Address, Any, traits::Address as _};
+    ///
+    /// let ipv4_addr = "192.0.2.1".parse::<Address<Any>>()?;
+    /// let ipv6_addr = "2001:db8::1".parse::<Address<Any>>()?;
+    ///
+    /// assert!(!ipv4_addr.is_ipv6());
+    /// assert!(ipv6_addr.is_ipv6());
+    /// # Ok::<(), ip::Error>(())
+    /// ```
     #[must_use]
-    pub fn is_ipv6(&self) -> bool {
+    pub const fn is_ipv6(&self) -> bool {
         matches!(self, Self::Ipv6(_))
     }
 
+    // TODO: move to `traits::Address`
+    /// Convert the address to its canonical representation.
+    ///
+    /// [`Address::Ipv4`] variants are returned unchanged.
+    ///
+    /// [`Address::Ipv6`] variants are hanndled by converting an IPv4-mapped
+    /// IPv6 address to an [`Address::Ipv4`], and returning an
+    /// [`Address::Ipv6`] otherwise.
+    ///
+    /// # Examples
+    ///
+    /// ``` rust
+    /// use ip::{Address, Any, Ipv6};
+    ///
+    /// let ipv4_mapped = "::ffff:192.0.2.1".parse::<Address<Any>>()?;
+    ///
+    /// assert!(ipv4_mapped.is_ipv6());
+    /// assert!(ipv4_mapped.to_canonical().is_ipv4());
+    /// # Ok::<(), ip::Error>(())
+    /// ```
     #[allow(clippy::wrong_self_convention)]
     #[must_use]
     pub fn to_canonical(&self) -> Self {

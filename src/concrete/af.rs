@@ -40,6 +40,15 @@ impl<A: traits::Afi> traits::AfiClass for A {
 }
 
 /// Enumeration of concrete address families.
+///
+/// # Examples
+///
+/// ``` rust
+/// use ip::{Afi, Ipv4, Ipv6};
+///
+/// assert_eq!(Ipv4::as_afi().to_string(), "ipv4");
+/// assert_eq!(Ipv6::as_afi().to_string(), "ipv6");
+/// ```
 #[derive(Clone, Copy, Debug, Hash, PartialEq, Eq)]
 pub enum Afi {
     /// Variant respresenting the IPv4 address family.

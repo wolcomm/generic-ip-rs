@@ -4,6 +4,7 @@ use crate::{concrete, traits};
 
 use super::{Address, Hostmask, Netmask, Prefix, PrefixLength};
 
+/// The class of address families consisting of `{ IPv4, IPv6 }`.
 #[derive(Clone, Copy, Debug, Hash, PartialEq, Eq, PartialOrd, Ord)]
 pub enum Any {}
 
@@ -19,10 +20,14 @@ impl traits::AfiClass for Any {
     }
 }
 
+/// Enumeration of address family classes.
 #[derive(Clone, Copy, Debug, Hash, PartialEq, Eq)]
 pub enum AfiClass {
+    /// Variant respresenting the class `{ IPv4 }`.
     Ipv4,
+    /// Variant respresenting the class `{ IPv6 }`.
     Ipv6,
+    /// Variant respresenting the [`Any`] class.
     Any,
 }
 

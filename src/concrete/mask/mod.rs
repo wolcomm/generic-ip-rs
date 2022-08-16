@@ -69,6 +69,8 @@ impl<A: Afi, T: Type> Shr<PrefixLength<A>> for Mask<T, A> {
     }
 }
 
+// TODO: impl FromStr
+
 impl<A: Afi, T: Type> fmt::Display for Mask<T, A>
 where
     A::Primitive: AddressDisplay<A>,

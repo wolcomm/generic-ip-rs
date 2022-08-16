@@ -8,11 +8,32 @@ use crate::{
 
 use super::{delegate, Address, Hostmask, Netmask};
 
-// TODO: document memory inefficiency due to variant size differences
+/// Either an IPv4 or IPv6 prefix.
+///
+/// # Memory Use
+///
+/// Rust enums are sized to accomodate their largest variant, with smaller
+/// variants being padded to fill up any unused space.
+///
+/// As a result, users should avoid using this type in a context where only
+/// [`Prefix::Ipv4`] variants are expected.
+///
+/// # Examples
+///
+/// ``` rust
+/// use ip::{Prefix, Any, traits::{Address as _, Prefix as _}};
+///
+/// let prefix = "192.0.2.0/24".parse::<Prefix<Any>>()?;
+///
+/// assert!(prefix.network().is_documentation());
+/// # Ok::<(), ip::Error>(())
+/// ```
 #[allow(variant_size_differences)]
 #[derive(Clone, Copy, Debug, Hash, PartialEq, Eq, PartialOrd)]
 pub enum Prefix {
+    /// IPv4 prefix variant.
     Ipv4(concrete::Prefix<Ipv4>),
+    /// IPv6 prefix variant.
     Ipv6(concrete::Prefix<Ipv6>),
 }
 
@@ -74,9 +95,24 @@ impl FromStr for Prefix {
 // TODO: impl Display for Prefix
 // TODO: impl Arbitrary for Prefix
 
+/// The length of either an IPv4 or IPv6 prefix.
+///
+/// # Examples
+///
+/// ``` rust
+/// use ip::{Prefix, PrefixLength, Any, traits::Prefix as _};
+///
+/// let prefix = "2001:db8::/32".parse::<Prefix<Any>>()?;
+///
+/// assert!(matches!(prefix.prefix_len(), PrefixLength::<Any>::Ipv6(_)));
+/// # Ok::<(), ip::Error>(())
+/// ```
+#[allow(clippy::module_name_repetitions)]
 #[derive(Clone, Copy, Debug, Hash, PartialEq, Eq, PartialOrd)]
 pub enum PrefixLength {
+    /// IPv4 prefix length variant.
     Ipv4(concrete::PrefixLength<Ipv4>),
+    /// IPv6 prefix length variant.
     Ipv6(concrete::PrefixLength<Ipv6>),
 }
 
