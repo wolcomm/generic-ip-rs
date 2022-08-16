@@ -64,7 +64,7 @@ impl Address<Ipv6> {
         }
     }
 
-    /// Returns a big-endian ['[u16; 8]'] respresenting the segments of the
+    /// Returns a big-endian [`[u16; 8]`] respresenting the segments of the
     /// address.
     ///
     /// # Examples

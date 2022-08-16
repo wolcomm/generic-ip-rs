@@ -49,13 +49,13 @@ impl<A: Afi> PartialOrd<Self> for Prefix<A> {
 
 impl<A: Afi> PartialEq<Address<A>> for Prefix<A> {
     fn eq(&self, other: &Address<A>) -> bool {
-        self.eq(&Prefix::from(*other))
+        self.eq(&Self::from(*other))
     }
 }
 
 impl<A: Afi> PartialOrd<Address<A>> for Prefix<A> {
     fn partial_cmp(&self, other: &Address<A>) -> Option<Ordering> {
-        self.partial_cmp(&Prefix::from(*other))
+        self.partial_cmp(&Self::from(*other))
     }
 }
 

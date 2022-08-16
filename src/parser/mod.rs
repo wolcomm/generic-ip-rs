@@ -69,7 +69,7 @@ impl<'a> Parser<'a> {
     fn skip(&mut self, bytes: &[u8]) -> Option<&mut Self> {
         bytes
             .iter()
-            .try_for_each(|c| self.take().and_then(|next| next.eq(c).then(|| ())))
+            .try_for_each(|c| self.take().and_then(|next| next.eq(c).then_some(())))
             .map(|_| self)
     }
 
@@ -100,7 +100,7 @@ impl<'a> Parser<'a> {
                 break;
             }
         }
-        (digits > 0).then(|| result)
+        (digits > 0).then_some(result)
     }
 
     fn take_separated<F>(&mut self, sep: &[u8], lim: usize, mut f: F) -> usize
@@ -117,7 +117,7 @@ impl<'a> Parser<'a> {
             })
             .and_then(|(taken, cont)| {
                 count += taken;
-                cont.then(|| ())
+                cont.then_some(())
             })
         });
         count
@@ -129,27 +129,24 @@ impl<'a> Parser<'a> {
             buf[i] = p.take_number(10, 3, false)?;
             Some((1, true))
         }) == 4)
-            .then(|| buf)
+            .then_some(buf)
     }
 
     fn take_ipv6_parts(&mut self, buf: &mut [u16]) -> (usize, bool) {
         let mut took_ipv4 = false;
         let limit = buf.len();
         let taken = self.take_separated(b":", limit, |p, i| {
-            match (i < limit - 1)
+            if let Some([a, b, c, d]) = (i < limit - 1)
                 .then(|| p.atomically(Self::take_ipv4_octets))
                 .flatten()
             {
-                Some([a, b, c, d]) => {
-                    buf[i] = u16::from_be_bytes([a, b]);
-                    buf[i + 1] = u16::from_be_bytes([c, d]);
-                    took_ipv4 = true;
-                    Some((2, false))
-                }
-                None => {
-                    buf[i] = p.take_number(16, 4, true)?;
-                    Some((1, true))
-                }
+                buf[i] = u16::from_be_bytes([a, b]);
+                buf[i + 1] = u16::from_be_bytes([c, d]);
+                took_ipv4 = true;
+                Some((2, false))
+            } else {
+                buf[i] = p.take_number(16, 4, true)?;
+                Some((1, true))
             }
         });
         (taken, took_ipv4)
@@ -177,7 +174,7 @@ impl<'a> Parser<'a> {
         F: FnMut(&mut Self) -> Option<T>,
     {
         let result = f(self)?;
-        self.is_eof().then(|| result)
+        self.is_eof().then_some(result)
     }
 
     fn take_with_length<F, T>(&mut self, mut f: F) -> Option<(T, u8)>
@@ -186,6 +183,6 @@ impl<'a> Parser<'a> {
     {
         let result = f(self)?;
         let len = self.skip(b"/").and_then(|p| p.take_number(10, 3, false))?;
-        self.is_eof().then(|| (result, len))
+        self.is_eof().then_some((result, len))
     }
 }

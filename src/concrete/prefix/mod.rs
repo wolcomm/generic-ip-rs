@@ -1,3 +1,5 @@
+#![allow(clippy::module_name_repetitions)]
+
 use core::cmp::min;
 use core::fmt;
 use core::str::FromStr;
