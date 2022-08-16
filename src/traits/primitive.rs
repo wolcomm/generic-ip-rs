@@ -3,13 +3,12 @@ use core::hash::Hash;
 use core::mem;
 use core::ops::{BitAnd, BitOr, BitXor, RangeInclusive, Shl, Shr, Sub};
 
+use super::Afi;
 use crate::{
     concrete::{Ipv4, Ipv6},
     error::Error,
     parser,
 };
-
-use super::Afi;
 
 /// Underlying integer-like type used to respresent an IP address.
 pub trait Address<A: Afi>:
@@ -48,7 +47,8 @@ pub trait Address<A: Afi>:
     /// The primitive value of the `localhost` address for this address family.
     const LOCALHOST: Self;
 
-    /// The primitive value of the "unspecified" address for this address family.
+    /// The primitive value of the "unspecified" address for this address
+    /// family.
     const UNSPECIFIED: Self;
 
     /// The range of primitive address values defined for "loopback" use for

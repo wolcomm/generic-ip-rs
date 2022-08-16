@@ -1,8 +1,7 @@
 use core::cmp::Ordering::{self, Equal, Greater, Less};
 
-use crate::traits::Afi;
-
 use super::{Address, Prefix};
+use crate::traits::Afi;
 
 /// Ordering relationship between a pair of [`Prefix<A>`] `P` and `Q`.
 #[derive(Clone, Copy, Debug, Hash, PartialEq, Eq)]
@@ -63,7 +62,6 @@ impl<A: Afi> PartialOrd<Address<A>> for Prefix<A> {
 #[cfg(test)]
 mod tests {
     use super::*;
-
     use crate::{Ipv4, Ipv6};
 
     mod ipv4 {

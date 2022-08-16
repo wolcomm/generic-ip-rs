@@ -1,12 +1,11 @@
 use core::str::FromStr;
 
+use super::{delegate, Address, Hostmask, Netmask};
 use crate::{
     concrete::{self, Ipv4, Ipv6},
     error::Error,
     traits,
 };
-
-use super::{delegate, Address, Hostmask, Netmask};
 
 /// Either an IPv4 or IPv6 prefix.
 ///
@@ -21,7 +20,10 @@ use super::{delegate, Address, Hostmask, Netmask};
 /// # Examples
 ///
 /// ``` rust
-/// use ip::{Prefix, Any, traits::{Address as _, Prefix as _}};
+/// use ip::{
+///     traits::{Address as _, Prefix as _},
+///     Any, Prefix,
+/// };
 ///
 /// let prefix = "192.0.2.0/24".parse::<Prefix<Any>>()?;
 ///
@@ -98,7 +100,7 @@ impl FromStr for Prefix {
 /// # Examples
 ///
 /// ``` rust
-/// use ip::{Prefix, PrefixLength, Any, traits::Prefix as _};
+/// use ip::{traits::Prefix as _, Any, Prefix, PrefixLength};
 ///
 /// let prefix = "2001:db8::/32".parse::<Prefix<Any>>()?;
 ///

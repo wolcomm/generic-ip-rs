@@ -103,10 +103,10 @@ impl<P: primitive::Address<Ipv6>> AddressDisplay<Ipv6> for P {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
-
     use core::fmt::Write;
     use core::marker::PhantomData;
+
+    use super::*;
 
     struct FmtWrapper<A: Afi, T: AddressDisplay<A>> {
         inner: T,

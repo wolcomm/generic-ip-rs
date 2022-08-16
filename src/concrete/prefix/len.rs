@@ -1,6 +1,7 @@
 use core::fmt;
 use core::ops::Neg;
 
+use super::impl_try_from_any;
 use crate::{
     any,
     error::{err, Error, Kind},
@@ -11,8 +12,6 @@ use crate::{
     },
     Ipv4, Ipv6,
 };
-
-use super::impl_try_from_any;
 
 #[allow(clippy::wildcard_imports)]
 mod private {

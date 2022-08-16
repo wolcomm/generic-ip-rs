@@ -32,7 +32,7 @@ pub trait Address: Clone + Copy + Debug + Hash + PartialEq + Eq + PartialOrd {
     /// # Examples
     ///
     /// ```
-    /// use ip::{Address, Ipv4, Ipv6, Any, traits::Address as _};
+    /// use ip::{traits::Address as _, Address, Any, Ipv4, Ipv6};
     ///
     /// let v4_broadcast = "255.255.255.255".parse::<Address<Ipv4>>()?;
     /// let v4_unicast = "203.0.113.1".parse::<Address<Ipv4>>()?;
@@ -68,7 +68,7 @@ pub trait Address: Clone + Copy + Debug + Hash + PartialEq + Eq + PartialOrd {
     /// # Examples
     ///
     /// ```
-    /// use ip::{Address, Ipv4, Ipv6, Any, traits::Address as _};
+    /// use ip::{traits::Address as _, Address, Any, Ipv4, Ipv6};
     ///
     /// let v4_link_local = "169.254.254.1".parse::<Address<Ipv4>>()?;
     /// let v6_link_local = "fe80::1".parse::<Address<Ipv6>>()?;
@@ -104,7 +104,7 @@ pub trait Address: Clone + Copy + Debug + Hash + PartialEq + Eq + PartialOrd {
     /// # Examples
     ///
     /// ```
-    /// use ip::{Address, Ipv4, Ipv6, Any, traits::Address as _};
+    /// use ip::{traits::Address as _, Address, Any, Ipv4, Ipv6};
     ///
     /// let v4_private = "172.18.0.1".parse::<Address<Ipv4>>()?;
     /// let v4_unicast = "203.0.113.1".parse::<Address<Ipv4>>()?;
@@ -141,7 +141,7 @@ pub trait Address: Clone + Copy + Debug + Hash + PartialEq + Eq + PartialOrd {
     /// # Examples
     ///
     /// ```
-    /// use ip::{Address, Ipv4, Ipv6, Any, traits::Address as _};
+    /// use ip::{traits::Address as _, Address, Any, Ipv4, Ipv6};
     ///
     /// let v4_reserved = "240.0.0.1".parse::<Address<Ipv4>>()?;
     /// let v4_unicast = "203.0.113.1".parse::<Address<Ipv4>>()?;
@@ -170,7 +170,7 @@ pub trait Address: Clone + Copy + Debug + Hash + PartialEq + Eq + PartialOrd {
     /// # Examples
     ///
     /// ```
-    /// use ip::{Address, Ipv4, Ipv6, Any, traits::Address as _};
+    /// use ip::{traits::Address as _, Address, Any, Ipv4, Ipv6};
     ///
     /// let v4_shared = "100.72.1.1".parse::<Address<Ipv4>>()?;
     /// let v4_unicast = "192.0.2.1".parse::<Address<Ipv4>>()?;
@@ -192,7 +192,7 @@ pub trait Address: Clone + Copy + Debug + Hash + PartialEq + Eq + PartialOrd {
     /// # Examples
     ///
     /// ```
-    /// use ip::{Address, Ipv4, Ipv6, Any, traits::Address as _};
+    /// use ip::{traits::Address as _, Address, Any, Ipv4, Ipv6};
     ///
     /// let v4_thisnet = "0.255.255.255".parse::<Address<Ipv4>>()?;
     ///
@@ -224,7 +224,7 @@ pub trait Address: Clone + Copy + Debug + Hash + PartialEq + Eq + PartialOrd {
     /// # Examples
     ///
     /// ```
-    /// use ip::{Address, Ipv4, Ipv6, Any, traits::Address as _};
+    /// use ip::{traits::Address as _, Address, Any, Ipv4, Ipv6};
     ///
     /// let v4_benchmarking = "198.19.0.1".parse::<Address<Ipv4>>()?;
     /// let v6_benchmarking = "2001:2::1".parse::<Address<Ipv6>>()?;
@@ -238,11 +238,11 @@ pub trait Address: Clone + Copy + Debug + Hash + PartialEq + Eq + PartialOrd {
 
     /// Returns [`true`] if this is an address reserved for documentation:
     ///
-    /// -   IPv4 (defined in [RFC 5737]):
+    /// - IPv4 (defined in [RFC 5737]):
     ///     - `192.0.2.0/24` (`TEST-NET-1`)
     ///     - `198.51.100.0/24` (`TEST-NET-2`)
     ///     - `203.0.113.0/24` (`TEST-NET-3`)
-    /// -   IPv6: `2001:db8::/32` (defined in [RFC 3849])
+    /// - IPv6: `2001:db8::/32` (defined in [RFC 3849])
     ///
     /// [RFC 3849]: https://tools.ietf.org/html/rfc3849
     /// [RFC 5737]: https://tools.ietf.org/html/rfc5737
@@ -250,7 +250,7 @@ pub trait Address: Clone + Copy + Debug + Hash + PartialEq + Eq + PartialOrd {
     /// # Examples
     ///
     /// ```
-    /// use ip::{Address, Ipv4, Ipv6, Any, traits::Address as _};
+    /// use ip::{traits::Address as _, Address, Any, Ipv4, Ipv6};
     ///
     /// let v4_test_net_2 = "198.51.100.1".parse::<Address<Ipv4>>()?;
     /// let v6_documentation = "2001:db8::1".parse::<Address<Ipv6>>()?;
@@ -294,7 +294,7 @@ pub trait Address: Clone + Copy + Debug + Hash + PartialEq + Eq + PartialOrd {
     /// # Examples
     ///
     /// ```
-    /// use ip::{Address, Ipv4, Ipv6, Any, traits::Address as _};
+    /// use ip::{traits::Address as _, Address, Any, Ipv4, Ipv6};
     ///
     /// // private addresses are not global
     /// assert_eq!("10.254.0.0".parse::<Address<Ipv4>>()?.is_global(), false);
@@ -354,7 +354,10 @@ pub trait Address: Clone + Copy + Debug + Hash + PartialEq + Eq + PartialOrd {
     ///
     /// // All the other addresses are global
     /// assert_eq!("1.1.1.1".parse::<Address<Ipv4>>()?.is_global(), true);
-    /// assert_eq!("2606:4700:4700::1111".parse::<Address<Ipv6>>()?.is_global(), true);
+    /// assert_eq!(
+    ///     "2606:4700:4700::1111".parse::<Address<Ipv6>>()?.is_global(),
+    ///     true
+    /// );
     /// # Ok::<(), ip::Error>(())
     /// ```
     // TODO: unstable
@@ -371,7 +374,7 @@ pub trait Address: Clone + Copy + Debug + Hash + PartialEq + Eq + PartialOrd {
     /// # Examples
     ///
     /// ```
-    /// use ip::{Address, Ipv4, Ipv6, Any, traits::Address as _};
+    /// use ip::{traits::Address as _, Address, Any, Ipv4, Ipv6};
     ///
     /// let v4_loopback = "127.0.0.53".parse::<Address<Ipv4>>()?;
     /// let v6_loopback = "::1".parse::<Address<Ipv6>>()?;
@@ -393,7 +396,7 @@ pub trait Address: Clone + Copy + Debug + Hash + PartialEq + Eq + PartialOrd {
     /// # Examples
     ///
     /// ```
-    /// use ip::{Address, Ipv4, Ipv6, Any, traits::Address as _};
+    /// use ip::{traits::Address as _, Address, Any, Ipv4, Ipv6};
     ///
     /// let v4_multicast = "224.254.0.0".parse::<Address<Ipv4>>()?;
     /// let v4_unicast = "172.16.10.65".parse::<Address<Ipv4>>()?;
@@ -418,7 +421,7 @@ pub trait Address: Clone + Copy + Debug + Hash + PartialEq + Eq + PartialOrd {
     /// # Examples
     ///
     /// ```
-    /// use ip::{Address, Ipv4, Ipv6, Any, traits::Address as _};
+    /// use ip::{traits::Address as _, Address, Any, Ipv4, Ipv6};
     ///
     /// let v4_unspecified = "0.0.0.0".parse::<Address<Ipv4>>()?;
     /// let v6_unspecified = "::".parse::<Address<Ipv6>>()?;
@@ -449,7 +452,7 @@ pub trait Address: Clone + Copy + Debug + Hash + PartialEq + Eq + PartialOrd {
     /// # Examples
     ///
     /// ```
-    /// use ip::{Address, Ipv4, Ipv6, Any, traits::Address as _};
+    /// use ip::{traits::Address as _, Address, Any, Ipv4, Ipv6};
     ///
     /// let v6_ula = "fc01::1".parse::<Address<Ipv6>>()?;
     /// let v6_doc = "2001:db8::1".parse::<Address<Ipv6>>()?;
@@ -477,7 +480,7 @@ pub trait Address: Clone + Copy + Debug + Hash + PartialEq + Eq + PartialOrd {
     /// # Examples
     ///
     /// ```
-    /// use ip::{Address, Ipv4, Ipv6, Any, traits::Address as _};
+    /// use ip::{traits::Address as _, Address, Any, Ipv4, Ipv6};
     ///
     /// let v6_unicast = "2001:db8::1".parse::<Address<Ipv6>>()?;
     /// let v6_multicast = "ffaa::1".parse::<Address<Ipv6>>()?;
@@ -511,7 +514,7 @@ pub trait Address: Clone + Copy + Debug + Hash + PartialEq + Eq + PartialOrd {
     /// # Examples
     ///
     /// ```
-    /// use ip::{Address, Ipv4, Ipv6, Any, traits::Address as _};
+    /// use ip::{traits::Address as _, Address, Any, Ipv4, Ipv6};
     ///
     /// let v4_unicast_global = "1.1.1.1".parse::<Address<Ipv4>>()?;
     /// let v4_unicast_private = "192.168.1.1".parse::<Address<Ipv4>>()?;

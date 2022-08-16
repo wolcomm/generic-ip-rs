@@ -1,8 +1,7 @@
 use core::fmt;
 
-use crate::{any, traits};
-
 use super::{Address, Hostmask, Interface, Netmask, Prefix, PrefixLength};
+use crate::{any, traits};
 
 /// The IPv4 address family.
 #[derive(Clone, Copy, Debug, Hash, PartialEq, Eq, PartialOrd, Ord)]

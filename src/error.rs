@@ -26,7 +26,7 @@ impl Error {
     /// # Examples
     ///
     /// ``` rust
-    /// use ip::{Address, Ipv4, error::Kind};
+    /// use ip::{error::Kind, Address, Ipv4};
     ///
     /// let err = "10.0.0.256".parse::<Address<Ipv4>>().unwrap_err();
     /// assert_eq!(err.kind(), Kind::ParserError);

@@ -1,6 +1,7 @@
 use core::fmt;
 use core::str::FromStr;
 
+use super::{impl_try_from_any, AddressRange, PrefixLength};
 use crate::{
     any,
     error::Error,
@@ -8,8 +9,6 @@ use crate::{
     traits::{self, primitive::Address as _, Afi},
     Ipv4, Ipv6,
 };
-
-use super::{impl_try_from_any, AddressRange, PrefixLength};
 
 mod private;
 pub use self::private::Address;
@@ -41,9 +40,7 @@ impl<A: Afi> Address<A> {
     /// );
     ///
     /// assert_eq!(
-    ///     Address::<Ipv6>::from_octets([
-    ///         0x20, 0x01, 0x0d, 0xb8, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1,
-    ///     ]),
+    ///     Address::<Ipv6>::from_octets([0x20, 0x01, 0x0d, 0xb8, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1,]),
     ///     "2001:db8::1".parse::<Address<Ipv6>>()?,
     /// );
     /// # Ok::<(), ip::Error>(())
@@ -59,10 +56,7 @@ impl<A: Afi> Address<A> {
     /// ``` rust
     /// use ip::{Address, Ipv4, Ipv6};
     ///
-    /// assert_eq!(
-    ///     "10.0.0.1".parse::<Address<Ipv4>>()?.octets(),
-    ///     [10, 0, 0, 1],
-    /// );
+    /// assert_eq!("10.0.0.1".parse::<Address<Ipv4>>()?.octets(), [10, 0, 0, 1],);
     ///
     /// assert_eq!(
     ///     "2001:db8::1".parse::<Address<Ipv6>>()?.octets(),
@@ -89,7 +83,7 @@ impl<A: Afi> Address<A> {
 /// # Examples
 ///
 /// ``` rust
-/// use ip::{Address, PrefixLength, Ipv4, Ipv6, concrete::common_length};
+/// use ip::{concrete::common_length, Address, Ipv4, Ipv6, PrefixLength};
 ///
 /// assert_eq!(
 ///     common_length(
@@ -253,7 +247,6 @@ where
 #[cfg(test)]
 mod tests {
     use super::*;
-
     use crate::{traits::Address as _, Ipv4, Ipv6};
 
     #[test]

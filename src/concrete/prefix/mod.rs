@@ -2,6 +2,7 @@ use core::cmp::min;
 use core::fmt;
 use core::str::FromStr;
 
+use super::{common_length, impl_try_from_any, Address, Hostmask, Interface, Netmask};
 use crate::{
     any,
     error::Error,
@@ -9,8 +10,6 @@ use crate::{
     traits::{self, primitive::Address as _, Afi},
     Ipv4, Ipv6,
 };
-
-use super::{common_length, impl_try_from_any, Address, Hostmask, Interface, Netmask};
 
 mod len;
 pub use self::len::PrefixLength;

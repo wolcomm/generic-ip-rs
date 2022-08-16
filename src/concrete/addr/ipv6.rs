@@ -1,10 +1,9 @@
+use super::Address;
 use crate::{
     any,
     concrete::{Ipv4, Ipv6},
     traits::{primitive::IntoIpv6Segments as _, Address as _, Afi},
 };
-
-use super::Address;
 
 // TODO: make methods `const fn`
 impl Address<Ipv6> {
@@ -18,13 +17,13 @@ impl Address<Ipv6> {
         self.is_link_local()
     }
 
-    /// Returns the [`Ipv6MulticastScope`] variant of the address if the address is
-    /// a multicast address, or [`None`] otherwise.
+    /// Returns the [`Ipv6MulticastScope`] variant of the address if the address
+    /// is a multicast address, or [`None`] otherwise.
     ///
     /// # Examples
     ///
     /// ``` rust
-    /// use ip::{Address, Ipv6, concrete::Ipv6MulticastScope};
+    /// use ip::{concrete::Ipv6MulticastScope, Address, Ipv6};
     ///
     /// let ipv6_site_local_multicast = "ff05::1".parse::<Address<Ipv6>>()?;
     /// assert_eq!(
@@ -39,10 +38,7 @@ impl Address<Ipv6> {
     /// );
     ///
     /// let ipv6_unicast = "2001:db8::1".parse::<Address<Ipv6>>()?;
-    /// assert_eq!(
-    ///     ipv6_unicast.multicast_scope(),
-    ///     None,
-    /// );
+    /// assert_eq!(ipv6_unicast.multicast_scope(), None,);
     /// # Ok::<(), ip::Error>(())
     /// ```
     #[allow(clippy::match_same_arms)]
@@ -131,16 +127,14 @@ impl Address<Ipv6> {
     /// use ip::{Address, Ipv6};
     ///
     /// assert_eq!(
-    ///     "::192.168.1.1".parse::<Address<Ipv6>>()?
+    ///     "::192.168.1.1"
+    ///         .parse::<Address<Ipv6>>()?
     ///         .to_ipv4()
     ///         .map(|ipv4| ipv4.octets()),
     ///     Some([192, 168, 1, 1]),
     /// );
     ///
-    /// assert_eq!(
-    ///     "2001:db8::1".parse::<Address<Ipv6>>()?.to_ipv4(),
-    ///     None,
-    /// );
+    /// assert_eq!("2001:db8::1".parse::<Address<Ipv6>>()?.to_ipv4(), None,);
     /// # Ok::<(), ip::Error>(())
     /// ```
     #[allow(clippy::wrong_self_convention)]
@@ -163,7 +157,8 @@ impl Address<Ipv6> {
     /// use ip::{Address, Ipv6};
     ///
     /// assert_eq!(
-    ///     "::ffff:172.16.1.1".parse::<Address<Ipv6>>()?
+    ///     "::ffff:172.16.1.1"
+    ///         .parse::<Address<Ipv6>>()?
     ///         .to_ipv4_mapped()
     ///         .map(|ipv4| ipv4.octets()),
     ///     Some([172, 16, 1, 1]),

@@ -1,17 +1,15 @@
 use core::borrow::Borrow;
 
+use super::Address;
+use crate::traits::primitive::{Address as _, IntoIpv6Segments as _};
 use crate::{
     concrete::{Ipv4, Ipv6},
     traits::Afi,
 };
 
-use crate::traits::primitive::{Address as _, IntoIpv6Segments as _};
-
-use super::Address;
-
 // TODO:
-// These should be `impl<A: Afi> From<A::Primitive> for Address<A>`, but that is not
-// allowed by the coherence rules.
+// These should be `impl<A: Afi> From<A::Primitive> for Address<A>`, but that is
+// not allowed by the coherence rules.
 macro_rules! impl_from_primitive {
     ( $( $af:ident ),* $(,)? ) => {
         $(

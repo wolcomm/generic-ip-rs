@@ -1,6 +1,5 @@
-use crate::error::{err, Error, Kind};
-
 use super::Parser;
+use crate::error::{err, Error, Kind};
 
 #[allow(clippy::inline_always)]
 #[inline(always)]
@@ -61,9 +60,8 @@ mod tests {
 
         use proptest::{arbitrary::any, proptest};
 
-        use crate::concrete::Address;
-
         use super::*;
+        use crate::concrete::Address;
 
         proptest! {
             #[test]

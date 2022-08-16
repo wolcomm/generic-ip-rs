@@ -30,12 +30,13 @@ pub trait Prefix: Sized + Copy + Clone + Debug + Hash + PartialEq + Eq + Partial
     // type Hosts: Iterator<Item = Self::Address>;
     // type Subnets: Iterator<Item = Self>;
 
-    /// Returns the network address of the IP subnet respresented by this prefix.
+    /// Returns the network address of the IP subnet respresented by this
+    /// prefix.
     ///
     /// # Examples
     ///
     /// ``` rust
-    /// use ip::{Address, Prefix, Any, Ipv4, Ipv6, traits::Prefix as _};
+    /// use ip::{traits::Prefix as _, Address, Any, Ipv4, Ipv6, Prefix};
     ///
     /// assert_eq!(
     ///     "172.16.123.123/16".parse::<Prefix<Ipv4>>()?.network(),
@@ -60,10 +61,13 @@ pub trait Prefix: Sized + Copy + Clone + Debug + Hash + PartialEq + Eq + Partial
     /// # Examples
     ///
     /// ``` rust
-    /// use ip::{Prefix, Ipv4, traits::Prefix as _};
+    /// use ip::{traits::Prefix as _, Ipv4, Prefix};
     ///
     /// assert_eq!(
-    ///     "172.16.123.123/16".parse::<Prefix<Ipv4>>()?.hostmask().to_string(),
+    ///     "172.16.123.123/16"
+    ///         .parse::<Prefix<Ipv4>>()?
+    ///         .hostmask()
+    ///         .to_string(),
     ///     "0.0.255.255",
     /// );
     /// # Ok::<(), ip::Error>(())
@@ -75,10 +79,13 @@ pub trait Prefix: Sized + Copy + Clone + Debug + Hash + PartialEq + Eq + Partial
     /// # Examples
     ///
     /// ``` rust
-    /// use ip::{Prefix, Ipv4, traits::Prefix as _};
+    /// use ip::{traits::Prefix as _, Ipv4, Prefix};
     ///
     /// assert_eq!(
-    ///     "172.16.123.123/16".parse::<Prefix<Ipv4>>()?.netmask().to_string(),
+    ///     "172.16.123.123/16"
+    ///         .parse::<Prefix<Ipv4>>()?
+    ///         .netmask()
+    ///         .to_string(),
     ///     "255.255.0.0",
     /// );
     /// # Ok::<(), ip::Error>(())
@@ -90,7 +97,7 @@ pub trait Prefix: Sized + Copy + Clone + Debug + Hash + PartialEq + Eq + Partial
     /// # Examples
     ///
     /// ``` rust
-    /// use ip::{PrefixLength, Prefix, Any, Ipv4, Ipv6, traits::Prefix as _};
+    /// use ip::{traits::Prefix as _, Any, Ipv4, Ipv6, Prefix, PrefixLength};
     ///
     /// assert_eq!(
     ///     "172.16.123.123/16".parse::<Prefix<Any>>()?.max_prefix_len(),
@@ -110,7 +117,7 @@ pub trait Prefix: Sized + Copy + Clone + Debug + Hash + PartialEq + Eq + Partial
     /// # Examples
     ///
     /// ``` rust
-    /// use ip::{Prefix, PrefixLength, Ipv4, Ipv6, traits::Prefix as _};
+    /// use ip::{traits::Prefix as _, Ipv4, Ipv6, Prefix, PrefixLength};
     ///
     /// assert_eq!(
     ///     "172.16.123.123/16".parse::<Prefix<Ipv4>>()?.prefix_len(),
@@ -138,7 +145,7 @@ pub trait Prefix: Sized + Copy + Clone + Debug + Hash + PartialEq + Eq + Partial
     /// # Examples
     ///
     /// ``` rust
-    /// use ip::{Address, Prefix, Any, Ipv4, Ipv6, traits::Prefix as _};
+    /// use ip::{traits::Prefix as _, Address, Any, Ipv4, Ipv6, Prefix};
     ///
     /// assert_eq!(
     ///     "172.16.123.123/16".parse::<Prefix<Ipv4>>()?.broadcast(),
@@ -151,7 +158,9 @@ pub trait Prefix: Sized + Copy + Clone + Debug + Hash + PartialEq + Eq + Partial
     /// );
     ///
     /// assert_eq!(
-    ///     "2001:db8:dead:beef::/64".parse::<Prefix<Any>>()?.broadcast(),
+    ///     "2001:db8:dead:beef::/64"
+    ///         .parse::<Prefix<Any>>()?
+    ///         .broadcast(),
     ///     Address::<Any>::Ipv6("2001:db8:dead:beef:ffff:ffff:ffff:ffff".parse()?),
     /// );
     /// # Ok::<(), ip::Error>(())
@@ -164,17 +173,14 @@ pub trait Prefix: Sized + Copy + Clone + Debug + Hash + PartialEq + Eq + Partial
     /// # Examples
     ///
     /// ``` rust
-    /// use ip::{Prefix, Ipv4, Ipv6, traits::Prefix as _};
+    /// use ip::{traits::Prefix as _, Ipv4, Ipv6, Prefix};
     ///
     /// assert_eq!(
     ///     "172.16.123.123/16".parse::<Prefix<Ipv4>>()?.supernet(),
     ///     Some("172.16.0.0/15".parse()?),
     /// );
     ///
-    /// assert_eq!(
-    ///     "::/0".parse::<Prefix<Ipv6>>()?.supernet(),
-    ///     None,
-    /// );
+    /// assert_eq!("::/0".parse::<Prefix<Ipv6>>()?.supernet(), None,);
     /// # Ok::<(), ip::Error>(())
     /// ```
     fn supernet(&self) -> Option<Self>;
@@ -185,7 +191,7 @@ pub trait Prefix: Sized + Copy + Clone + Debug + Hash + PartialEq + Eq + Partial
     /// # Examples
     ///
     /// ``` rust
-    /// use ip::{Prefix, Ipv6, traits::Prefix as _};
+    /// use ip::{traits::Prefix as _, Ipv6, Prefix};
     ///
     /// let a: Prefix<Ipv6> = "2001:db8:a::/48".parse()?;
     /// let b: Prefix<Ipv6> = "2001:db8:b::/48".parse()?;
@@ -207,7 +213,7 @@ pub trait Prefix: Sized + Copy + Clone + Debug + Hash + PartialEq + Eq + Partial
     /// # Examples
     ///
     /// ``` rust
-    /// use ip::{Address, Prefix, Ipv6, traits::Prefix as _};
+    /// use ip::{traits::Prefix as _, Address, Ipv6, Prefix};
     ///
     /// let a: Prefix<Ipv6> = "2001:db8:a::/48".parse()?;
     /// let b: Prefix<Ipv6> = "2001:db8:a:b::/64".parse()?;

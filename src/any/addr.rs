@@ -2,6 +2,7 @@ use core::cmp::Ordering;
 use core::fmt;
 use core::str::FromStr;
 
+use super::delegate;
 use crate::{
     concrete::{self, Ipv4, Ipv6},
     error::Error,
@@ -11,8 +12,6 @@ use crate::{
         Afi,
     },
 };
-
-use super::delegate;
 
 /// Either an IPv4 or IPv6 address.
 ///
@@ -27,7 +26,7 @@ use super::delegate;
 /// # Examples
 ///
 /// ``` rust
-/// use ip::{Address, Any, traits::Address as _};
+/// use ip::{traits::Address as _, Address, Any};
 ///
 /// let addr = "2001:db8::1".parse::<Address<Any>>()?;
 ///
@@ -49,7 +48,7 @@ impl Address {
     /// # Examples
     ///
     /// ``` rust
-    /// use ip::{Address, Any, traits::Address as _};
+    /// use ip::{traits::Address as _, Address, Any};
     ///
     /// let ipv4_addr = "192.0.2.1".parse::<Address<Any>>()?;
     /// let ipv6_addr = "2001:db8::1".parse::<Address<Any>>()?;
@@ -68,7 +67,7 @@ impl Address {
     /// # Examples
     ///
     /// ``` rust
-    /// use ip::{Address, Any, traits::Address as _};
+    /// use ip::{traits::Address as _, Address, Any};
     ///
     /// let ipv4_addr = "192.0.2.1".parse::<Address<Any>>()?;
     /// let ipv6_addr = "2001:db8::1".parse::<Address<Any>>()?;
@@ -301,11 +300,10 @@ impl Arbitrary for Address {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
-
-    use crate::traits::Address as _;
-
     use proptest::{arbitrary::any, proptest};
+
+    use super::*;
+    use crate::traits::Address as _;
 
     #[cfg(feature = "std")]
     proptest! {

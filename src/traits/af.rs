@@ -3,11 +3,9 @@ use core::cmp::Ord;
 use core::fmt::Debug;
 use core::hash::Hash;
 
-use crate::{any, concrete, fmt};
-
-use super::{Address, Hostmask, Interface, Netmask, Prefix, PrefixLength};
-
 use super::primitive;
+use super::{Address, Hostmask, Interface, Netmask, Prefix, PrefixLength};
+use crate::{any, concrete, fmt};
 
 /// An interface for describing an IP address family.
 pub trait Afi: Copy + Debug + Hash + Ord {
@@ -36,7 +34,8 @@ pub trait AfiClass: Copy + Debug + Hash + Ord {
     /// The type respresenting IP prefix values of this address family class.
     type Prefix: Prefix;
 
-    /// The type respresenting IP prefix-length values of this address family class.
+    /// The type respresenting IP prefix-length values of this address family
+    /// class.
     type PrefixLength: PrefixLength;
 
     /// The type respresenting IP netmask values of this address family class.

@@ -1,9 +1,8 @@
+use super::Address;
 use crate::{
     concrete::{Ipv4, Ipv6},
     traits::{primitive::Address as _, Afi},
 };
-
-use super::Address;
 
 // TODO: make methods `const fn`
 impl Address<Ipv4> {

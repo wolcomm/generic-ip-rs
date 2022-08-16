@@ -1,15 +1,15 @@
 use core::marker::PhantomData;
 
-use crate::traits::Afi;
-
 use super::Type;
+use crate::traits::Afi;
 
 /// An IP mask of address family `A`.
 #[derive(Clone, Copy, Debug, Hash, PartialEq, Eq)]
 pub struct Mask<T: Type, A: Afi>(A::Primitive, PhantomData<T>);
 
 impl<A: Afi, T: Type> Mask<T, A> {
-    /// Construct a new [`Mask<T, A>`] from an integer primitive appropriate to `A`.
+    /// Construct a new [`Mask<T, A>`] from an integer primitive appropriate to
+    /// `A`.
     pub const fn new(bits: A::Primitive) -> Self {
         Self(bits, PhantomData)
     }

@@ -1,8 +1,7 @@
 use core::cmp::Ordering;
 
-use crate::{concrete, traits};
-
 use super::{Address, Hostmask, Interface, Netmask, Prefix, PrefixLength};
+use crate::{concrete, traits};
 
 /// The class of address families consisting of `{ IPv4, IPv6 }`.
 #[derive(Clone, Copy, Debug, Hash, PartialEq, Eq, PartialOrd, Ord)]

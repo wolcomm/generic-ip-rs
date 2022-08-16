@@ -1,14 +1,13 @@
 use core::fmt::{self};
 use core::ops::{Shl, Shr};
 
+use super::{impl_try_from_any, PrefixLength};
 use crate::{
     any,
     fmt::AddressDisplay,
     traits::{self, primitive::Address as _, Afi},
     Ipv4, Ipv6,
 };
-
-use super::{impl_try_from_any, PrefixLength};
 
 mod private;
 pub use self::private::Mask;

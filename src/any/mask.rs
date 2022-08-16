@@ -1,3 +1,4 @@
+use super::PrefixLength;
 use crate::{
     concrete::{
         self,
@@ -6,8 +7,6 @@ use crate::{
     },
     traits,
 };
-
-use super::PrefixLength;
 
 /// Either an IPv4 or IPv6 address mask.
 ///

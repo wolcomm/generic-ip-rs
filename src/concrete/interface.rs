@@ -1,6 +1,7 @@
 use core::fmt;
 use core::str::FromStr;
 
+use super::{impl_try_from_any, Address, Prefix, PrefixLength};
 use crate::{
     any,
     error::Error,
@@ -8,8 +9,6 @@ use crate::{
     traits::{self, primitive::Address as _, Afi, Prefix as _},
     Ipv4, Ipv6,
 };
-
-use super::{impl_try_from_any, Address, Prefix, PrefixLength};
 
 #[allow(clippy::wildcard_imports)]
 mod private {

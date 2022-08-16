@@ -1,8 +1,7 @@
 use core::ops::RangeInclusive;
 
-use crate::traits::Afi;
-
 use super::Address;
+use crate::traits::Afi;
 
 /// An inclusive range of [`Address<A>`].
 ///

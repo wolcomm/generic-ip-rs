@@ -1,7 +1,6 @@
 use core::str::FromStr;
 
 use criterion::{criterion_group, criterion_main, BenchmarkId, Criterion};
-
 use ip::{Address, Ipv6, Prefix};
 
 pub fn addr_benchmark(c: &mut Criterion) {

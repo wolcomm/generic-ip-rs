@@ -1,12 +1,11 @@
 use core::str::FromStr;
 
+use super::{delegate, Address, Prefix, PrefixLength};
 use crate::{
     concrete::{self, Ipv4, Ipv6},
     error::Error,
     traits,
 };
-
-use super::{delegate, Address, Prefix, PrefixLength};
 
 /// Either an IPv4 or IPv6 interface.
 ///
@@ -21,7 +20,10 @@ use super::{delegate, Address, Prefix, PrefixLength};
 /// # Examples
 ///
 /// ``` rust
-/// use ip::{Interface, Any, traits::{Address as _, Interface as _}};
+/// use ip::{
+///     traits::{Address as _, Interface as _},
+///     Any, Interface,
+/// };
 ///
 /// let interface = "192.0.2.0/24".parse::<Interface<Any>>()?;
 ///

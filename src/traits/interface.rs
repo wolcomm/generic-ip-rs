@@ -21,7 +21,8 @@ pub trait Interface: Sized + Copy + Clone + Debug + Hash + PartialEq + Eq {
     /// The type used to respresent IP prefixes for this IP interface type.
     type PrefixLength: PrefixLength;
 
-    /// The type used to respresent IP prefix lengths for this IP interface type.
+    /// The type used to respresent IP prefix lengths for this IP interface
+    /// type.
     type Prefix: Prefix;
 
     /// Returns the network address of the IP subnet containing this interface.
@@ -29,7 +30,7 @@ pub trait Interface: Sized + Copy + Clone + Debug + Hash + PartialEq + Eq {
     /// # Examples
     ///
     /// ``` rust
-    /// use ip::{Address, Interface, Any, Ipv4, Ipv6, traits::Interface as _};
+    /// use ip::{traits::Interface as _, Address, Any, Interface, Ipv4, Ipv6};
     ///
     /// assert_eq!(
     ///     "172.16.123.123/16".parse::<Interface<Ipv4>>()?.network(),
@@ -54,7 +55,7 @@ pub trait Interface: Sized + Copy + Clone + Debug + Hash + PartialEq + Eq {
     /// # Examples
     ///
     /// ``` rust
-    /// use ip::{Address, Interface, Any, Ipv4, Ipv6, traits::Interface as _};
+    /// use ip::{traits::Interface as _, Address, Any, Interface, Ipv4, Ipv6};
     ///
     /// assert_eq!(
     ///     "172.16.123.123/16".parse::<Interface<Ipv4>>()?.addr(),
@@ -79,7 +80,7 @@ pub trait Interface: Sized + Copy + Clone + Debug + Hash + PartialEq + Eq {
     /// # Examples
     ///
     /// ``` rust
-    /// use ip::{Interface, Prefix, Any, Ipv4, Ipv6, traits::Interface as _};
+    /// use ip::{traits::Interface as _, Any, Interface, Ipv4, Ipv6, Prefix};
     ///
     /// assert_eq!(
     ///     "172.16.123.123/16".parse::<Interface<Ipv4>>()?.trunc(),
@@ -104,7 +105,7 @@ pub trait Interface: Sized + Copy + Clone + Debug + Hash + PartialEq + Eq {
     /// # Examples
     ///
     /// ``` rust
-    /// use ip::{Interface, PrefixLength, Any, Ipv4, Ipv6, traits::Interface as _};
+    /// use ip::{traits::Interface as _, Any, Interface, Ipv4, Ipv6, PrefixLength};
     ///
     /// assert_eq!(
     ///     "172.16.123.123/16".parse::<Interface<Ipv4>>()?.prefix_len(),
@@ -112,7 +113,9 @@ pub trait Interface: Sized + Copy + Clone + Debug + Hash + PartialEq + Eq {
     /// );
     ///
     /// assert_eq!(
-    ///     "2001:db8:f00::baa/48".parse::<Interface<Ipv6>>()?.prefix_len(),
+    ///     "2001:db8:f00::baa/48"
+    ///         .parse::<Interface<Ipv6>>()?
+    ///         .prefix_len(),
     ///     PrefixLength::<Ipv6>::from_primitive(48)?,
     /// );
     ///
@@ -124,7 +127,8 @@ pub trait Interface: Sized + Copy + Clone + Debug + Hash + PartialEq + Eq {
     /// ```
     fn prefix_len(&self) -> Self::PrefixLength;
 
-    /// Returns the broadcast address of the IP subnet containing this interface.
+    /// Returns the broadcast address of the IP subnet containing this
+    /// interface.
     ///
     /// # [`ipnet`] Compatibility
     ///
@@ -136,7 +140,7 @@ pub trait Interface: Sized + Copy + Clone + Debug + Hash + PartialEq + Eq {
     /// # Examples
     ///
     /// ``` rust
-    /// use ip::{Address, Interface, Any, Ipv4, Ipv6, traits::Interface as _};
+    /// use ip::{traits::Interface as _, Address, Any, Interface, Ipv4, Ipv6};
     ///
     /// assert_eq!(
     ///     "172.16.123.123/16".parse::<Interface<Ipv4>>()?.broadcast(),
@@ -144,12 +148,16 @@ pub trait Interface: Sized + Copy + Clone + Debug + Hash + PartialEq + Eq {
     /// );
     ///
     /// assert_eq!(
-    ///     "2001:db8:f00::baa/48".parse::<Interface<Ipv6>>()?.broadcast(),
+    ///     "2001:db8:f00::baa/48"
+    ///         .parse::<Interface<Ipv6>>()?
+    ///         .broadcast(),
     ///     "2001:db8:f00:ffff:ffff:ffff:ffff:ffff".parse::<Address<Ipv6>>()?,
     /// );
     ///
     /// assert_eq!(
-    ///     "2001:db8:dead:beef::/64".parse::<Interface<Any>>()?.broadcast(),
+    ///     "2001:db8:dead:beef::/64"
+    ///         .parse::<Interface<Any>>()?
+    ///         .broadcast(),
     ///     Address::<Any>::Ipv6("2001:db8:dead:beef:ffff:ffff:ffff:ffff".parse()?),
     /// );
     /// # Ok::<(), ip::Error>(())

@@ -14,7 +14,7 @@
 //! For example:
 //!
 //! ``` rust
-//! use ip::{Address, Prefix, Afi, Error, Ipv4, Ipv6};
+//! use ip::{Address, Afi, Error, Ipv4, Ipv6, Prefix};
 //!
 //! struct RibEntry<A: Afi> {
 //!     prefix: Prefix<A>,
@@ -28,18 +28,20 @@
 //! }
 //!
 //! fn main() -> Result<(), Error> {
-//!
 //!     let v4: RibEntry<Ipv4> = RibEntry {
 //!         prefix: "192.0.2.0/24".parse()?,
-//!         next_hop: "198.51.100.1".parse()?
+//!         next_hop: "198.51.100.1".parse()?,
 //!     };
 //!
 //!     let v6: RibEntry<Ipv6> = RibEntry {
 //!         prefix: "2001:db8::/48".parse()?,
-//!         next_hop: "2001:db8:f00::1".parse()?
+//!         next_hop: "2001:db8:f00::1".parse()?,
 //!     };
 //!
-//!     assert_eq!(v4.get_next_hop("192.0.2.127".parse()?), Some("198.51.100.1".parse()?));
+//!     assert_eq!(
+//!         v4.get_next_hop("192.0.2.127".parse()?),
+//!         Some("198.51.100.1".parse()?)
+//!     );
 //!     assert_eq!(v6.get_next_hop("2001:db8:ffff::ffff".parse()?), None);
 //!
 //!     Ok(())
@@ -79,12 +81,12 @@
 //! either address-family, as in the following:
 //!
 //! ``` rust
-//! use ip::{concrete, any, Afi, Ipv4, Ipv6};
+//! use ip::{any, concrete, Afi, Ipv4, Ipv6};
 //!
 //! // `x` and `y` must be the same address-family
 //! fn longer_concrete<A: Afi>(
 //!     x: concrete::Prefix<A>,
-//!     y: concrete::Prefix<A>
+//!     y: concrete::Prefix<A>,
 //! ) -> concrete::Prefix<A> {
 //!     if x.length() > y.length() {
 //!         x
@@ -97,12 +99,8 @@
 //! // comparable
 //! fn longer_any(x: any::Prefix, y: any::Prefix) -> Option<any::Prefix> {
 //!     match (x, y) {
-//!         (any::Prefix::Ipv4(x), any::Prefix::Ipv4(y)) => {
-//!             Some(longer_concrete(x, y).into())
-//!         }
-//!         (any::Prefix::Ipv6(x), any::Prefix::Ipv6(y)) => {
-//!             Some(longer_concrete(x, y).into())
-//!         }
+//!         (any::Prefix::Ipv4(x), any::Prefix::Ipv4(y)) => Some(longer_concrete(x, y).into()),
+//!         (any::Prefix::Ipv6(x), any::Prefix::Ipv6(y)) => Some(longer_concrete(x, y).into()),
 //!         _ => None,
 //!     }
 //! }
@@ -145,11 +143,11 @@
 //! #### Example
 //!
 //! ``` rust
-//! use ip::{Ipv4, Any, Afi, AfiClass, Address};
+//! use ip::{Address, Afi, AfiClass, Any, Ipv4};
 //!
 //! #[derive(Debug, PartialEq)]
 //! struct Foo<A: AfiClass> {
-//!     addr: Address<A>
+//!     addr: Address<A>,
 //! }
 //!
 //! impl<A: AfiClass> Foo<A> {
@@ -167,14 +165,24 @@
 //! }
 //!
 //! let anys: Vec<Foo<Any>> = vec![
-//!     Foo { addr: Address::<Any>::Ipv4("192.0.2.1".parse().unwrap()) },
-//!     Foo { addr: Address::<Any>::Ipv6("2001:db8::1".parse().unwrap()) },
-//!     Foo { addr: Address::<Any>::Ipv4("198.51.100.1".parse().unwrap()) },
+//!     Foo {
+//!         addr: Address::<Any>::Ipv4("192.0.2.1".parse().unwrap()),
+//!     },
+//!     Foo {
+//!         addr: Address::<Any>::Ipv6("2001:db8::1".parse().unwrap()),
+//!     },
+//!     Foo {
+//!         addr: Address::<Any>::Ipv4("198.51.100.1".parse().unwrap()),
+//!     },
 //! ];
 //!
 //! let filtered: Vec<Foo<Ipv4>> = vec![
-//!     Foo { addr: "192.0.2.1".parse().unwrap() },
-//!     Foo { addr: "198.51.100.1".parse().unwrap() },
+//!     Foo {
+//!         addr: "192.0.2.1".parse().unwrap(),
+//!     },
+//!     Foo {
+//!         addr: "198.51.100.1".parse().unwrap(),
+//!     },
 //! ];
 //!
 //! assert_eq!(

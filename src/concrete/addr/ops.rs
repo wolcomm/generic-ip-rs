@@ -1,11 +1,10 @@
 use core::ops::{BitAnd, BitAndAssign, BitOr, BitXor};
 
-use crate::traits::Afi;
-
 use super::{
     super::{mask_types::Type, Mask},
     Address,
 };
+use crate::traits::Afi;
 
 impl<A: Afi, T: Type> BitAnd<Mask<T, A>> for Address<A> {
     type Output = Self;
