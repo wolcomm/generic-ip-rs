@@ -2,11 +2,13 @@ use core::fmt::{self};
 use core::ops::{Shl, Shr};
 
 use crate::{
+    any,
     fmt::AddressDisplay,
     traits::{self, primitive::Address as _, Afi},
+    Ipv4, Ipv6,
 };
 
-use super::PrefixLength;
+use super::{impl_try_from_any, PrefixLength};
 
 mod private;
 pub use self::private::Mask;
@@ -29,6 +31,10 @@ impl<A: Afi, T: Type> Mask<T, A> {
     pub const ONES: Self = Self::new(A::Primitive::ONES);
 }
 
+impl<T: Type, A: Afi> traits::Mask for Mask<T, A> {}
+impl<A: Afi> traits::Netmask for Netmask<A> {}
+impl<A: Afi> traits::Hostmask for Hostmask<A> {}
+
 impl<A: Afi> From<PrefixLength<A>> for Netmask<A> {
     fn from(len: PrefixLength<A>) -> Self {
         Self::ONES << -len
@@ -41,9 +47,19 @@ impl<A: Afi> From<PrefixLength<A>> for Hostmask<A> {
     }
 }
 
-impl<T: Type, A: Afi> traits::Mask for Mask<T, A> {}
-impl<A: Afi> traits::Netmask for Netmask<A> {}
-impl<A: Afi> traits::Hostmask for Hostmask<A> {}
+impl_try_from_any! {
+    any::Netmask {
+        any::Netmask::Ipv4 => Netmask<Ipv4>,
+        any::Netmask::Ipv6 => Netmask<Ipv6>,
+    }
+}
+
+impl_try_from_any! {
+    any::Hostmask {
+        any::Hostmask::Ipv4 => Hostmask<Ipv4>,
+        any::Hostmask::Ipv6 => Hostmask<Ipv6>,
+    }
+}
 
 impl<A: Afi, T: Type> Shl<PrefixLength<A>> for Mask<T, A> {
     type Output = Self;

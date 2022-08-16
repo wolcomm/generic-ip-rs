@@ -2,13 +2,17 @@ use core::fmt;
 use core::ops::Neg;
 
 use crate::{
+    any,
     error::{err, Error, Kind},
     traits::{
         self,
         primitive::{self, Address as _, Length as _},
         Afi,
     },
+    Ipv4, Ipv6,
 };
+
+use super::impl_try_from_any;
 
 #[allow(clippy::wildcard_imports)]
 mod private {
@@ -68,6 +72,13 @@ impl<A: Afi> PrefixLength<A> {
 }
 
 impl<A: Afi> traits::PrefixLength for PrefixLength<A> {}
+
+impl_try_from_any! {
+    any::PrefixLength {
+        any::PrefixLength::Ipv4 => PrefixLength<Ipv4>,
+        any::PrefixLength::Ipv6 => PrefixLength<Ipv6>,
+    }
+}
 
 impl<A: Afi> fmt::Display for PrefixLength<A> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {

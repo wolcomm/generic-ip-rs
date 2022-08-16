@@ -145,20 +145,25 @@
 //! #### Example
 //!
 //! ``` rust
-//! use ip::{Ipv4, Any, AfiClass, Address};
+//! use ip::{Ipv4, Any, Afi, AfiClass, Address};
 //!
 //! #[derive(Debug, PartialEq)]
 //! struct Foo<A: AfiClass> {
 //!     addr: Address<A>
 //! }
 //!
-//! fn filter(anys: Vec<Foo<Any>>) -> Vec<Foo<Ipv4>> {
-//!     anys.into_iter()
-//!         .filter_map(|foo| match foo.addr {
-//!             Address::<Any>::Ipv4(addr) => Some(Foo { addr }),
-//!             Address::<Any>::Ipv6(_) => None,
-//!         })
-//!         .collect()
+//! impl<A: AfiClass> Foo<A> {
+//!     fn new(addr: Address<A>) -> Self {
+//!         Self { addr }
+//!     }
+//!
+//!     fn into_concrete<C>(self) -> Option<Foo<C>>
+//!     where
+//!         C: Afi,
+//!         Address<C>: TryFrom<Address<A>>,
+//!     {
+//!         self.addr.try_into().map(Foo::new).ok()
+//!     }
 //! }
 //!
 //! let anys: Vec<Foo<Any>> = vec![
@@ -172,7 +177,12 @@
 //!     Foo { addr: "198.51.100.1".parse().unwrap() },
 //! ];
 //!
-//! assert_eq!(filter(anys), filtered);
+//! assert_eq!(
+//!     anys.into_iter()
+//!         .filter_map(Foo::into_concrete)
+//!         .collect::<Vec<Foo<Ipv4>>>(),
+//!     filtered
+//! );
 //! ```
 #![doc(html_root_url = "https://docs.rs/generic-ip/0.1.0-alpha.2")]
 // clippy lints

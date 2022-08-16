@@ -3,12 +3,14 @@ use core::fmt;
 use core::str::FromStr;
 
 use crate::{
+    any,
     error::Error,
     fmt::AddressDisplay,
     traits::{self, primitive::Address as _, Afi},
+    Ipv4, Ipv6,
 };
 
-use super::{common_length, Address, Hostmask, Interface, Netmask};
+use super::{common_length, impl_try_from_any, Address, Hostmask, Interface, Netmask};
 
 mod len;
 pub use self::len::PrefixLength;
@@ -126,6 +128,13 @@ impl<A: Afi> FromStr for Prefix<A> {
     }
 }
 
+impl_try_from_any! {
+    any::Prefix {
+        any::Prefix::Ipv4 => Prefix<Ipv4>,
+        any::Prefix::Ipv6 => Prefix<Ipv6>,
+    }
+}
+
 impl<A: Afi> fmt::Display for Prefix<A>
 where
     A::Primitive: AddressDisplay<A>,
@@ -136,7 +145,7 @@ where
 }
 
 #[cfg(feature = "ipnet")]
-impl From<ipnet::Ipv4Net> for Prefix<super::Ipv4> {
+impl From<ipnet::Ipv4Net> for Prefix<Ipv4> {
     fn from(net: ipnet::Ipv4Net) -> Self {
         let prefix = net.network().into();
         let length = PrefixLength::from_primitive(net.prefix_len())
@@ -146,7 +155,7 @@ impl From<ipnet::Ipv4Net> for Prefix<super::Ipv4> {
 }
 
 #[cfg(feature = "ipnet")]
-impl From<ipnet::Ipv6Net> for Prefix<super::Ipv6> {
+impl From<ipnet::Ipv6Net> for Prefix<Ipv6> {
     fn from(net: ipnet::Ipv6Net) -> Self {
         let prefix = net.network().into();
         let length = PrefixLength::from_primitive(net.prefix_len())

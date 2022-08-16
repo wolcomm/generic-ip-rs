@@ -2,12 +2,14 @@ use core::fmt;
 use core::str::FromStr;
 
 use crate::{
+    any,
     error::Error,
     fmt::AddressDisplay,
     traits::{self, primitive::Address as _, Afi, Prefix as _},
+    Ipv4, Ipv6,
 };
 
-use super::{Address, Prefix, PrefixLength};
+use super::{impl_try_from_any, Address, Prefix, PrefixLength};
 
 #[allow(clippy::wildcard_imports)]
 mod private {
@@ -22,7 +24,7 @@ mod private {
 
     impl<A: Afi> Interface<A> {
         /// Construct a new [`Interface<A>`] from an address and prefix length.
-        pub fn new(address: Address<A>, length: PrefixLength<A>) -> Self {
+        pub const fn new(address: Address<A>, length: PrefixLength<A>) -> Self {
             Self { address, length }
         }
 
@@ -86,6 +88,13 @@ impl<A: Afi> FromStr for Interface<A> {
     }
 }
 
+impl_try_from_any! {
+    any::Interface {
+        any::Interface::Ipv4 => Interface<Ipv4>,
+        any::Interface::Ipv6 => Interface<Ipv6>,
+    }
+}
+
 impl<A: Afi> fmt::Display for Interface<A>
 where
     A::Primitive: AddressDisplay<A>,
@@ -96,7 +105,7 @@ where
 }
 
 #[cfg(feature = "ipnet")]
-impl From<ipnet::Ipv4Net> for Interface<super::Ipv4> {
+impl From<ipnet::Ipv4Net> for Interface<Ipv4> {
     fn from(net: ipnet::Ipv4Net) -> Self {
         let address = net.addr().into();
         let length = PrefixLength::from_primitive(net.prefix_len())
@@ -106,7 +115,7 @@ impl From<ipnet::Ipv4Net> for Interface<super::Ipv4> {
 }
 
 #[cfg(feature = "ipnet")]
-impl From<ipnet::Ipv6Net> for Interface<super::Ipv6> {
+impl From<ipnet::Ipv6Net> for Interface<Ipv6> {
     fn from(net: ipnet::Ipv6Net) -> Self {
         let address = net.addr().into();
         let length = PrefixLength::from_primitive(net.prefix_len())

@@ -73,6 +73,9 @@ pub enum Kind {
     PrefixLength,
     /// An [`Error`] resulting from a parser failure.
     ParserError,
+    /// An [`Error`] resulting from an attempt to convert between incompatible
+    /// address families.
+    AfiMismatch,
 }
 
 impl fmt::Display for Kind {
@@ -82,6 +85,7 @@ impl fmt::Display for Kind {
                 write!(f, "prefix-length out of bounds")
             }
             Self::ParserError => write!(f, "parser error"),
+            Self::AfiMismatch => write!(f, "address family mis-match"),
         }
     }
 }

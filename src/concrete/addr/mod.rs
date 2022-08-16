@@ -2,12 +2,14 @@ use core::fmt;
 use core::str::FromStr;
 
 use crate::{
+    any,
     error::Error,
     fmt::AddressDisplay,
     traits::{self, primitive::Address as _, Afi},
+    Ipv4, Ipv6,
 };
 
-use super::{AddressRange, PrefixLength};
+use super::{impl_try_from_any, AddressRange, PrefixLength};
 
 mod private;
 pub use self::private::Address;
@@ -205,6 +207,13 @@ impl<A: Afi> FromStr for Address<A> {
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         A::Primitive::parse_addr(s).map(Self::new)
+    }
+}
+
+impl_try_from_any! {
+    any::Address {
+        any::Address::Ipv4 => Address<Ipv4>,
+        any::Address::Ipv6 => Address<Ipv6>,
     }
 }
 

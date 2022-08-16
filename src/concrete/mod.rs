@@ -15,3 +15,24 @@ pub use self::prefix::{Prefix, PrefixLength, PrefixOrdering};
 
 mod range;
 pub use self::range::AddressRange;
+
+macro_rules! impl_try_from_any {
+    ( $any_ty:ty {
+        $( $variant:path => $concrete_ty:ty ),* $(,)?
+    } ) => {
+        $(
+            impl TryFrom<$any_ty> for $concrete_ty {
+                type Error = $crate::error::Error;
+
+                fn try_from(from: $any_ty) -> Result<Self, Self::Error> {
+                    if let $variant(inner) = from {
+                        Ok(inner)
+                    } else {
+                        Err($crate::error::err!($crate::error::Kind::AfiMismatch))
+                    }
+                }
+            }
+        )*
+    }
+}
+pub(self) use impl_try_from_any;
