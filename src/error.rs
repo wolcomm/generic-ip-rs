@@ -48,9 +48,10 @@ impl fmt::Display for Error {
 }
 
 #[cfg(feature = "std")]
+#[allow(trivial_casts)]
 impl std::error::Error for Error {
-    fn source(&self) -> Option<SourceError> {
-        self.source
+    fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
+        self.source.map(|err| err as _)
     }
 }
 
@@ -91,7 +92,7 @@ impl fmt::Display for Kind {
 }
 
 #[cfg(feature = "std")]
-type SourceError = &'static (dyn std::error::Error + 'static);
+type SourceError = &'static (dyn std::error::Error + Send + Sync + 'static);
 #[cfg(not(feature = "std"))]
 type SourceError = &'static (dyn core::any::Any);
 
