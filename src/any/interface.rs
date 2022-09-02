@@ -1,4 +1,12 @@
+use core::fmt;
 use core::str::FromStr;
+
+#[cfg(any(test, feature = "arbitrary"))]
+use proptest::{
+    arbitrary::{any, Arbitrary},
+    prop_oneof,
+    strategy::{BoxedStrategy, Strategy},
+};
 
 use super::{delegate, Address, Prefix, PrefixLength};
 use crate::{
@@ -75,5 +83,25 @@ impl FromStr for Interface {
     }
 }
 
-// TODO: impl Display for Prefix
-// TODO: impl Arbitrary for Prefix
+impl fmt::Display for Interface {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            Self::Ipv4(interface) => interface.fmt(f),
+            Self::Ipv6(interface) => interface.fmt(f),
+        }
+    }
+}
+
+#[cfg(any(test, feature = "arbitrary"))]
+impl Arbitrary for Interface {
+    type Parameters = ();
+    type Strategy = BoxedStrategy<Self>;
+
+    fn arbitrary_with(_: Self::Parameters) -> Self::Strategy {
+        prop_oneof![
+            any::<concrete::Interface<Ipv4>>().prop_map(Self::Ipv4),
+            any::<concrete::Interface<Ipv6>>().prop_map(Self::Ipv6),
+        ]
+        .boxed()
+    }
+}

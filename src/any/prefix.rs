@@ -1,4 +1,12 @@
+use core::fmt;
 use core::str::FromStr;
+
+#[cfg(any(test, feature = "arbitrary"))]
+use proptest::{
+    arbitrary::{any, any_with, Arbitrary, ParamsFor},
+    prop_oneof,
+    strategy::{BoxedStrategy, Strategy},
+};
 
 use super::{delegate, Address, Hostmask, Netmask};
 use crate::{
@@ -92,8 +100,31 @@ impl FromStr for Prefix {
     }
 }
 
-// TODO: impl Display for Prefix
-// TODO: impl Arbitrary for Prefix
+impl fmt::Display for Prefix {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            Self::Ipv4(prefix) => prefix.fmt(f),
+            Self::Ipv6(prefix) => prefix.fmt(f),
+        }
+    }
+}
+
+#[cfg(any(test, feature = "arbitrary"))]
+impl Arbitrary for Prefix {
+    type Parameters = (
+        ParamsFor<concrete::Prefix<Ipv4>>,
+        ParamsFor<concrete::Prefix<Ipv6>>,
+    );
+    type Strategy = BoxedStrategy<Self>;
+
+    fn arbitrary_with(params: Self::Parameters) -> Self::Strategy {
+        prop_oneof![
+            any_with::<concrete::Prefix<Ipv4>>(params.0).prop_map(Self::Ipv4),
+            any_with::<concrete::Prefix<Ipv6>>(params.1).prop_map(Self::Ipv6),
+        ]
+        .boxed()
+    }
+}
 
 /// The length of either an IPv4 or IPv6 prefix.
 ///
@@ -130,6 +161,27 @@ impl From<concrete::PrefixLength<Ipv6>> for PrefixLength {
     }
 }
 
-// TODO: impl Display for PrefixLength
 // TODO: impl FromStr for PrefixLength
-// TODO: impl Arbitrary for PrefixLength
+
+impl fmt::Display for PrefixLength {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            Self::Ipv4(len) => len.fmt(f),
+            Self::Ipv6(len) => len.fmt(f),
+        }
+    }
+}
+
+#[cfg(any(test, feature = "arbitrary"))]
+impl Arbitrary for PrefixLength {
+    type Parameters = ();
+    type Strategy = BoxedStrategy<Self>;
+
+    fn arbitrary_with(_: Self::Parameters) -> Self::Strategy {
+        prop_oneof![
+            any::<concrete::PrefixLength<Ipv4>>().prop_map(Self::Ipv4),
+            any::<concrete::PrefixLength<Ipv6>>().prop_map(Self::Ipv6),
+        ]
+        .boxed()
+    }
+}
