@@ -18,6 +18,7 @@ all-features = true
 name = "ip"
 
 [features]
+default = ["std"]
 arbitrary = ["proptest"]
 std = []
 
