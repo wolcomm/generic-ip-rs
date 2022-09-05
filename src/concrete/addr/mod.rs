@@ -20,6 +20,9 @@ mod ipv4;
 mod ipv6;
 pub use self::ipv6::MulticastScope as Ipv6MulticastScope;
 
+mod range;
+pub use self::range::Range;
+
 impl<A: Afi> Address<A> {
     /// The `localhost` address for address family `A`.
     pub const LOCALHOST: Self = Self::new(A::Primitive::LOCALHOST);

@@ -17,14 +17,13 @@ use crate::traits::Afi;
 /// assert!(range.contains(&mid));
 /// # Ok::<(), ip::Error>(())
 /// ```
-#[allow(clippy::module_name_repetitions)]
 #[derive(Clone, Debug)]
-pub struct AddressRange<A: Afi>(RangeInclusive<Address<A>>);
+pub struct Range<A: Afi>(RangeInclusive<Address<A>>);
 
-impl<A: Afi> AddressRange<A> {
+impl<A: Afi> Range<A> {
     /// Construct a new [`AddressRange<A>`] from `start` and `end` bounds.
     pub const fn new(start: Address<A>, end: Address<A>) -> Self {
-        Self(RangeInclusive::new(start, end))
+        Self(start..=end)
     }
 
     /// Returns [`true`] if `addr` is contained in the range.
@@ -33,7 +32,7 @@ impl<A: Afi> AddressRange<A> {
     }
 }
 
-impl<A: Afi> From<&RangeInclusive<A::Primitive>> for AddressRange<A> {
+impl<A: Afi> From<&RangeInclusive<A::Primitive>> for Range<A> {
     fn from(range: &RangeInclusive<A::Primitive>) -> Self {
         Self::new(Address::new(*range.start()), Address::new(*range.end()))
     }

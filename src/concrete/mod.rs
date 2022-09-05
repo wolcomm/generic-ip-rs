@@ -2,7 +2,7 @@ mod af;
 pub use self::af::{Afi, Ipv4, Ipv6};
 
 mod addr;
-pub use self::addr::{common_length, Address, Ipv6MulticastScope};
+pub use self::addr::{common_length, Address, Ipv6MulticastScope, Range as AddressRange};
 
 mod mask;
 pub use self::mask::{types as mask_types, Hostmask, Mask, Netmask};
@@ -11,10 +11,7 @@ mod interface;
 pub use self::interface::Interface;
 
 mod prefix;
-pub use self::prefix::{Prefix, PrefixLength, PrefixOrdering};
-
-mod range;
-pub use self::range::AddressRange;
+pub use self::prefix::{Prefix, PrefixLength, PrefixOrdering, Range as PrefixRange};
 
 macro_rules! impl_try_from_any {
     ( $any_ty:ty {
