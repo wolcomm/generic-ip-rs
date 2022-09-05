@@ -52,15 +52,16 @@ mod private {
 
 pub use self::private::PrefixLength;
 
-impl<A: Afi> PrefixLength<A> {
-    /// Returns a new [`PrefixLength<A>`] that is one less than `self` unless
-    /// `self` is already the minimum possible value.
-    ///
-    /// # Errors
-    ///
-    /// An [`Error`] of kind [`error::Kind::PrefixLength`] is returned if self
-    /// is equal to zero.
-    pub fn decrement(self) -> Result<Self, Error> {
+impl<A: Afi> traits::PrefixLength for PrefixLength<A> {
+    fn increment(self) -> Result<Self, Error> {
+        let l = self.into_primitive();
+        if l < <A::Primitive as primitive::Address<A>>::MAX_LENGTH {
+            Self::from_primitive(l + <A::Primitive as primitive::Address<A>>::Length::ONE)
+        } else {
+            Err(err!(Kind::PrefixLength))
+        }
+    }
+    fn decrement(self) -> Result<Self, Error> {
         let l = self.into_primitive();
         if l > <A::Primitive as primitive::Address<A>>::Length::ZERO {
             Self::from_primitive(l - <A::Primitive as primitive::Address<A>>::Length::ONE)
@@ -69,8 +70,6 @@ impl<A: Afi> PrefixLength<A> {
         }
     }
 }
-
-impl<A: Afi> traits::PrefixLength for PrefixLength<A> {}
 
 impl_try_from_any! {
     any::PrefixLength {

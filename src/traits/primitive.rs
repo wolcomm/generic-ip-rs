@@ -1,7 +1,7 @@
 use core::fmt::{Debug, Display};
 use core::hash::Hash;
 use core::mem;
-use core::ops::{BitAnd, BitOr, BitXor, RangeInclusive, Shl, Shr, Sub};
+use core::ops::{Add, BitAnd, BitOr, BitXor, RangeInclusive, Shl, Shr, Sub};
 
 use super::Afi;
 use crate::{
@@ -410,7 +410,9 @@ pub(crate) trait IntoIpv6Segments: Address<Ipv6> {
 impl<P: Address<Ipv6>> IntoIpv6Segments for P {}
 
 /// Underlying integer-like type used to respresent an IP prefix-length.
-pub trait Length: Copy + Clone + Debug + Display + Hash + Ord + Sub<Output = Self> {
+pub trait Length:
+    Copy + Clone + Debug + Display + Hash + Ord + Add<Output = Self> + Sub<Output = Self>
+{
     /// Additive identity value.
     const ZERO: Self;
     /// Additive unit value.

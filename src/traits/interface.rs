@@ -1,5 +1,8 @@
-use core::fmt::Debug;
+use core::fmt::{Debug, Display};
 use core::hash::Hash;
+use core::str::FromStr;
+
+use crate::error::Error;
 
 use super::{Address, Prefix, PrefixLength};
 
@@ -14,7 +17,9 @@ use super::{Address, Prefix, PrefixLength};
 ///
 /// See also [`concrete::Interface<A>`][crate::concrete::Interface] and
 /// [`any::Interface`][crate::any::Interface] for address-family specific items.
-pub trait Interface: Sized + Copy + Clone + Debug + Hash + PartialEq + Eq {
+pub trait Interface:
+    Copy + Clone + Debug + Display + FromStr<Err = Error> + Sized + Hash + PartialEq + Eq
+{
     /// The type of IP address respresented by this interface type.
     type Address: Address;
 

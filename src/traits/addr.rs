@@ -1,5 +1,8 @@
-use core::fmt::Debug;
+use core::fmt::{Debug, Display};
 use core::hash::Hash;
+use core::str::FromStr;
+
+use crate::error::Error;
 
 /// Address-family independent interface for IP addresses
 ///
@@ -12,7 +15,9 @@ use core::hash::Hash;
 ///
 /// See also [`concrete::Address<A>`][crate::concrete::Address] and
 /// [`any::Address`][crate::any::Address] for address-family specific items.
-pub trait Address: Clone + Copy + Debug + Hash + PartialEq + Eq + PartialOrd {
+pub trait Address:
+    Clone + Copy + Debug + Display + FromStr<Err = Error> + Hash + PartialEq + Eq + PartialOrd
+{
     /// Returns [`true`] if this is an IPv4 broadcast address
     /// (`255.255.255.255`). Returns [`false`] for all IPv6 addresses.
     ///
