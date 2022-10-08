@@ -4,7 +4,7 @@ use core::fmt::Debug;
 use core::hash::Hash;
 
 use super::primitive;
-use super::{Address, Hostmask, Interface, Netmask, Prefix, PrefixLength};
+use super::{Address, Hostmask, Interface, Netmask, Prefix, PrefixLength, PrefixRange};
 use crate::{any, concrete, fmt};
 
 /// An interface for describing an IP address family.
@@ -43,6 +43,10 @@ pub trait AfiClass: Copy + Debug + Hash + Ord {
 
     /// The type respresenting IP hostmask values of this address family class.
     type Hostmask: Hostmask;
+
+    /// The type respresenting IP prefix range values of this address family
+    /// class.
+    type PrefixRange: PrefixRange;
 
     /// Get the [`any::AfiClass`] variant associated with `Self`.
     fn as_afi_class() -> any::AfiClass;

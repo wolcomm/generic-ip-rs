@@ -1,6 +1,6 @@
 use core::fmt;
 
-use super::{Address, Hostmask, Interface, Netmask, Prefix, PrefixLength};
+use super::{Address, Hostmask, Interface, Netmask, Prefix, PrefixLength, PrefixRange};
 use crate::{any, traits};
 
 /// The IPv4 address family.
@@ -33,6 +33,7 @@ impl<A: traits::Afi> traits::AfiClass for A {
     type Prefix = Prefix<A>;
     type Netmask = Netmask<A>;
     type Hostmask = Hostmask<A>;
+    type PrefixRange = PrefixRange<A>;
 
     fn as_afi_class() -> any::AfiClass {
         A::as_afi().into()

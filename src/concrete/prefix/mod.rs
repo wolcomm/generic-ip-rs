@@ -9,7 +9,7 @@ use crate::{
     any,
     error::Error,
     fmt::AddressDisplay,
-    traits::{self, primitive::Address as _, Afi},
+    traits::{self, primitive::Address as _, Afi, PrefixLength as _},
     Ipv4, Ipv6,
 };
 
@@ -18,6 +18,9 @@ pub use self::len::PrefixLength;
 
 mod ord;
 pub use self::ord::PrefixOrdering;
+
+mod range;
+pub use self::range::Range;
 
 #[allow(clippy::wildcard_imports)]
 mod private {
@@ -64,7 +67,7 @@ impl<A: Afi> Prefix<A> {
 
 impl<A: Afi> traits::Prefix for Prefix<A> {
     type Address = Address<A>;
-    type PrefixLength = PrefixLength<A>;
+    type Length = PrefixLength<A>;
     type Hostmask = Hostmask<A>;
     type Netmask = Netmask<A>;
 
@@ -80,11 +83,11 @@ impl<A: Afi> traits::Prefix for Prefix<A> {
         self.length().into()
     }
 
-    fn max_prefix_len(&self) -> Self::PrefixLength {
-        Self::PrefixLength::MAX
+    fn max_prefix_len(&self) -> Self::Length {
+        Self::Length::MAX
     }
 
-    fn prefix_len(&self) -> Self::PrefixLength {
+    fn prefix_len(&self) -> Self::Length {
         self.length()
     }
 

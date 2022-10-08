@@ -1,5 +1,6 @@
 use core::fmt::{Debug, Display};
 use core::hash::Hash;
+use core::ops::RangeInclusive;
 use core::str::FromStr;
 
 use crate::error::Error;
@@ -24,7 +25,7 @@ pub trait Prefix:
     type Address: Address;
 
     /// The type used to respresent lengths for this IP prefix type.
-    type PrefixLength: Length;
+    type Length: Length;
 
     /// The type of IP hostmask corresponding to this prefix type.
     type Hostmask: Mask;
@@ -115,7 +116,7 @@ pub trait Prefix:
     /// );
     /// # Ok::<(), ip::Error>(())
     /// ```
-    fn max_prefix_len(&self) -> Self::PrefixLength;
+    fn max_prefix_len(&self) -> Self::Length;
 
     /// Returns the length of this prefix.
     ///
@@ -135,7 +136,7 @@ pub trait Prefix:
     /// );
     /// # Ok::<(), ip::Error>(())
     /// ```
-    fn prefix_len(&self) -> Self::PrefixLength;
+    fn prefix_len(&self) -> Self::Length;
 
     /// Returns the broadcast address of the IP subnet respresented by this
     /// prefix.
@@ -295,4 +296,36 @@ pub trait Length: Copy + Clone + Debug + Display + Hash + PartialEq + Eq + Parti
     /// An [`Error`] of kind [`error::Kind::PrefixLength`] is returned if
     /// `self` is zero-valued.
     fn decrement(self) -> Result<Self, Error>;
+}
+
+/// Address-family independent interface for IP prefix ranges.
+///
+/// See also [`concrete::PrefixRange<A>`][crate::concrete::PrefixRange] and
+/// [`any::PrefixRange`][crate::any::PrefixRange] for address-family specific
+/// items.
+pub trait Range: Clone + Debug + Display + Hash + PartialEq + Eq + PartialOrd {
+    type Prefix: Prefix<Length = Self::Length>;
+    type Length: Length;
+
+    fn prefix(&self) -> Self::Prefix;
+    fn lower(&self) -> Self::Length;
+    fn upper(&self) -> Self::Length;
+    fn with_length_range(self, len_range: RangeInclusive<Self::Length>) -> Option<Self>;
+
+    fn or_longer(self) -> Self {
+        let lower = self.lower();
+        let upper = self.prefix().max_prefix_len();
+        // OK to unwrap here as we can guarantee that `len_range` in non-empty.
+        self.with_length_range(lower..=upper).unwrap()
+    }
+
+    fn or_longer_excl(self) -> Option<Self> {
+        let lower = self.lower().increment().ok()?;
+        let upper = self.prefix().max_prefix_len();
+        self.with_length_range(lower..=upper)
+    }
+
+    fn with_length(self, len: Self::Length) -> Option<Self> {
+        self.with_length_range(len..=len)
+    }
 }

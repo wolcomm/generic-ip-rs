@@ -11,18 +11,18 @@ mod interface;
 pub use self::interface::Interface;
 
 mod prefix;
-pub use self::prefix::{Prefix, PrefixLength};
+pub use self::prefix::{Length as PrefixLength, Prefix, Range as PrefixRange};
 
 macro_rules! delegate {
     ( $( fn $fn:ident(&self) -> $ret_ty:ty; )* ) => {
         $(
             fn $fn(&self) -> $ret_ty {
                 match self {
-                    Self::Ipv4(prefix) => prefix.$fn().into(),
-                    Self::Ipv6(prefix) => prefix.$fn().into(),
+                    Self::Ipv4(inner) => inner.$fn().into(),
+                    Self::Ipv6(inner) => inner.$fn().into(),
                 }
             }
         )*
-    }
+    };
 }
 pub(self) use delegate;

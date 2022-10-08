@@ -77,6 +77,8 @@ pub enum Kind {
     /// An [`Error`] resulting from an attempt to convert between incompatible
     /// address families.
     AfiMismatch,
+    /// An [`Error`] resulting from an invalid prefix-length range.
+    PrefixLengthRange,
 }
 
 impl fmt::Display for Kind {
@@ -87,6 +89,7 @@ impl fmt::Display for Kind {
             }
             Self::ParserError => write!(f, "parser error"),
             Self::AfiMismatch => write!(f, "address family mis-match"),
+            Self::PrefixLengthRange => write!(f, "invalid prefix-length range"),
         }
     }
 }
