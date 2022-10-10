@@ -48,6 +48,16 @@ mod private {
             self.0
         }
     }
+
+    impl<A> PrefixLength<A>
+    where
+        A: Afi,
+        A::Primitive: primitive::Address<A, Length = u8>,
+    {
+        pub(super) const fn as_u8(&self) -> &u8 {
+            &self.0
+        }
+    }
 }
 
 pub use self::private::PrefixLength;
@@ -68,6 +78,15 @@ impl<A: Afi> traits::PrefixLength for PrefixLength<A> {
         } else {
             Err(err!(Kind::PrefixLength))
         }
+    }
+}
+
+impl<A: Afi> AsRef<u8> for PrefixLength<A>
+where
+    A::Primitive: primitive::Address<A, Length = u8>,
+{
+    fn as_ref(&self) -> &u8 {
+        self.as_u8()
     }
 }
 

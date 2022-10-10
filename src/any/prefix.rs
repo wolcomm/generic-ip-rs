@@ -175,7 +175,11 @@ impl From<concrete::PrefixLength<Ipv6>> for Length {
     }
 }
 
-// TODO: impl FromStr for Length
+impl AsRef<u8> for Length {
+    delegate! {
+        fn as_ref(&self) -> &u8;
+    }
+}
 
 impl fmt::Display for Length {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
