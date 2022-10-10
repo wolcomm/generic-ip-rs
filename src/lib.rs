@@ -270,6 +270,9 @@ pub type Interface<A> = <A as AfiClass>::Interface;
 /// Convenience alias to name types implementing [`traits::PrefixLength`].
 pub type PrefixLength<A> = <A as AfiClass>::PrefixLength;
 
+/// Convenience alias to name types implementing [`traits::PrefixRange`].
+pub type PrefixRange<A> = <A as AfiClass>::PrefixRange;
+
 /// Convenience alias to name types implementing [`traits::Prefix`].
 pub type Prefix<A> = <A as AfiClass>::Prefix;
 
