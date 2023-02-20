@@ -1,7 +1,7 @@
 use core::fmt;
 
 use super::{Address, Hostmask, Interface, Netmask, Prefix, PrefixLength, PrefixRange};
-use crate::{any, traits};
+use crate::{any, error::Error, traits};
 
 /// The IPv4 address family.
 #[derive(Clone, Copy, Debug, Hash, PartialEq, Eq, PartialOrd, Ord)]
@@ -56,6 +56,22 @@ pub enum Afi {
     Ipv4,
     /// Variant respresenting the IPv6 address family.
     Ipv6,
+}
+
+#[cfg(feature = "std")]
+impl Afi {
+    // TODO: consider making this a method on the concrete `Ipv6` and `Ipv4` to
+    // avoid the dynamic despatch and downcasting.
+    #[allow(box_pointers)]
+    pub(crate) fn new_prefix_length(
+        self,
+        len: u8,
+    ) -> Result<std::boxed::Box<dyn std::any::Any>, Error> {
+        match self {
+            Self::Ipv4 => Ok(PrefixLength::<Ipv4>::from_primitive(len).map(std::boxed::Box::new)?),
+            Self::Ipv6 => Ok(PrefixLength::<Ipv6>::from_primitive(len).map(std::boxed::Box::new)?),
+        }
+    }
 }
 
 impl fmt::Display for Afi {

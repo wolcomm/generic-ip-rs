@@ -13,3 +13,8 @@ impl Type for Net {}
 #[derive(Clone, Copy, Debug, Hash, PartialEq, Eq)]
 pub enum Host {}
 impl Type for Host {}
+
+/// A general bit-mask, used to perform arbitrary bit-wise arithmitic.
+#[derive(Clone, Copy, Debug, Hash, PartialEq, Eq)]
+pub enum Bit {}
+impl Type for Bit {}

@@ -3,7 +3,10 @@ use core::hash::Hash;
 use core::ops::RangeInclusive;
 use core::str::FromStr;
 
-use crate::error::Error;
+use crate::{
+    concrete,
+    error::{self, Error},
+};
 
 use super::{Address, Mask};
 
@@ -32,9 +35,10 @@ pub trait Prefix:
 
     /// The type of IP netmask corresponding to this prefix type.
     type Netmask: Mask;
+
+    type Subprefixes: Iterator<Item = Self>;
     // TODO:
     // type Hosts: Iterator<Item = Self::Address>;
-    // type Subnets: Iterator<Item = Self>;
 
     /// Returns the network address of the IP subnet respresented by this
     /// prefix.
@@ -246,10 +250,42 @@ pub trait Prefix:
     // #[cfg(feature = "std")]
     // fn aggregate(networks: &std::vec::Vec<Self>) -> std::vec::Vec<Self>;
     // fn hosts(&self) -> Self::Hosts;
-    // fn subnets(
-    //     &self,
-    //     new_prefix_len: Self::PrefixLength,
-    // ) -> Result<Self::Subnets, Error<'static, A, P>>;
+
+    /// Returns an iterator over the subprefixes of `self` of length
+    /// `new_prefix_len`.
+    ///
+    /// # Errors
+    ///
+    /// An error is returned if `new_prefix_len < self.prefix_len()`.
+    ///
+    /// # Examples
+    ///
+    /// ``` rust
+    /// use ip::{traits::Prefix as _, Prefix, Ipv4, Ipv6};
+    ///
+    /// let prefix: Prefix<Ipv4> = "192.0.2.0/24".parse()?;
+    /// let new_length = PrefixLength::<Ipv4>::from_primitive(26)?;
+    ///
+    /// assert_eq!(ipv4_prefix.subprefixes(new_length)?.count(), 4);
+    /// # Ok::<(), ip::Error>(())
+    /// ```
+    fn subprefixes(&self, new_prefix_len: Self::Length) -> Result<Self::Subprefixes, Error>;
+
+    fn afi(&self) -> concrete::Afi {
+        self.network().afi()
+    }
+
+    #[cfg(feature = "std")]
+    #[allow(box_pointers)]
+    fn new_prefix_length(&self, length: u8) -> Result<Self::Length, Error> {
+        self.afi()
+            .new_prefix_length(length)
+            .and_then(|l| {
+                l.downcast()
+                    .map_err(|_| Error::new(error::Kind::Downcast, None::<&str>, None))
+            })
+            .map(|l| *l)
+    }
 }
 
 /// Address-family independent interface for IP prefix-lengths
@@ -257,7 +293,9 @@ pub trait Prefix:
 /// See also [`concrete::PrefixLength<A>`][crate::concrete::PrefixLength] and
 /// [`any::PrefixLength`][crate::any::PrefixLength] for address-family specific
 /// items.
-pub trait Length: Copy + Clone + Debug + Display + Hash + PartialEq + Eq + PartialOrd {
+pub trait Length:
+    Copy + Clone + Debug + Display + Hash + PartialEq + Eq + PartialOrd + 'static
+{
     /// Returns a new `Self` that is one greater than `self` unless `self` is
     /// already the maximum possible value.
     ///
@@ -327,5 +365,15 @@ pub trait Range: Clone + Debug + Display + Hash + PartialEq + Eq + PartialOrd {
 
     fn with_length(self, len: Self::Length) -> Option<Self> {
         self.with_length_range(len..=len)
+    }
+
+    fn afi(&self) -> concrete::Afi {
+        self.prefix().afi()
+    }
+
+    #[cfg(feature = "std")]
+    #[allow(box_pointers)]
+    fn new_prefix_length(&self, length: u8) -> Result<Self::Length, Error> {
+        self.prefix().new_prefix_length(length)
     }
 }

@@ -22,6 +22,9 @@ pub use self::ord::PrefixOrdering;
 mod range;
 pub use self::range::Range;
 
+mod subprefixes;
+pub use self::subprefixes::Subprefixes;
+
 #[allow(clippy::wildcard_imports)]
 mod private {
     use super::*;
@@ -57,7 +60,7 @@ mod private {
 pub use self::private::Prefix;
 
 impl<A: Afi> Prefix<A> {
-    fn common_with(self, other: Self) -> Self {
+    fn common_with(&self, other: &Self) -> Self {
         let min_length = min(self.length(), other.length());
         let common_length = common_length(self.prefix(), other.prefix());
         let length = min(min_length, common_length);
@@ -70,6 +73,7 @@ impl<A: Afi> traits::Prefix for Prefix<A> {
     type Length = PrefixLength<A>;
     type Hostmask = Hostmask<A>;
     type Netmask = Netmask<A>;
+    type Subprefixes = Subprefixes<A>;
 
     fn network(&self) -> Self::Address {
         self.prefix()
@@ -104,6 +108,10 @@ impl<A: Afi> traits::Prefix for Prefix<A> {
 
     fn is_sibling(&self, other: &Self) -> bool {
         self.supernet() == other.supernet()
+    }
+
+    fn subprefixes(&self, new_prefix_len: Self::Length) -> Result<Self::Subprefixes, Error> {
+        Self::Subprefixes::new(*self, new_prefix_len)
     }
 }
 

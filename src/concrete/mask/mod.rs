@@ -1,7 +1,7 @@
 use core::fmt::{self};
-use core::ops::{Shl, Shr};
+use core::ops::{BitAnd, BitOr, BitXor, Not, Shl, Shr};
 
-use super::{impl_try_from_any, PrefixLength};
+use super::{impl_try_from_any, Address, PrefixLength};
 use crate::{
     any,
     fmt::AddressDisplay,
@@ -14,13 +14,16 @@ pub use self::private::Mask;
 
 /// Types of IP address mask.
 pub mod types;
-use self::types::{Host, Net, Type};
+use self::types::{Bit, Host, Net, Type};
 
 /// An IP Netmask.
 pub type Netmask<A> = Mask<Net, A>;
 
 /// An IP Hostmask.
 pub type Hostmask<A> = Mask<Host, A>;
+
+/// An address bit-mask.
+pub type Bitmask<A> = Mask<Bit, A>;
 
 impl<A: Afi, T: Type> Mask<T, A> {
     /// The "all-zeros" mask.
@@ -43,6 +46,12 @@ impl<A: Afi> From<PrefixLength<A>> for Netmask<A> {
 impl<A: Afi> From<PrefixLength<A>> for Hostmask<A> {
     fn from(len: PrefixLength<A>) -> Self {
         Self::ONES >> len
+    }
+}
+
+impl<A: Afi> From<Address<A>> for Bitmask<A> {
+    fn from(addr: Address<A>) -> Self {
+        Self::new(addr.into_primitive())
     }
 }
 
@@ -81,6 +90,34 @@ impl<A: Afi, T: Type> Shr<PrefixLength<A>> for Mask<T, A> {
         } else {
             Self::new(Self::into_primitive(self) >> rhs.into_primitive())
         }
+    }
+}
+
+impl<A: Afi, T: Type> BitAnd<Mask<T, A>> for Bitmask<A> {
+    type Output = Self;
+    fn bitand(self, rhs: Mask<T, A>) -> Self {
+        Self::new(self.into_primitive() & rhs.into_primitive())
+    }
+}
+
+impl<A: Afi, T: Type> BitOr<Mask<T, A>> for Bitmask<A> {
+    type Output = Self;
+    fn bitor(self, rhs: Mask<T, A>) -> Self {
+        Self::new(self.into_primitive() | rhs.into_primitive())
+    }
+}
+
+impl<A: Afi, T: Type> BitXor<Mask<T, A>> for Bitmask<A> {
+    type Output = Self;
+    fn bitxor(self, rhs: Mask<T, A>) -> Self {
+        Self::new(self.into_primitive() ^ rhs.into_primitive())
+    }
+}
+
+impl<A: Afi> Not for Bitmask<A> {
+    type Output = Self;
+    fn not(self) -> Self {
+        Self::new(self.into_primitive().not())
     }
 }
 

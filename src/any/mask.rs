@@ -57,6 +57,15 @@ impl From<PrefixLength> for Netmask {
     }
 }
 
+impl From<PrefixLength> for Hostmask {
+    fn from(len: PrefixLength) -> Self {
+        match len {
+            PrefixLength::Ipv4(len) => Self::Ipv4(len.into()),
+            PrefixLength::Ipv6(len) => Self::Ipv6(len.into()),
+        }
+    }
+}
+
 // TODO: impl FromStr
 // TODO: impl Display
 // TODO: impl Arbitrary

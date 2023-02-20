@@ -19,7 +19,7 @@ pub enum PrefixOrdering<A: Afi> {
 impl<A: Afi> Prefix<A> {
     /// Perform ordinal comparison with another [`Prefix<A>`], calculating the
     /// longest common prefix in the process.
-    pub fn compare(self, other: Self) -> PrefixOrdering<A> {
+    pub fn compare(&self, other: &Self) -> PrefixOrdering<A> {
         let common = self.common_with(other);
         match (
             self.length().cmp(&common.length()),
@@ -38,7 +38,7 @@ impl<A: Afi> Prefix<A> {
 
 impl<A: Afi> PartialOrd<Self> for Prefix<A> {
     fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
-        match self.compare(*other) {
+        match self.compare(other) {
             PrefixOrdering::Equal => Some(Equal),
             PrefixOrdering::Subprefix(_) => Some(Greater),
             PrefixOrdering::Superprefix(_) => Some(Less),

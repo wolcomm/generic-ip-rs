@@ -79,6 +79,7 @@ pub enum Kind {
     AfiMismatch,
     /// An [`Error`] resulting from an invalid prefix-length range.
     PrefixLengthRange,
+    Downcast,
 }
 
 impl fmt::Display for Kind {
@@ -90,6 +91,7 @@ impl fmt::Display for Kind {
             Self::ParserError => write!(f, "parser error"),
             Self::AfiMismatch => write!(f, "address family mis-match"),
             Self::PrefixLengthRange => write!(f, "invalid prefix-length range"),
+            Self::Downcast => write!(f, "failed to downcast to concrete type"),
         }
     }
 }

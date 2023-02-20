@@ -1,7 +1,7 @@
 use core::fmt::{Debug, Display};
 use core::hash::Hash;
 use core::mem;
-use core::ops::{Add, BitAnd, BitOr, BitXor, RangeInclusive, Shl, Shr, Sub};
+use core::ops::{Add, BitAnd, BitOr, BitXor, Not, RangeInclusive, Shl, Shr, Sub};
 
 use super::Afi;
 use crate::{
@@ -20,6 +20,7 @@ pub trait Address<A: Afi>:
     + BitAnd<Self, Output = Self>
     + BitOr<Self, Output = Self>
     + BitXor<Self, Output = Self>
+    + Not<Output = Self>
     + Shl<Self::Length, Output = Self>
     + Shr<Self::Length, Output = Self>
     + 'static

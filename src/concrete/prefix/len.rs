@@ -23,6 +23,9 @@ mod private {
     pub struct PrefixLength<A: Afi>(<A::Primitive as primitive::Address<A>>::Length);
 
     impl<A: Afi> PrefixLength<A> {
+        /// Minimum valid value of [`PrefixLength<A>`].
+        pub const MIN: Self = Self(A::Primitive::MIN_LENGTH);
+
         /// Maximum valid value of [`PrefixLength<A>`].
         pub const MAX: Self = Self(A::Primitive::MAX_LENGTH);
 

@@ -12,7 +12,7 @@ use proptest::{
 use super::{delegate, Address, Hostmask, Netmask};
 use crate::{
     concrete::{self, Ipv4, Ipv6},
-    error::Error,
+    error::{err, Error, Kind},
     traits,
 };
 
@@ -53,6 +53,7 @@ impl traits::Prefix for Prefix {
     type Length = Length;
     type Hostmask = Hostmask;
     type Netmask = Netmask;
+    type Subprefixes = Subprefixes;
 
     delegate! {
         fn network(&self) -> Self::Address;
@@ -75,6 +76,18 @@ impl traits::Prefix for Prefix {
             (Self::Ipv4(prefix), Self::Ipv4(other)) => prefix.is_sibling(other),
             (Self::Ipv6(prefix), Self::Ipv6(other)) => prefix.is_sibling(other),
             _ => false,
+        }
+    }
+
+    fn subprefixes(&self, new_prefix_length: Self::Length) -> Result<Self::Subprefixes, Error> {
+        match (self, new_prefix_length) {
+            (Self::Ipv4(prefix), Self::Length::Ipv4(length)) => {
+                prefix.subprefixes(length).map(Self::Subprefixes::Ipv4)
+            }
+            (Self::Ipv6(prefix), Self::Length::Ipv6(length)) => {
+                prefix.subprefixes(length).map(Self::Subprefixes::Ipv6)
+            }
+            _ => Err(err!(Kind::AfiMismatch)),
         }
     }
 }
@@ -124,6 +137,22 @@ impl Arbitrary for Prefix {
             any_with::<concrete::Prefix<Ipv6>>(params.1).prop_map(Self::Ipv6),
         ]
         .boxed()
+    }
+}
+
+pub enum Subprefixes {
+    Ipv4(concrete::Subprefixes<Ipv4>),
+    Ipv6(concrete::Subprefixes<Ipv6>),
+}
+
+impl Iterator for Subprefixes {
+    type Item = Prefix;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        match self {
+            Self::Ipv4(iter) => iter.next().map(Self::Item::Ipv4),
+            Self::Ipv6(iter) => iter.next().map(Self::Item::Ipv6),
+        }
     }
 }
 
@@ -270,6 +299,16 @@ impl From<concrete::PrefixRange<Ipv4>> for Range {
 impl From<concrete::PrefixRange<Ipv6>> for Range {
     fn from(range: concrete::PrefixRange<Ipv6>) -> Self {
         Self::Ipv6(range)
+    }
+}
+
+#[allow(clippy::fallible_impl_from)]
+impl From<Prefix> for Range {
+    fn from(prefix: Prefix) -> Self {
+        match prefix {
+            Prefix::Ipv4(p) => Self::Ipv4(p.into()),
+            Prefix::Ipv6(p) => Self::Ipv6(p.into()),
+        }
     }
 }
 

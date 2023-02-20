@@ -3,7 +3,7 @@ use core::str::FromStr;
 
 use super::{impl_try_from_any, AddressRange, PrefixLength};
 use crate::{
-    any,
+    any, concrete,
     error::Error,
     fmt::AddressDisplay,
     traits::{self, primitive::Address as _, Afi},
@@ -110,6 +110,10 @@ pub fn common_length<A: Afi>(lhs: Address<A>, rhs: Address<A>) -> PrefixLength<A
 }
 
 impl<A: Afi> traits::Address for Address<A> {
+    fn afi(&self) -> concrete::Afi {
+        A::as_afi()
+    }
+
     #[allow(clippy::option_if_let_else)]
     fn is_broadcast(&self) -> bool {
         if let Some(broadcast) = A::Primitive::BROADCAST {

@@ -113,6 +113,7 @@ impl Address {
 
 impl traits::Address for Address {
     delegate! {
+        fn afi(&self) -> concrete::Afi;
         fn is_broadcast(&self) -> bool;
         fn is_link_local(&self) -> bool;
         fn is_private(&self) -> bool;

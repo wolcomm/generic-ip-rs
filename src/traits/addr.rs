@@ -2,7 +2,7 @@ use core::fmt::{Debug, Display};
 use core::hash::Hash;
 use core::str::FromStr;
 
-use crate::error::Error;
+use crate::{concrete, error::Error};
 
 /// Address-family independent interface for IP addresses
 ///
@@ -18,6 +18,8 @@ use crate::error::Error;
 pub trait Address:
     Clone + Copy + Debug + Display + FromStr<Err = Error> + Hash + PartialEq + Eq + PartialOrd
 {
+    fn afi(&self) -> concrete::Afi;
+
     /// Returns [`true`] if this is an IPv4 broadcast address
     /// (`255.255.255.255`). Returns [`false`] for all IPv6 addresses.
     ///
