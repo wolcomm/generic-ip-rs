@@ -1,4 +1,4 @@
-use core::fmt::{self};
+use core::fmt;
 use core::ops::{BitAnd, BitOr, BitXor, Not, Shl, Shr};
 
 use super::{impl_try_from_any, Address, PrefixLength};
@@ -93,10 +93,10 @@ impl<A: Afi, T: Type> Shr<PrefixLength<A>> for Mask<T, A> {
     }
 }
 
-impl<A: Afi, T: Type> BitAnd<Mask<T, A>> for Bitmask<A> {
-    type Output = Self;
-    fn bitand(self, rhs: Mask<T, A>) -> Self {
-        Self::new(self.into_primitive() & rhs.into_primitive())
+impl<A: Afi, T1: Type, T2: Type> BitAnd<Mask<T2, A>> for Mask<T1, A> {
+    type Output = Bitmask<A>;
+    fn bitand(self, rhs: Mask<T2, A>) -> Self::Output {
+        Self::Output::new(self.into_primitive() & rhs.into_primitive())
     }
 }
 

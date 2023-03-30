@@ -1,4 +1,4 @@
-use core::ops::{BitAnd, BitAndAssign, BitOr, BitXor};
+use core::ops::{Add, BitAnd, BitAndAssign, BitOr, BitXor};
 
 use super::{
     super::{mask_types::Type, Mask},
@@ -28,6 +28,14 @@ impl<A: Afi, T: Type> BitOr<Mask<T, A>> for Address<A> {
 
     fn bitor(self, mask: Mask<T, A>) -> Self::Output {
         Self::new(self.into_primitive().bitor(mask.into_primitive()))
+    }
+}
+
+impl<A: Afi, T: Type> Add<Mask<T, A>> for Address<A> {
+    type Output = Self;
+
+    fn add(self, mask: Mask<T, A>) -> Self::Output {
+        Self::new(self.into_primitive().add(mask.into_primitive()))
     }
 }
 

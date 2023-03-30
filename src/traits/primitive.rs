@@ -20,6 +20,7 @@ pub trait Address<A: Afi>:
     + BitAnd<Self, Output = Self>
     + BitOr<Self, Output = Self>
     + BitXor<Self, Output = Self>
+    + Add<Self, Output = Self>
     + Not<Output = Self>
     + Shl<Self::Length, Output = Self>
     + Shr<Self::Length, Output = Self>

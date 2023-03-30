@@ -4,7 +4,7 @@ use core::cmp::min;
 use core::fmt;
 use core::str::FromStr;
 
-use super::{common_length, impl_try_from_any, Address, Hostmask, Interface, Netmask};
+use super::{common_length, impl_try_from_any, Address, Bitmask, Hostmask, Interface, Netmask};
 use crate::{
     any,
     error::Error,
@@ -65,6 +65,13 @@ impl<A: Afi> Prefix<A> {
         let common_length = common_length(self.prefix(), other.prefix());
         let length = min(min_length, common_length);
         Self::new(self.prefix(), length)
+    }
+
+    pub fn map_addr<F>(&self, f: F) -> Self
+    where
+        F: FnOnce(Address<A>) -> Address<A>,
+    {
+        Self::new(f(self.prefix()), self.length())
     }
 }
 

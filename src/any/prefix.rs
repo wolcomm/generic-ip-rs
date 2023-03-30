@@ -13,7 +13,7 @@ use super::{delegate, Address, Hostmask, Netmask};
 use crate::{
     concrete::{self, Ipv4, Ipv6},
     error::{err, Error, Kind},
-    traits,
+    traits::{self},
 };
 
 /// Either an IPv4 or IPv6 prefix.

@@ -261,12 +261,12 @@ pub trait Prefix:
     /// # Examples
     ///
     /// ``` rust
-    /// use ip::{traits::Prefix as _, Prefix, Ipv4, Ipv6};
+    /// use ip::{traits::Prefix as _, Prefix, PrefixLength, Ipv4, Ipv6};
     ///
     /// let prefix: Prefix<Ipv4> = "192.0.2.0/24".parse()?;
     /// let new_length = PrefixLength::<Ipv4>::from_primitive(26)?;
     ///
-    /// assert_eq!(ipv4_prefix.subprefixes(new_length)?.count(), 4);
+    /// assert_eq!(prefix.subprefixes(new_length)?.count(), 4);
     /// # Ok::<(), ip::Error>(())
     /// ```
     fn subprefixes(&self, new_prefix_len: Self::Length) -> Result<Self::Subprefixes, Error>;

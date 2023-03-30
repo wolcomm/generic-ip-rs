@@ -5,7 +5,7 @@ mod addr;
 pub use self::addr::{common_length, Address, Ipv6MulticastScope, Range as AddressRange};
 
 mod mask;
-pub use self::mask::{types as mask_types, Hostmask, Mask, Netmask};
+pub use self::mask::{types as mask_types, Bitmask, Hostmask, Mask, Netmask};
 
 mod interface;
 pub use self::interface::Interface;
