@@ -59,13 +59,13 @@ impl traits::PrefixRange for Range {
         fn upper(&self) -> Self::Length;
     }
 
-    fn from_intersection(self, len_range: RangeInclusive<Self::Length>) -> Option<Self> {
+    fn with_intersection(self, len_range: RangeInclusive<Self::Length>) -> Option<Self> {
         match (self, *len_range.start(), *len_range.end()) {
             (Self::Ipv4(range), Length::Ipv4(lower), Length::Ipv4(upper)) => {
-                range.from_intersection(lower..=upper).map(Self::Ipv4)
+                range.with_intersection(lower..=upper).map(Self::Ipv4)
             }
             (Self::Ipv6(range), Length::Ipv6(lower), Length::Ipv6(upper)) => {
-                range.from_intersection(lower..=upper).map(Self::Ipv6)
+                range.with_intersection(lower..=upper).map(Self::Ipv6)
             }
             _ => None,
         }
@@ -137,7 +137,7 @@ impl IntoIterator for Range {
     }
 }
 
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Clone)]
 pub enum IntoIter {
     Ipv4(<concrete::PrefixRange<Ipv4> as IntoIterator>::IntoIter),
     Ipv6(<concrete::PrefixRange<Ipv6> as IntoIterator>::IntoIter),

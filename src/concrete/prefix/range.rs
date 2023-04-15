@@ -94,7 +94,7 @@ impl<A: Afi> traits::PrefixRange for Range<A> {
         self.upper()
     }
 
-    fn from_intersection(self, len_range: RangeInclusive<Self::Length>) -> Option<Self> {
+    fn with_intersection(self, len_range: RangeInclusive<Self::Length>) -> Option<Self> {
         let lower = max(self.lower(), *len_range.start());
         let upper = min(self.upper(), *len_range.end());
         Self::new(self.prefix(), lower..=upper).ok()
@@ -107,6 +107,7 @@ impl<A: Afi> traits::PrefixRange for Range<A> {
     }
 }
 
+#[allow(clippy::fallible_impl_from)]
 impl<A: Afi> From<Prefix<A>> for Range<A> {
     fn from(prefix: Prefix<A>) -> Self {
         // OK to unwrap here as we can guarantee the checks in `new()` will
@@ -181,7 +182,7 @@ impl<A: Afi> IntoIterator for Range<A> {
     }
 }
 
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Clone)]
 pub struct IntoIter<A: Afi> {
     base: Prefix<A>,
     current_length: PrefixLength<A>,
@@ -198,14 +199,13 @@ impl<A: Afi> Iterator for IntoIter<A> {
                 if let Some(prefix) = subprefixes.next() {
                     self.current_iter = Some(subprefixes);
                     break Some(prefix);
-                } else {
-                    self.current_length = self
-                        .current_length
-                        .increment()
-                        .ok()
-                        .filter(|length| length <= &self.upper_length)?;
-                    self.current_iter = self.base.subprefixes(self.current_length).ok();
                 }
+                self.current_length = self
+                    .current_length
+                    .increment()
+                    .ok()
+                    .filter(|length| length <= &self.upper_length)?;
+                self.current_iter = self.base.subprefixes(self.current_length).ok();
             } else {
                 break None;
             }

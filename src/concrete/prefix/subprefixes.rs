@@ -6,7 +6,7 @@ use crate::{
 use super::{Bitmask, Hostmask, Netmask, Prefix, PrefixLength};
 
 /// Iterator returned by [`Prefix::subprefixes`].
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Clone)]
 pub struct Subprefixes<A: Afi> {
     base: Prefix<A>,
     next: Option<Prefix<A>>,

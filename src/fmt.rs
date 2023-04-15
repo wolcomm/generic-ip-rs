@@ -16,9 +16,9 @@ struct Span {
 
 fn fmt_segments(segments: &[u16], sep: char, f: &mut fmt::Formatter<'_>) -> fmt::Result {
     if let Some((first, tail)) = segments.split_first() {
-        write!(f, "{:x}", first)?;
+        write!(f, "{first:x}")?;
         tail.iter()
-            .try_for_each(|segment| write!(f, "{}{:x}", sep, segment))?;
+            .try_for_each(|segment| write!(f, "{sep}{segment:x}"))?;
     }
     Ok(())
 }
@@ -41,7 +41,7 @@ impl<P: primitive::Address<Ipv4>> AddressDisplay<Ipv4> for P {
 impl AddressDisplay<Ipv4> for <Ipv4 as Afi>::Octets {
     fn fmt_addr(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let [a, b, c, d] = self;
-        write!(f, "{}.{}.{}.{}", a, b, c, d)
+        write!(f, "{a}.{b}.{c}.{d}")
     }
 }
 

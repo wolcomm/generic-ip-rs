@@ -272,8 +272,8 @@ impl fmt::Debug for Address {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "Address<Any>::")?;
         match self {
-            Self::Ipv4(addr) => write!(f, "Ipv4({})", addr),
-            Self::Ipv6(addr) => write!(f, "Ipv6({})", addr),
+            Self::Ipv4(addr) => write!(f, "Ipv4({addr})"),
+            Self::Ipv6(addr) => write!(f, "Ipv6({addr})"),
         }
     }
 }

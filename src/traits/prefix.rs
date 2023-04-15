@@ -3,7 +3,7 @@ use core::hash::Hash;
 use core::ops::RangeInclusive;
 use core::str::FromStr;
 
-use crate::{any, concrete, error::Error};
+use crate::{concrete, error::Error};
 
 use super::{Address, Mask};
 
@@ -288,6 +288,10 @@ pub trait Prefix:
     /// Try to construct a new [`PrefixLength`] for the address-family associated with this IP
     /// prefix.
     ///
+    /// # Errors
+    ///
+    /// Fails when `length` is outside of the bounds of prefix-lengths of the address-family.
+    ///
     /// # Examples
     ///
     /// ```
@@ -399,7 +403,7 @@ pub trait Range:
     ///     .parse::<Prefix<Ipv6>>()?
     ///     .into();
     /// assert_eq!(
-    ///     x.from_intersection(lower..=upper).into_iter().count(),
+    ///     x.with_intersection(lower..=upper).into_iter().count(),
     ///     0,
     /// );
     ///
@@ -407,12 +411,12 @@ pub trait Range:
     ///     .parse::<Prefix<Ipv6>>()?
     ///     .into();
     /// assert_eq!(
-    ///     y.from_intersection(lower..=upper).into_iter().count(),
+    ///     y.with_intersection(lower..=upper).into_iter().count(),
     ///     1,
     /// );
     /// # Ok::<(), ip::Error>(())
     /// ```
-    fn from_intersection(self, len_range: RangeInclusive<Self::Length>) -> Option<Self>;
+    fn with_intersection(self, len_range: RangeInclusive<Self::Length>) -> Option<Self>;
 
     /// Construct a new IP prefix-range consisting of all the more specific subprefixes
     /// of `self` with prefix-lengths within `len_range`.
@@ -456,6 +460,7 @@ pub trait Range:
     /// );
     /// # Ok::<(), ip::Error>(())
     /// ```
+    #[must_use]
     fn or_longer(self) -> Self {
         let lower = self.lower();
         let upper = self.prefix().max_prefix_len();
@@ -525,6 +530,10 @@ pub trait Range:
     /// Try to construct a new [`PrefixLength`] for the address-family associated with this IP
     /// prefix-range.
     ///
+    /// # Errors
+    ///
+    /// Fails when `length` is outside of the bounds of prefix-lengths of the address-family.
+    ///
     /// # Examples
     ///
     /// ```
@@ -538,10 +547,7 @@ pub trait Range:
     /// );
     /// # Ok::<(), ip::Error>(())
     /// ```
-    fn new_prefix_length(&self, length: u8) -> Result<Self::Length, Error>
-    where
-        Self::Length: TryFrom<any::PrefixLength>,
-    {
+    fn new_prefix_length(&self, length: u8) -> Result<Self::Length, Error> {
         self.prefix().new_prefix_length(length)
     }
 }

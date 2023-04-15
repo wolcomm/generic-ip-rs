@@ -159,6 +159,7 @@ pub trait Address<A: Afi>:
     ///
     /// Fails if the string does not conform to the textual prefix
     /// representation rules for `A`.
+    #[allow(clippy::type_complexity)]
     fn parse_range<S>(s: &S) -> Result<(Self, Self::Length, Self::Length, Self::Length), Error>
     where
         S: AsRef<str> + ?Sized;

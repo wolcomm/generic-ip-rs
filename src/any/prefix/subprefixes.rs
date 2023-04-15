@@ -2,7 +2,7 @@ use super::Prefix;
 use crate::concrete::{self, Ipv4, Ipv6};
 
 /// Iterator returned by [`Prefix::subprefixes`].
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Clone)]
 pub enum Subprefixes {
     /// IPv4 variant.
     Ipv4(concrete::Subprefixes<Ipv4>),
