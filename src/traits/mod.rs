@@ -5,7 +5,7 @@ mod addr;
 pub use self::addr::Address;
 
 mod mask;
-pub use self::mask::{Hostmask, Mask, Netmask};
+pub use self::mask::{Bitmask, Hostmask, Mask, Netmask};
 
 mod interface;
 pub use self::interface::Interface;

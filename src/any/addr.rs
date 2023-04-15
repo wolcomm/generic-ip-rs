@@ -17,7 +17,7 @@ use crate::{
 ///
 /// # Memory Use
 ///
-/// Rust enums are sized to accomodate their largest variant, with smaller
+/// Rust enums are sized to accommodate their largest variant, with smaller
 /// variants being padded to fill up any unused space.
 ///
 /// As a result, users should avoid using this type in a context where only
@@ -86,7 +86,7 @@ impl Address {
     ///
     /// [`Address::Ipv4`] variants are returned unchanged.
     ///
-    /// [`Address::Ipv6`] variants are hanndled by converting an IPv4-mapped
+    /// [`Address::Ipv6`] variants are handled by converting an IPv4-mapped
     /// IPv6 address to an [`Address::Ipv4`], and returning an
     /// [`Address::Ipv6`] otherwise.
     ///

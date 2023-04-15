@@ -65,6 +65,17 @@ mod private {
 
 pub use self::private::PrefixLength;
 
+impl<A: Afi> TryFrom<usize> for PrefixLength<A> {
+    type Error = Error;
+
+    fn try_from(value: usize) -> Result<Self, Self::Error> {
+        value
+            .try_into()
+            .map_err(|_| err!(Kind::PrefixLength))
+            .and_then(Self::from_primitive)
+    }
+}
+
 impl<A: Afi> traits::PrefixLength for PrefixLength<A> {
     fn increment(self) -> Result<Self, Error> {
         let l = self.into_primitive();

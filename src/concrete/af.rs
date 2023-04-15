@@ -1,6 +1,6 @@
 use core::fmt;
 
-use super::{Address, Hostmask, Interface, Netmask, Prefix, PrefixLength, PrefixRange};
+use super::{Address, Bitmask, Hostmask, Interface, Netmask, Prefix, PrefixLength, PrefixRange};
 use crate::{any, error::Error, traits};
 
 /// The IPv4 address family.
@@ -33,6 +33,7 @@ impl<A: traits::Afi> traits::AfiClass for A {
     type Prefix = Prefix<A>;
     type Netmask = Netmask<A>;
     type Hostmask = Hostmask<A>;
+    type Bitmask = Bitmask<A>;
     type PrefixRange = PrefixRange<A>;
 
     fn as_afi_class() -> any::AfiClass {
@@ -58,18 +59,11 @@ pub enum Afi {
     Ipv6,
 }
 
-#[cfg(feature = "std")]
 impl Afi {
-    // TODO: consider making this a method on the concrete `Ipv6` and `Ipv4` to
-    // avoid the dynamic despatch and downcasting.
-    #[allow(box_pointers)]
-    pub(crate) fn new_prefix_length(
-        self,
-        len: u8,
-    ) -> Result<std::boxed::Box<dyn std::any::Any>, Error> {
+    pub(crate) fn new_prefix_length(self, len: u8) -> Result<any::PrefixLength, Error> {
         match self {
-            Self::Ipv4 => Ok(PrefixLength::<Ipv4>::from_primitive(len).map(std::boxed::Box::new)?),
-            Self::Ipv6 => Ok(PrefixLength::<Ipv6>::from_primitive(len).map(std::boxed::Box::new)?),
+            Self::Ipv4 => PrefixLength::<Ipv4>::from_primitive(len).map(any::PrefixLength::Ipv4),
+            Self::Ipv6 => PrefixLength::<Ipv6>::from_primitive(len).map(any::PrefixLength::Ipv6),
         }
     }
 }

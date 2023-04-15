@@ -1,5 +1,7 @@
 use core::ops::{Add, BitAnd, BitAndAssign, BitOr, BitXor};
 
+use num_traits::CheckedAdd;
+
 use super::{
     super::{mask_types::Type, Mask},
     Address,
@@ -32,10 +34,12 @@ impl<A: Afi, T: Type> BitOr<Mask<T, A>> for Address<A> {
 }
 
 impl<A: Afi, T: Type> Add<Mask<T, A>> for Address<A> {
-    type Output = Self;
+    type Output = Option<Self>;
 
     fn add(self, mask: Mask<T, A>) -> Self::Output {
-        Self::new(self.into_primitive().add(mask.into_primitive()))
+        self.into_primitive()
+            .checked_add(&mask.into_primitive())
+            .map(Self::new)
     }
 }
 

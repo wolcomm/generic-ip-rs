@@ -37,6 +37,12 @@ mod private {
     }
 
     impl<A: Afi> Prefix<A> {
+        /// The "default" prefix containing all addresses of address family `A`.
+        pub const DEFAULT: Self = Self {
+            prefix: Address::ZEROS,
+            length: PrefixLength::MIN,
+        };
+
         /// Construct a new [`Prefix<A>`] from an address and prefix length.
         ///
         /// The host bits of `prefix` will be automatically set to zero.
@@ -67,11 +73,11 @@ impl<A: Afi> Prefix<A> {
         Self::new(self.prefix(), length)
     }
 
-    pub fn map_addr<F>(&self, f: F) -> Self
+    fn map_addr<F>(&self, f: F) -> Option<Self>
     where
-        F: FnOnce(Address<A>) -> Address<A>,
+        F: FnOnce(Address<A>) -> Option<Address<A>>,
     {
-        Self::new(f(self.prefix()), self.length())
+        f(self.prefix()).map(|addr| Self::new(addr, self.length()))
     }
 }
 
@@ -119,6 +125,10 @@ impl<A: Afi> traits::Prefix for Prefix<A> {
 
     fn subprefixes(&self, new_prefix_len: Self::Length) -> Result<Self::Subprefixes, Error> {
         Self::Subprefixes::new(*self, new_prefix_len)
+    }
+
+    fn new_prefix_length(&self, length: u8) -> Result<Self::Length, Error> {
+        (length as usize).try_into()
     }
 }
 

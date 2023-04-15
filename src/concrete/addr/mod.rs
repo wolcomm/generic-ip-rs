@@ -30,6 +30,9 @@ impl<A: Afi> Address<A> {
     /// The "unspecified" address for address family `A`.
     pub const UNSPECIFIED: Self = Self::new(A::Primitive::UNSPECIFIED);
 
+    /// The "all-zeros" address for address family `A`.
+    pub const ZEROS: Self = Self::new(A::Primitive::ZERO);
+
     /// Construct a new [`Address<A>`] from a big-endian byte-array.
     ///
     /// # Examples

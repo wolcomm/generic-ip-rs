@@ -169,6 +169,10 @@ impl<'a> Parser<'a> {
         }
     }
 
+    fn take_length(&mut self) -> Option<u8> {
+        self.skip(b"/").and_then(|p| p.take_number(10, 3, false))
+    }
+
     fn take_only<F, T>(&mut self, mut f: F) -> Option<T>
     where
         F: FnMut(&mut Self) -> Option<T>,
@@ -182,7 +186,24 @@ impl<'a> Parser<'a> {
         F: FnMut(&mut Self) -> Option<T>,
     {
         let result = f(self)?;
-        let len = self.skip(b"/").and_then(|p| p.take_number(10, 3, false))?;
+        let len = self.take_length()?;
         self.is_eof().then_some((result, len))
+    }
+
+    fn take_with_length_range<F, T>(&mut self, mut f: F) -> Option<(T, u8, u8, u8)>
+    where
+        F: FnMut(&mut Self) -> Option<T>,
+    {
+        let result = f(self)?;
+        let mut buf = [0; 3];
+        self.skip(b"/").and_then(|p| {
+            (p.take_separated(b",", buf.len(), |p, i| {
+                buf[i] = p.take_number(10, 3, false)?;
+                Some((1, true))
+            }) == 3)
+                .then_some(())
+        })?;
+        let [len, lower, upper] = buf;
+        self.is_eof().then_some((result, len, lower, upper))
     }
 }

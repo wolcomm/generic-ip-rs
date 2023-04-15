@@ -3,10 +3,7 @@ use core::hash::Hash;
 use core::ops::RangeInclusive;
 use core::str::FromStr;
 
-use crate::{
-    concrete,
-    error::{self, Error},
-};
+use crate::{any, concrete, error::Error};
 
 use super::{Address, Mask};
 
@@ -24,10 +21,10 @@ use super::{Address, Mask};
 pub trait Prefix:
     Sized + Copy + Clone + Debug + Display + FromStr<Err = Error> + Hash + PartialEq + Eq + PartialOrd
 {
-    /// The type of IP address respresented by this prefix type.
+    /// The type of IP address represented by this prefix type.
     type Address: Address;
 
-    /// The type used to respresent lengths for this IP prefix type.
+    /// The type used to represent lengths for this IP prefix type.
     type Length: Length;
 
     /// The type of IP hostmask corresponding to this prefix type.
@@ -36,11 +33,12 @@ pub trait Prefix:
     /// The type of IP netmask corresponding to this prefix type.
     type Netmask: Mask;
 
+    /// The [`Iterator`] type returned by the [`Self::subprefixes`] method.
     type Subprefixes: Iterator<Item = Self>;
     // TODO:
     // type Hosts: Iterator<Item = Self::Address>;
 
-    /// Returns the network address of the IP subnet respresented by this
+    /// Returns the network address of the IP subnet represented by this
     /// prefix.
     ///
     /// # Examples
@@ -271,21 +269,40 @@ pub trait Prefix:
     /// ```
     fn subprefixes(&self, new_prefix_len: Self::Length) -> Result<Self::Subprefixes, Error>;
 
+    /// Returns the address-family associated with this IP prefix.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use ip::{Prefix, Any, traits::Prefix as _};
+    ///
+    /// let prefix: Prefix<Any> = "192.0.2.0/24".parse()?;
+    ///
+    /// assert_eq!(prefix.afi().to_string(), "ipv4");
+    /// # Ok::<(), ip::Error>(())
+    /// ```
     fn afi(&self) -> concrete::Afi {
         self.network().afi()
     }
 
-    #[cfg(feature = "std")]
-    #[allow(box_pointers)]
-    fn new_prefix_length(&self, length: u8) -> Result<Self::Length, Error> {
-        self.afi()
-            .new_prefix_length(length)
-            .and_then(|l| {
-                l.downcast()
-                    .map_err(|_| Error::new(error::Kind::Downcast, None::<&str>, None))
-            })
-            .map(|l| *l)
-    }
+    /// Try to construct a new [`PrefixLength`] for the address-family associated with this IP
+    /// prefix.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use ip::{Any, Ipv6, Prefix, PrefixLength, traits::Prefix as _};
+    ///
+    /// let prefix: Prefix<Any> = "2001:db8::/32".parse()?;
+    ///
+    /// assert_eq!(
+    ///     prefix.new_prefix_length(48)?,
+    ///     PrefixLength::<Ipv6>::from_primitive(48)?.into(),
+    /// );
+    /// # Ok::<(), ip::Error>(())
+    /// ```
+    // #[cfg(feature = "std")]
+    fn new_prefix_length(&self, length: u8) -> Result<Self::Length, Error>;
 }
 
 /// Address-family independent interface for IP prefix-lengths
@@ -341,15 +358,104 @@ pub trait Length:
 /// See also [`concrete::PrefixRange<A>`][crate::concrete::PrefixRange] and
 /// [`any::PrefixRange`][crate::any::PrefixRange] for address-family specific
 /// items.
-pub trait Range: Clone + Debug + Display + Hash + PartialEq + Eq + PartialOrd {
+pub trait Range:
+    Clone
+    + Debug
+    + Display
+    + From<Self::Prefix>
+    + FromStr<Err = Error>
+    + Hash
+    + IntoIterator<Item = Self::Prefix>
+    + PartialEq
+    + Eq
+    + PartialOrd
+{
+    /// The type of IP prefix over which `Self` represents a range.
     type Prefix: Prefix<Length = Self::Length>;
+
+    /// The type used to represent lengths for this IP prefix type.
     type Length: Length;
 
+    /// Return the covering super-prefix of `self`.
     fn prefix(&self) -> Self::Prefix;
+
+    /// Return the lower bound [`Self::Length`] of `self`.
     fn lower(&self) -> Self::Length;
+
+    /// Return the upper bound [`Self::Length`] of `self`.
     fn upper(&self) -> Self::Length;
+
+    /// Construct a new IP prefix-range from the intersection of `self` and `len_range`.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use ip::{Ipv6, Prefix, PrefixLength, PrefixRange, traits::PrefixRange as _};
+    ///
+    /// let lower = PrefixLength::<Ipv6>::from_primitive(52)?;
+    /// let upper = PrefixLength::<Ipv6>::from_primitive(56)?;
+    ///
+    /// let x: PrefixRange<Ipv6> = "2001:db8::/48"
+    ///     .parse::<Prefix<Ipv6>>()?
+    ///     .into();
+    /// assert_eq!(
+    ///     x.from_intersection(lower..=upper).into_iter().count(),
+    ///     0,
+    /// );
+    ///
+    /// let y: PrefixRange<Ipv6> = "2001:db8::/54"
+    ///     .parse::<Prefix<Ipv6>>()?
+    ///     .into();
+    /// assert_eq!(
+    ///     y.from_intersection(lower..=upper).into_iter().count(),
+    ///     1,
+    /// );
+    /// # Ok::<(), ip::Error>(())
+    /// ```
+    fn from_intersection(self, len_range: RangeInclusive<Self::Length>) -> Option<Self>;
+
+    /// Construct a new IP prefix-range consisting of all the more specific subprefixes
+    /// of `self` with prefix-lengths within `len_range`.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use core::cmp::max;
+    /// use ip::{Ipv4, Address, Prefix, PrefixLength, PrefixRange, traits::PrefixRange as _};
+    ///
+    /// let addr = "192.0.2.0".parse::<Address<Ipv4>>()?;
+    ///
+    /// let [l, m, n, p, q]: &[PrefixLength<Ipv4>] = &[24u8, 26, 28, 30, 32].into_iter()
+    ///     .map(PrefixLength::<Ipv4>::from_primitive)
+    ///     .collect::<Result<Vec<PrefixLength<Ipv4>>, _>>()? else { panic!() };
+    ///
+    /// let prefix = Prefix::<Ipv4>::new(addr, *l);
+    ///
+    /// assert_eq!(
+    ///     PrefixRange::<Ipv4>::new(prefix, *m..=*n)?.with_length_range(*p..=*q).unwrap(),
+    ///     PrefixRange::<Ipv4>::new(prefix, max(*m, *p)..=*q)?,
+    /// );
+    /// # Ok::<(), ip::Error>(())
+    /// ```
     fn with_length_range(self, len_range: RangeInclusive<Self::Length>) -> Option<Self>;
 
+    /// Construct a new IP prefix-range consisting of all the more-specific sub-prefixes of `self`.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use ip::{Any, Prefix, PrefixRange, traits::PrefixRange as _};
+    ///
+    /// let range: PrefixRange<Any> = "2001:db8::/126"
+    ///     .parse::<Prefix<Any>>()?
+    ///     .into();
+    ///
+    /// assert_eq!(
+    ///     range.or_longer().into_iter().count(),
+    ///     7,
+    /// );
+    /// # Ok::<(), ip::Error>(())
+    /// ```
     fn or_longer(self) -> Self {
         let lower = self.lower();
         let upper = self.prefix().max_prefix_len();
@@ -357,23 +463,85 @@ pub trait Range: Clone + Debug + Display + Hash + PartialEq + Eq + PartialOrd {
         self.with_length_range(lower..=upper).unwrap()
     }
 
+    /// Construct a new IP prefix-range consisting of all the *strictly* more-specific sub-prefixes
+    /// of `self`.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use ip::{Any, Prefix, PrefixRange, traits::PrefixRange as _};
+    ///
+    /// let x: PrefixRange<Any> = "192.0.2.0/24,25,27".parse()?;
+    /// let y: PrefixRange<Any> = "192.0.2.0/24,26,32".parse()?;
+    ///
+    /// assert_eq!(x.or_longer_excl().unwrap(), y);
+    /// # Ok::<(), ip::Error>(())
+    /// ```
     fn or_longer_excl(self) -> Option<Self> {
         let lower = self.lower().increment().ok()?;
         let upper = self.prefix().max_prefix_len();
         self.with_length_range(lower..=upper)
     }
 
+    /// Construct a new IP prefix-range consisting of all the more-specific sub-prefixes of `self`
+    /// of length `len`.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use ip::{Any, Ipv6, Prefix, PrefixLength, PrefixRange, traits::PrefixRange as _};
+    ///
+    /// let range: PrefixRange<Any> = "2001:db8::/32"
+    ///     .parse::<Prefix<Any>>()?
+    ///     .into();
+    /// let len = PrefixLength::<Ipv6>::from_primitive(48)?.into();
+    ///
+    /// assert_eq!(
+    ///     range.with_length(len).unwrap().into_iter().count(),
+    ///     1 << 16,
+    /// );
+    /// # Ok::<(), ip::Error>(())
+    /// ```
     fn with_length(self, len: Self::Length) -> Option<Self> {
         self.with_length_range(len..=len)
     }
 
+    /// Returns the address-family associated with this IP prefix-range.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use ip::{PrefixRange, Any, traits::PrefixRange as _};
+    ///
+    /// let range: PrefixRange<Any> = "2001:db8::/32,48,64".parse()?;
+    ///
+    /// assert_eq!(range.afi().to_string(), "ipv6");
+    /// # Ok::<(), ip::Error>(())
+    /// ```
     fn afi(&self) -> concrete::Afi {
         self.prefix().afi()
     }
 
-    #[cfg(feature = "std")]
-    #[allow(box_pointers)]
-    fn new_prefix_length(&self, length: u8) -> Result<Self::Length, Error> {
+    /// Try to construct a new [`PrefixLength`] for the address-family associated with this IP
+    /// prefix-range.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use ip::{Any, Ipv4, PrefixRange, PrefixLength, traits::PrefixRange as _};
+    ///
+    /// let range: PrefixRange<Any> = "192.0.2.0/24,26,28".parse()?;
+    ///
+    /// assert_eq!(
+    ///     range.new_prefix_length(30)?,
+    ///     PrefixLength::<Ipv4>::from_primitive(30)?.into(),
+    /// );
+    /// # Ok::<(), ip::Error>(())
+    /// ```
+    fn new_prefix_length(&self, length: u8) -> Result<Self::Length, Error>
+    where
+        Self::Length: TryFrom<any::PrefixLength>,
+    {
         self.prefix().new_prefix_length(length)
     }
 }

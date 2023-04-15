@@ -4,7 +4,7 @@ use core::fmt::Debug;
 use core::hash::Hash;
 
 use super::primitive;
-use super::{Address, Hostmask, Interface, Netmask, Prefix, PrefixLength, PrefixRange};
+use super::{Address, Bitmask, Hostmask, Interface, Netmask, Prefix, PrefixLength, PrefixRange};
 use crate::{any, concrete, fmt};
 
 /// An interface for describing an IP address family.
@@ -33,6 +33,9 @@ pub trait AfiClass: Copy + Debug + Hash + Ord {
 
     /// The type respresenting IP hostmask values of this address family class.
     type Hostmask: Hostmask;
+
+    /// The type respresenting bitmask values of this address family class.
+    type Bitmask: Bitmask;
 
     /// The type respresenting IP prefix-length values of this address family
     /// class.

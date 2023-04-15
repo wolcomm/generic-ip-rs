@@ -36,6 +36,7 @@ impl<A: Afi, T: Type> Mask<T, A> {
 impl<T: Type, A: Afi> traits::Mask for Mask<T, A> {}
 impl<A: Afi> traits::Netmask for Netmask<A> {}
 impl<A: Afi> traits::Hostmask for Hostmask<A> {}
+impl<A: Afi> traits::Bitmask for Bitmask<A> {}
 
 impl<A: Afi> From<PrefixLength<A>> for Netmask<A> {
     fn from(len: PrefixLength<A>) -> Self {

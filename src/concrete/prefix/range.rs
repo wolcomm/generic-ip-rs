@@ -1,6 +1,7 @@
 use core::cmp::{max, min, Ordering};
 use core::fmt;
 use core::ops::RangeInclusive;
+use core::str::FromStr;
 
 #[cfg(any(test, feature = "arbitrary"))]
 use proptest::{
@@ -11,13 +12,13 @@ use proptest::{
 use crate::{
     any,
     error::{err, Error, Kind},
-    traits::{self, Afi},
+    traits::{self, primitive::Address as _, Afi, Prefix as _, PrefixLength as _},
 };
 
 #[cfg(any(test, feature = "arbitrary"))]
 use crate::traits::primitive;
 
-use super::{impl_try_from_any, Ipv4, Ipv6, Prefix, PrefixLength};
+use super::{impl_try_from_any, Address, Ipv4, Ipv6, Prefix, PrefixLength, Subprefixes};
 
 mod private {
     #[allow(clippy::wildcard_imports)]
@@ -32,6 +33,12 @@ mod private {
     }
 
     impl<A: Afi> Range<A> {
+        /// The range containing all prefixes of address family `A`.
+        pub const ALL: Self = Self {
+            prefix: Prefix::DEFAULT,
+            len_range: PrefixLength::MIN..=PrefixLength::MAX,
+        };
+
         /// Construct a new [`Self`] from a convering [`Prefix<A>`] and an
         /// inclusive range of [`PrefixLength`]..
         ///
@@ -52,14 +59,17 @@ mod private {
             }
         }
 
+        /// Return the covering super-prefix of `self`.
         pub const fn prefix(&self) -> Prefix<A> {
             self.prefix
         }
 
+        /// Return the lower bound [`PrefixLength`] of `self`.
         pub const fn lower(&self) -> PrefixLength<A> {
             *self.len_range.start()
         }
 
+        /// Return the upper bound [`PrefixLength`] of `self`.
         pub const fn upper(&self) -> PrefixLength<A> {
             *self.len_range.end()
         }
@@ -84,19 +94,41 @@ impl<A: Afi> traits::PrefixRange for Range<A> {
         self.upper()
     }
 
-    fn with_length_range(self, len_range: RangeInclusive<Self::Length>) -> Option<Self> {
+    fn from_intersection(self, len_range: RangeInclusive<Self::Length>) -> Option<Self> {
         let lower = max(self.lower(), *len_range.start());
         let upper = min(self.upper(), *len_range.end());
         Self::new(self.prefix(), lower..=upper).ok()
     }
+
+    fn with_length_range(self, len_range: RangeInclusive<Self::Length>) -> Option<Self> {
+        let lower = max(self.lower(), *len_range.start());
+        let upper = *len_range.end();
+        Self::new(self.prefix(), lower..=upper).ok()
+    }
 }
 
-#[allow(clippy::fallible_impl_from)]
 impl<A: Afi> From<Prefix<A>> for Range<A> {
     fn from(prefix: Prefix<A>) -> Self {
         // OK to unwrap here as we can guarantee the checks in `new()` will
         // pass.
         Self::new(prefix, prefix.length()..=prefix.length()).unwrap()
+    }
+}
+
+impl<A: Afi> FromStr for Range<A> {
+    type Err = Error;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        A::Primitive::parse_range(s).and_then(|(addr, len, l, u)| {
+            let (lower, upper) = (
+                PrefixLength::from_primitive(l)?,
+                PrefixLength::from_primitive(u)?,
+            );
+            Self::new(
+                Prefix::new(Address::new(addr), PrefixLength::from_primitive(len)?),
+                lower..=upper,
+            )
+        })
     }
 }
 
@@ -128,6 +160,55 @@ impl<A: Afi> PartialOrd for Range<A> {
                 Some(Ordering::Greater)
             }
             _ => None,
+        }
+    }
+}
+
+impl<A: Afi> IntoIterator for Range<A> {
+    type Item = Prefix<A>;
+    type IntoIter = IntoIter<A>;
+
+    fn into_iter(self) -> Self::IntoIter {
+        // Safe to unwrap here since we are passing self.lower() which is
+        // guaranteed to be within the bounds check.
+        let current_iter = Some(self.prefix().subprefixes(self.lower()).unwrap());
+        Self::IntoIter {
+            base: self.prefix(),
+            current_length: self.lower(),
+            upper_length: self.upper(),
+            current_iter,
+        }
+    }
+}
+
+#[derive(Debug, Copy, Clone)]
+pub struct IntoIter<A: Afi> {
+    base: Prefix<A>,
+    current_length: PrefixLength<A>,
+    upper_length: PrefixLength<A>,
+    current_iter: Option<Subprefixes<A>>,
+}
+
+impl<A: Afi> Iterator for IntoIter<A> {
+    type Item = Prefix<A>;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        loop {
+            if let Some(mut subprefixes) = self.current_iter.take() {
+                if let Some(prefix) = subprefixes.next() {
+                    self.current_iter = Some(subprefixes);
+                    break Some(prefix);
+                } else {
+                    self.current_length = self
+                        .current_length
+                        .increment()
+                        .ok()
+                        .filter(|length| length <= &self.upper_length)?;
+                    self.current_iter = self.base.subprefixes(self.current_length).ok();
+                }
+            } else {
+                break None;
+            }
         }
     }
 }

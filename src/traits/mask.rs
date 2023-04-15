@@ -27,3 +27,12 @@ pub trait Netmask: Mask {}
 /// See also [`concrete::Hostmask<A>`][crate::concrete::Hostmask] and
 /// [`any::Hostmask`][crate::any::Hostmask] for address-family specific items.
 pub trait Hostmask: Mask {}
+
+/// Address-family independent interface for IP bitmasks.
+///
+/// Methods on `Bitmask` types that are well defined for all address-families
+/// are implemented via this trait.
+///
+/// See also [`concrete::Bitmask<A>`][crate::concrete::Bitmask] and
+/// [`any::Bitmask`][crate::any::Bitmask] for address-family specific items.
+pub trait Bitmask: Mask {}

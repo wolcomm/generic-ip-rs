@@ -1,6 +1,6 @@
 use core::cmp::Ordering;
 
-use super::{Address, Hostmask, Interface, Netmask, Prefix, PrefixLength, PrefixRange};
+use super::{Address, Bitmask, Hostmask, Interface, Netmask, Prefix, PrefixLength, PrefixRange};
 use crate::{concrete, traits};
 
 /// The class of address families consisting of `{ IPv4, IPv6 }`.
@@ -14,6 +14,7 @@ impl traits::AfiClass for Any {
     type Prefix = Prefix;
     type Netmask = Netmask;
     type Hostmask = Hostmask;
+    type Bitmask = Bitmask;
     type PrefixRange = PrefixRange;
 
     fn as_afi_class() -> AfiClass {

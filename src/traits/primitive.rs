@@ -1,7 +1,11 @@
-use core::fmt::{Debug, Display};
+use core::fmt::{Binary, Debug, Display};
 use core::hash::Hash;
 use core::mem;
-use core::ops::{Add, BitAnd, BitOr, BitXor, Not, RangeInclusive, Shl, Shr, Sub};
+use core::ops::{Add, BitAnd, BitOr, BitXor, Deref, DerefMut, Not, RangeInclusive, Shl, Shr, Sub};
+
+use bitvec::{slice::BitSlice, BitArr};
+
+use num_traits::CheckedAdd;
 
 use super::Afi;
 use crate::{
@@ -10,7 +14,7 @@ use crate::{
     parser,
 };
 
-/// Underlying integer-like type used to respresent an IP address.
+/// Underlying integer-like type used to represent an IP address.
 pub trait Address<A: Afi>:
     Copy
     + Debug
@@ -21,6 +25,7 @@ pub trait Address<A: Afi>:
     + BitOr<Self, Output = Self>
     + BitXor<Self, Output = Self>
     + Add<Self, Output = Self>
+    + CheckedAdd
     + Not<Output = Self>
     + Shl<Self::Length, Output = Self>
     + Shr<Self::Length, Output = Self>
@@ -28,6 +33,9 @@ pub trait Address<A: Afi>:
 {
     /// Underlying primitive type used to store bit-widths of `Self`.
     type Length: Length;
+
+    /// Underlying primitive type used to store bitmaps of prefix-lengths.
+    type LengthMap: LengthMap;
 
     /// Minimum valid value of the underlying primitive value used to store
     /// prefix-lengths for this address-family.
@@ -107,15 +115,15 @@ pub trait Address<A: Afi>:
     fn from_be_bytes(bytes: A::Octets) -> Self;
 
     // TODO: This really is a horrible hack. Will do better.
-    /// Returns [`true`] if this primitive value respresents a "globally
+    /// Returns [`true`] if this primitive value represents a "globally
     /// routable" address, according to the address family semantics.
     fn is_global(&self) -> bool;
 
-    /// Parse an `impl AsRef<str>` into a [`Self::Addr`].
+    /// Parse a string into [`Self`].
     ///
     /// This method is primarily intended for use via the
     /// [`FromStr`][core::str::FromStr] implementation for
-    /// [`Address<A>`][crate::addr::Address].
+    /// [`Address<A>`][crate::Address].
     ///
     /// # Errors
     ///
@@ -125,18 +133,33 @@ pub trait Address<A: Afi>:
     where
         S: AsRef<str> + ?Sized;
 
-    /// Parse an `impl AsRef<str>` into a `(Self::Addr, WidthOf<Self::Addr>)`
+    /// Parse a string into a `(Self, Self::Length>)`
     /// pair.
     ///
     /// This method is primarily intended for use via the
     /// [`FromStr`][core::str::FromStr] implementation for
-    /// [`Prefix<A>`][crate::prefix::Prefix].
+    /// [`Prefix<A>`][crate::Prefix].
     ///
     /// # Errors
     ///
-    /// Fails if the string does not conform to the textual address
+    /// Fails if the string does not conform to the textual prefix
     /// representation rules for `A`.
     fn parse_prefix<S>(s: &S) -> Result<(Self, Self::Length), Error>
+    where
+        S: AsRef<str> + ?Sized;
+
+    /// Parse a string into a `(Self, Self::Length>, Self::Length, Self::Length)`
+    /// quad.
+    ///
+    /// This method is primarily intended for use via the
+    /// [`FromStr`][core::str::FromStr] implementation for
+    /// [`PrefixRange<A>`][crate::PrefixRange].
+    ///
+    /// # Errors
+    ///
+    /// Fails if the string does not conform to the textual prefix
+    /// representation rules for `A`.
+    fn parse_range<S>(s: &S) -> Result<(Self, Self::Length, Self::Length, Self::Length), Error>
     where
         S: AsRef<str> + ?Sized;
 }
@@ -149,13 +172,13 @@ macro_rules! ipv4 {
 
 impl Address<Ipv4> for u32 {
     type Length = u8;
+    type LengthMap = BitArr!(for 33);
 
     const MAX_LENGTH: Self::Length = 32;
     const ZERO: Self = ipv4!(0, 0, 0, 0);
     const ONES: Self = ipv4!(255, 255, 255, 255);
 
     const BROADCAST: Option<Self> = Some(ipv4!(255, 255, 255, 255));
-    // const LOCALHOST: Self = 0x7f00_0001;
     const LOCALHOST: Self = ipv4!(127, 0, 0, 1);
     const UNSPECIFIED: Self = ipv4!(0, 0, 0, 0);
 
@@ -265,10 +288,18 @@ impl Address<Ipv4> for u32 {
     {
         parser::ipv4::parse_prefix(s.as_ref())
     }
+
+    fn parse_range<S>(s: &S) -> Result<(Self, Self::Length, Self::Length, Self::Length), Error>
+    where
+        S: AsRef<str> + ?Sized,
+    {
+        parser::ipv4::parse_range(s.as_ref())
+    }
 }
 
 impl Address<Ipv6> for u128 {
     type Length = u8;
+    type LengthMap = BitArr!(for 129);
 
     const MAX_LENGTH: Self::Length = 128;
     const ZERO: Self = 0x0000_0000_0000_0000_0000_0000_0000_0000;
@@ -364,6 +395,13 @@ impl Address<Ipv6> for u128 {
     {
         parser::ipv6::parse_prefix(s.as_ref())
     }
+
+    fn parse_range<S>(s: &S) -> Result<(Self, Self::Length, Self::Length, Self::Length), Error>
+    where
+        S: AsRef<str> + ?Sized,
+    {
+        parser::ipv6::parse_range(s.as_ref())
+    }
 }
 
 pub(crate) trait IntoIpv6Segments: Address<Ipv6> {
@@ -411,9 +449,18 @@ pub(crate) trait IntoIpv6Segments: Address<Ipv6> {
 }
 impl<P: Address<Ipv6>> IntoIpv6Segments for P {}
 
-/// Underlying integer-like type used to respresent an IP prefix-length.
+/// Underlying integer-like type used to represent an IP prefix-length.
 pub trait Length:
-    Copy + Clone + Debug + Display + Hash + Ord + Add<Output = Self> + Sub<Output = Self>
+    Copy
+    + Clone
+    + Debug
+    + Display
+    + Hash
+    + Ord
+    + Add<Output = Self>
+    + Sub<Output = Self>
+    + Into<usize>
+    + TryFrom<usize>
 {
     /// Additive identity value.
     const ZERO: Self;
@@ -424,4 +471,28 @@ pub trait Length:
 impl Length for u8 {
     const ZERO: Self = 0;
     const ONE: Self = 1;
+}
+
+/// Underlying bit-vector-like type used to represent bitmaps of IP prefix-lengths.
+pub trait LengthMap:
+    Copy
+    + Binary
+    + BitAnd<Output = Self>
+    + BitOr<Output = Self>
+    + Not<Output = Self>
+    + Default
+    + Deref<Target = BitSlice>
+    + DerefMut<Target = BitSlice>
+    + Eq
+{
+    /// The all-zeros value of `Self`.
+    const ZERO: Self;
+}
+
+impl LengthMap for BitArr!(for 33) {
+    const ZERO: Self = Self::ZERO;
+}
+
+impl LengthMap for BitArr!(for 129) {
+    const ZERO: Self = Self::ZERO;
 }

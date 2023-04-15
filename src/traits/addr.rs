@@ -18,6 +18,18 @@ use crate::{concrete, error::Error};
 pub trait Address:
     Clone + Copy + Debug + Display + FromStr<Err = Error> + Hash + PartialEq + Eq + PartialOrd
 {
+    /// Returns the address-family associated with this IP address.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use ip::{Address, Any, traits::Address as _};
+    ///
+    /// let addr: Address<Any> = "192.0.2.1".parse()?;
+    ///
+    /// assert_eq!(addr.afi().to_string(), "ipv4");
+    /// # Ok::<(), ip::Error>(())
+    /// ```
     fn afi(&self) -> concrete::Afi;
 
     /// Returns [`true`] if this is an IPv4 broadcast address

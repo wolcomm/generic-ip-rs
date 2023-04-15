@@ -199,8 +199,8 @@
 #![warn(clippy::nursery)]
 #![allow(clippy::redundant_pub_crate)]
 // rustc lints
+#![allow(box_pointers)]
 #![warn(absolute_paths_not_starting_with_crate)]
-#![warn(box_pointers)]
 #![warn(deprecated_in_future)]
 #![warn(elided_lifetimes_in_paths)]
 #![warn(explicit_outlives_requirements)]
@@ -281,6 +281,9 @@ pub type Netmask<A> = <A as AfiClass>::Netmask;
 
 /// Convenience alias to name types implementing [`traits::Hostmask`].
 pub type Hostmask<A> = <A as AfiClass>::Hostmask;
+
+/// Convenience alias to name types implementing [`traits::Bitmask`].
+pub type Bitmask<A> = <A as AfiClass>::Bitmask;
 
 #[cfg(test)]
 mod tests;

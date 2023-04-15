@@ -3,9 +3,10 @@ use crate::{
     traits::{Afi, Prefix as _, PrefixLength as _},
 };
 
-use super::{Address, Bitmask, Hostmask, Netmask, Prefix, PrefixLength};
+use super::{Bitmask, Hostmask, Netmask, Prefix, PrefixLength};
 
-#[derive(Debug)]
+/// Iterator returned by [`Prefix::subprefixes`].
+#[derive(Debug, Copy, Clone)]
 pub struct Subprefixes<A: Afi> {
     base: Prefix<A>,
     next: Option<Prefix<A>>,
@@ -35,7 +36,7 @@ impl<A: Afi> Iterator for Subprefixes<A> {
         if let Some(next) = self.next.take() {
             self.next = self
                 .step
-                .map(|step| next.map_addr(|addr| addr + step))
+                .and_then(|step| next.map_addr(|addr| addr + step))
                 .filter(|prefix| self.base.contains(prefix));
             Some(next)
         } else {
@@ -70,5 +71,12 @@ mod tests {
         let mut subprefixes = p.subprefixes(p.prefix_len()).unwrap();
         assert_eq!(subprefixes.next(), Some(p));
         assert_eq!(subprefixes.next(), None);
+    }
+
+    #[test]
+    fn count_subprefixes_of_default() {
+        let p: Prefix<Ipv4> = "0.0.0.0/0".parse().unwrap();
+        let len = p.new_prefix_length(8).unwrap();
+        assert_eq!(p.subprefixes(len).unwrap().count(), 256);
     }
 }

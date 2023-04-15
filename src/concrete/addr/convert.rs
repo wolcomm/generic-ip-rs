@@ -18,12 +18,6 @@ macro_rules! impl_from_primitive {
                     Self::new(primitive)
                 }
             }
-
-            impl From<Address<$af>> for <$af as Afi>::Primitive {
-                fn from(addr: Address<$af>) -> <$af as Afi>::Primitive {
-                    addr.into_primitive()
-                }
-            }
         )*
     };
 }

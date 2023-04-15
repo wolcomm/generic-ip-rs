@@ -22,6 +22,15 @@ pub(crate) fn parse_prefix(input: &str) -> Result<(u128, u8), Error> {
         .map(|(segments, len)| (u128::from_segments(segments), len))
 }
 
+#[allow(clippy::inline_always)]
+#[inline(always)]
+pub(crate) fn parse_range(input: &str) -> Result<(u128, u8, u8, u8), Error> {
+    Parser::new(input)
+        .take_with_length_range(Parser::take_ipv6_segments)
+        .ok_or_else(|| err!(Kind::ParserError))
+        .map(|(segments, len, lower, upper)| (u128::from_segments(segments), len, lower, upper))
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -115,6 +124,16 @@ mod tests {
         let input = "::ffff:192.0.0.0/112";
         let addr = parse_prefix(input).unwrap();
         assert_eq!(addr, (0x0000_0000_0000_0000_0000_ffff_c000_0000, 112));
+    }
+
+    #[test]
+    fn prefix_range() {
+        let input = "2001:db8::/32,48,64";
+        let range = parse_range(input).unwrap();
+        assert_eq!(
+            range,
+            (0x2001_0db8_0000_0000_0000_0000_0000_0000, 32, 48, 64)
+        );
     }
 
     #[cfg(feature = "std")]

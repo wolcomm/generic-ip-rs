@@ -19,6 +19,15 @@ pub(crate) fn parse_prefix(input: &str) -> Result<(u32, u8), Error> {
         .map(|(octets, len)| (u32::from_be_bytes(octets), len))
 }
 
+#[allow(clippy::inline_always)]
+#[inline(always)]
+pub(crate) fn parse_range(input: &str) -> Result<(u32, u8, u8, u8), Error> {
+    Parser::new(input)
+        .take_with_length_range(Parser::take_ipv4_octets)
+        .ok_or_else(|| err!(Kind::ParserError))
+        .map(|(octets, len, lower, upper)| (u32::from_be_bytes(octets), len, lower, upper))
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -51,6 +60,13 @@ mod tests {
         let input = "192.168.0.1\0";
         let addr = parse_addr(input);
         assert!(addr.is_err());
+    }
+
+    #[test]
+    fn prefix_range() {
+        let input = "192.0.2.0/24,25,26";
+        let range = parse_range(input).unwrap();
+        assert_eq!(range, (0xc000_0200, 24, 25, 26));
     }
 
     #[cfg(feature = "std")]
