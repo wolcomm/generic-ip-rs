@@ -113,7 +113,7 @@ jobs:
           override: true
           components: llvm-tools-preview
       - name: install cargo-llvm-cov
-        uses: taiki-e/install-action@v1
+        uses: taiki-e/install-action@v2
         with:
           tool: cargo-llvm-cov
       - name: run tests
