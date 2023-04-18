@@ -100,10 +100,8 @@ jobs:
           - --lib
           - --test versions
         include:
-          - rust: stable
-            args: --doc --no-report
           - rust: nightly
-            args: --doc --doctests
+            args: --doc
     steps:
       - name: checkout
         uses: actions/checkout@v2
