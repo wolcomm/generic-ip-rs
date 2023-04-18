@@ -1,9 +1,8 @@
+use super::{Bitmask, Hostmask, Netmask, Prefix, PrefixLength};
 use crate::{
     error::{err, Error, Kind},
     traits::{Afi, Prefix as _, PrefixLength as _},
 };
-
-use super::{Bitmask, Hostmask, Netmask, Prefix, PrefixLength};
 
 /// Iterator returned by [`Prefix::subprefixes`].
 #[derive(Debug, Clone)]

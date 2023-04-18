@@ -3,9 +3,8 @@ use core::hash::Hash;
 use core::ops::RangeInclusive;
 use core::str::FromStr;
 
-use crate::{concrete, error::Error};
-
 use super::{Address, Mask};
+use crate::{concrete, error::Error};
 
 /// Address-family independent interface for IP prefixes
 ///
@@ -259,7 +258,7 @@ pub trait Prefix:
     /// # Examples
     ///
     /// ``` rust
-    /// use ip::{traits::Prefix as _, Prefix, PrefixLength, Ipv4, Ipv6};
+    /// use ip::{traits::Prefix as _, Ipv4, Ipv6, Prefix, PrefixLength};
     ///
     /// let prefix: Prefix<Ipv4> = "192.0.2.0/24".parse()?;
     /// let new_length = PrefixLength::<Ipv4>::from_primitive(26)?;
@@ -274,7 +273,7 @@ pub trait Prefix:
     /// # Examples
     ///
     /// ```
-    /// use ip::{Prefix, Any, traits::Prefix as _};
+    /// use ip::{traits::Prefix as _, Any, Prefix};
     ///
     /// let prefix: Prefix<Any> = "192.0.2.0/24".parse()?;
     ///
@@ -285,17 +284,18 @@ pub trait Prefix:
         self.network().afi()
     }
 
-    /// Try to construct a new [`PrefixLength`] for the address-family associated with this IP
-    /// prefix.
+    /// Try to construct a new [`PrefixLength`] for the address-family
+    /// associated with this IP prefix.
     ///
     /// # Errors
     ///
-    /// Fails when `length` is outside of the bounds of prefix-lengths of the address-family.
+    /// Fails when `length` is outside of the bounds of prefix-lengths of the
+    /// address-family.
     ///
     /// # Examples
     ///
     /// ```
-    /// use ip::{Any, Ipv6, Prefix, PrefixLength, traits::Prefix as _};
+    /// use ip::{traits::Prefix as _, Any, Ipv6, Prefix, PrefixLength};
     ///
     /// let prefix: Prefix<Any> = "2001:db8::/32".parse()?;
     ///
@@ -328,7 +328,10 @@ pub trait Length:
     /// # Examples
     ///
     /// ``` rust
-    /// use ip::{traits::{Prefix as _, PrefixLength as _}, Ipv4, Ipv6, Prefix, PrefixLength};
+    /// use ip::{
+    ///     traits::{Prefix as _, PrefixLength as _},
+    ///     Ipv4, Ipv6, Prefix, PrefixLength,
+    /// };
     ///
     /// let ipv4_default: Prefix<Ipv4> = "0.0.0.0/0".parse()?;
     /// let ipv6_host: Prefix<Ipv6> = "2001:db8::1/128".parse()?;
@@ -389,43 +392,35 @@ pub trait Range:
     /// Return the upper bound [`Self::Length`] of `self`.
     fn upper(&self) -> Self::Length;
 
-    /// Construct a new IP prefix-range from the intersection of `self` and `len_range`.
+    /// Construct a new IP prefix-range from the intersection of `self` and
+    /// `len_range`.
     ///
     /// # Examples
     ///
     /// ```
-    /// use ip::{Ipv6, Prefix, PrefixLength, PrefixRange, traits::PrefixRange as _};
+    /// use ip::{traits::PrefixRange as _, Ipv6, Prefix, PrefixLength, PrefixRange};
     ///
     /// let lower = PrefixLength::<Ipv6>::from_primitive(52)?;
     /// let upper = PrefixLength::<Ipv6>::from_primitive(56)?;
     ///
-    /// let x: PrefixRange<Ipv6> = "2001:db8::/48"
-    ///     .parse::<Prefix<Ipv6>>()?
-    ///     .into();
-    /// assert_eq!(
-    ///     x.with_intersection(lower..=upper).into_iter().count(),
-    ///     0,
-    /// );
+    /// let x: PrefixRange<Ipv6> = "2001:db8::/48".parse::<Prefix<Ipv6>>()?.into();
+    /// assert_eq!(x.with_intersection(lower..=upper).into_iter().count(), 0,);
     ///
-    /// let y: PrefixRange<Ipv6> = "2001:db8::/54"
-    ///     .parse::<Prefix<Ipv6>>()?
-    ///     .into();
-    /// assert_eq!(
-    ///     y.with_intersection(lower..=upper).into_iter().count(),
-    ///     1,
-    /// );
+    /// let y: PrefixRange<Ipv6> = "2001:db8::/54".parse::<Prefix<Ipv6>>()?.into();
+    /// assert_eq!(y.with_intersection(lower..=upper).into_iter().count(), 1,);
     /// # Ok::<(), ip::Error>(())
     /// ```
     fn with_intersection(self, len_range: RangeInclusive<Self::Length>) -> Option<Self>;
 
-    /// Construct a new IP prefix-range consisting of all the more specific subprefixes
-    /// of `self` with prefix-lengths within `len_range`.
+    /// Construct a new IP prefix-range consisting of all the more specific
+    /// subprefixes of `self` with prefix-lengths within `len_range`.
     ///
     /// # Examples
     ///
     /// ```
     /// use core::cmp::max;
-    /// use ip::{Ipv4, Address, Prefix, PrefixLength, PrefixRange, traits::PrefixRange as _};
+    ///
+    /// use ip::{traits::PrefixRange as _, Address, Ipv4, Prefix, PrefixLength, PrefixRange};
     ///
     /// let addr = "192.0.2.0".parse::<Address<Ipv4>>()?;
     ///
@@ -436,28 +431,26 @@ pub trait Range:
     /// let prefix = Prefix::<Ipv4>::new(addr, *l);
     ///
     /// assert_eq!(
-    ///     PrefixRange::<Ipv4>::new(prefix, *m..=*n)?.with_length_range(*p..=*q).unwrap(),
+    ///     PrefixRange::<Ipv4>::new(prefix, *m..=*n)?
+    ///         .with_length_range(*p..=*q)
+    ///         .unwrap(),
     ///     PrefixRange::<Ipv4>::new(prefix, max(*m, *p)..=*q)?,
     /// );
     /// # Ok::<(), ip::Error>(())
     /// ```
     fn with_length_range(self, len_range: RangeInclusive<Self::Length>) -> Option<Self>;
 
-    /// Construct a new IP prefix-range consisting of all the more-specific sub-prefixes of `self`.
+    /// Construct a new IP prefix-range consisting of all the more-specific
+    /// sub-prefixes of `self`.
     ///
     /// # Examples
     ///
     /// ```
-    /// use ip::{Any, Prefix, PrefixRange, traits::PrefixRange as _};
+    /// use ip::{traits::PrefixRange as _, Any, Prefix, PrefixRange};
     ///
-    /// let range: PrefixRange<Any> = "2001:db8::/126"
-    ///     .parse::<Prefix<Any>>()?
-    ///     .into();
+    /// let range: PrefixRange<Any> = "2001:db8::/126".parse::<Prefix<Any>>()?.into();
     ///
-    /// assert_eq!(
-    ///     range.or_longer().into_iter().count(),
-    ///     7,
-    /// );
+    /// assert_eq!(range.or_longer().into_iter().count(), 7,);
     /// # Ok::<(), ip::Error>(())
     /// ```
     #[must_use]
@@ -468,13 +461,13 @@ pub trait Range:
         self.with_length_range(lower..=upper).unwrap()
     }
 
-    /// Construct a new IP prefix-range consisting of all the *strictly* more-specific sub-prefixes
-    /// of `self`.
+    /// Construct a new IP prefix-range consisting of all the *strictly*
+    /// more-specific sub-prefixes of `self`.
     ///
     /// # Examples
     ///
     /// ```
-    /// use ip::{Any, Prefix, PrefixRange, traits::PrefixRange as _};
+    /// use ip::{traits::PrefixRange as _, Any, Prefix, PrefixRange};
     ///
     /// let x: PrefixRange<Any> = "192.0.2.0/24,25,27".parse()?;
     /// let y: PrefixRange<Any> = "192.0.2.0/24,26,32".parse()?;
@@ -488,23 +481,18 @@ pub trait Range:
         self.with_length_range(lower..=upper)
     }
 
-    /// Construct a new IP prefix-range consisting of all the more-specific sub-prefixes of `self`
-    /// of length `len`.
+    /// Construct a new IP prefix-range consisting of all the more-specific
+    /// sub-prefixes of `self` of length `len`.
     ///
     /// # Examples
     ///
     /// ```
-    /// use ip::{Any, Ipv6, Prefix, PrefixLength, PrefixRange, traits::PrefixRange as _};
+    /// use ip::{traits::PrefixRange as _, Any, Ipv6, Prefix, PrefixLength, PrefixRange};
     ///
-    /// let range: PrefixRange<Any> = "2001:db8::/32"
-    ///     .parse::<Prefix<Any>>()?
-    ///     .into();
+    /// let range: PrefixRange<Any> = "2001:db8::/32".parse::<Prefix<Any>>()?.into();
     /// let len = PrefixLength::<Ipv6>::from_primitive(48)?.into();
     ///
-    /// assert_eq!(
-    ///     range.with_length(len).unwrap().into_iter().count(),
-    ///     1 << 16,
-    /// );
+    /// assert_eq!(range.with_length(len).unwrap().into_iter().count(), 1 << 16,);
     /// # Ok::<(), ip::Error>(())
     /// ```
     fn with_length(self, len: Self::Length) -> Option<Self> {
@@ -516,7 +504,7 @@ pub trait Range:
     /// # Examples
     ///
     /// ```
-    /// use ip::{PrefixRange, Any, traits::PrefixRange as _};
+    /// use ip::{traits::PrefixRange as _, Any, PrefixRange};
     ///
     /// let range: PrefixRange<Any> = "2001:db8::/32,48,64".parse()?;
     ///
@@ -527,17 +515,18 @@ pub trait Range:
         self.prefix().afi()
     }
 
-    /// Try to construct a new [`PrefixLength`] for the address-family associated with this IP
-    /// prefix-range.
+    /// Try to construct a new [`PrefixLength`] for the address-family
+    /// associated with this IP prefix-range.
     ///
     /// # Errors
     ///
-    /// Fails when `length` is outside of the bounds of prefix-lengths of the address-family.
+    /// Fails when `length` is outside of the bounds of prefix-lengths of the
+    /// address-family.
     ///
     /// # Examples
     ///
     /// ```
-    /// use ip::{Any, Ipv4, PrefixRange, PrefixLength, traits::PrefixRange as _};
+    /// use ip::{traits::PrefixRange as _, Any, Ipv4, PrefixLength, PrefixRange};
     ///
     /// let range: PrefixRange<Any> = "192.0.2.0/24,26,28".parse()?;
     ///

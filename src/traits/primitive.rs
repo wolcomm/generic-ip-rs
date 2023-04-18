@@ -4,7 +4,6 @@ use core::mem;
 use core::ops::{Add, BitAnd, BitOr, BitXor, Deref, DerefMut, Not, RangeInclusive, Shl, Shr, Sub};
 
 use bitvec::{slice::BitSlice, BitArr};
-
 use num_traits::CheckedAdd;
 
 use super::Afi;
@@ -148,8 +147,8 @@ pub trait Address<A: Afi>:
     where
         S: AsRef<str> + ?Sized;
 
-    /// Parse a string into a `(Self, Self::Length>, Self::Length, Self::Length)`
-    /// quad.
+    /// Parse a string into a `(Self, Self::Length>, Self::Length,
+    /// Self::Length)` quad.
     ///
     /// This method is primarily intended for use via the
     /// [`FromStr`][core::str::FromStr] implementation for
@@ -474,7 +473,8 @@ impl Length for u8 {
     const ONE: Self = 1;
 }
 
-/// Underlying bit-vector-like type used to represent bitmaps of IP prefix-lengths.
+/// Underlying bit-vector-like type used to represent bitmaps of IP
+/// prefix-lengths.
 pub trait LengthMap:
     Copy
     + Binary

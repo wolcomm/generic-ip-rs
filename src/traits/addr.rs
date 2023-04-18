@@ -23,7 +23,7 @@ pub trait Address:
     /// # Examples
     ///
     /// ```
-    /// use ip::{Address, Any, traits::Address as _};
+    /// use ip::{traits::Address as _, Address, Any};
     ///
     /// let addr: Address<Any> = "192.0.2.1".parse()?;
     ///

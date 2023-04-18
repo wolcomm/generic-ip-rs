@@ -9,16 +9,14 @@ use proptest::{
     strategy::{BoxedStrategy, Just, Strategy},
 };
 
+use super::{impl_try_from_any, Address, Ipv4, Ipv6, Prefix, PrefixLength, Subprefixes};
+#[cfg(any(test, feature = "arbitrary"))]
+use crate::traits::primitive;
 use crate::{
     any,
     error::{err, Error, Kind},
     traits::{self, primitive::Address as _, Afi, Prefix as _, PrefixLength as _},
 };
-
-#[cfg(any(test, feature = "arbitrary"))]
-use crate::traits::primitive;
-
-use super::{impl_try_from_any, Address, Ipv4, Ipv6, Prefix, PrefixLength, Subprefixes};
 
 mod private {
     #[allow(clippy::wildcard_imports)]

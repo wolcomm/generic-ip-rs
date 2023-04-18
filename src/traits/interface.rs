@@ -2,9 +2,8 @@ use core::fmt::{Debug, Display};
 use core::hash::Hash;
 use core::str::FromStr;
 
-use crate::error::Error;
-
 use super::{Address, Prefix, PrefixLength};
+use crate::error::Error;
 
 /// Address-family independent interface for IP interfaces.
 ///
