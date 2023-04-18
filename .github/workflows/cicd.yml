@@ -10,7 +10,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
       - name: audit
         uses: actions-rs/audit-check@v1
         with:
@@ -26,7 +26,7 @@ jobs:
         rust: [stable, nightly]
     steps:
       - name: checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
       - name: install rust
         uses: actions-rs/toolchain@v1
         with:
@@ -49,7 +49,7 @@ jobs:
         rust: [stable, nightly]
     steps:
       - name: checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
       - name: install rust
         uses: actions-rs/toolchain@v1
         with:
@@ -73,7 +73,7 @@ jobs:
         rust: [stable, nightly]
     steps:
       - name: checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
       - name: install rust
         uses: actions-rs/toolchain@v1
         with:
@@ -104,7 +104,7 @@ jobs:
             args: --doc
     steps:
       - name: checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
       - name: install rust
         uses: actions-rs/toolchain@v1
         with:
@@ -136,7 +136,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
       - name: install
         uses: actions-rs/toolchain@v1
         with:
