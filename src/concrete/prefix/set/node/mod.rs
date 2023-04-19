@@ -1,4 +1,3 @@
-use std::borrow::ToOwned;
 use std::boxed::Box;
 
 use super::Prefix;
@@ -13,7 +12,7 @@ mod iter;
 mod ops;
 
 use self::gluemap::GlueMap;
-pub use self::iter::{Children, Ranges};
+pub(super) use self::iter::{Children, Ranges};
 
 enum Direction {
     Left,
@@ -29,8 +28,8 @@ pub struct Node<A: Afi> {
 }
 
 impl<A: Afi> Node<A> {
-    fn new(prefix: Prefix<A>, gluemap: GlueMap<A>) -> Self {
-        Node {
+    const fn new(prefix: Prefix<A>, gluemap: GlueMap<A>) -> Self {
+        Self {
             prefix,
             gluemap,
             left: None,
@@ -38,7 +37,7 @@ impl<A: Afi> Node<A> {
         }
     }
 
-    fn new_glue(prefix: Prefix<A>) -> Self {
+    const fn new_glue(prefix: Prefix<A>) -> Self {
         Self::new(prefix, GlueMap::ZERO)
     }
 
@@ -46,7 +45,7 @@ impl<A: Afi> Node<A> {
         Box::new(self)
     }
 
-    pub fn prefix(&self) -> &Prefix<A> {
+    pub const fn prefix(&self) -> &Prefix<A> {
         &self.prefix
     }
 
@@ -157,7 +156,7 @@ impl<A: Afi> Node<A> {
                         .subprefixes(other.prefix.length())
                         .unwrap() // safe because `other` is a subprefix of `self`.
                         .map(|p| Box::new(Self::new(p, deaggr_mask)))
-                        .fold(self, |this, n| this.add(n));
+                        .fold(self, Self::add);
                 }
                 match other.branch_direction(&common) {
                     Direction::Left => {
@@ -172,7 +171,7 @@ impl<A: Afi> Node<A> {
                     }
                 }
             }
-            _ => (),
+            PrefixOrdering::Divergent(_) => (),
         };
         self
     }
@@ -180,7 +179,7 @@ impl<A: Afi> Node<A> {
     pub fn aggregate(mut self: Box<Self>, mut mask: Option<GlueMap<A>>) -> Option<Box<Self>> {
         // set mask to zero if None given
         if mask.is_none() {
-            mask = Some(GlueMap::ZERO)
+            mask = Some(GlueMap::ZERO);
         }
         // mask is the union of gluemaps of all parent nodes.
         // if the intersection of mask and self.gluemap is not zero
@@ -216,10 +215,13 @@ impl<A: Afi> Node<A> {
                 r.gluemap &= !aggr_bits;
                 // set them in self.gluemap
                 self.gluemap |= aggr_bits;
-                // check whether any aggregation occured
-                if aggr_bits != GlueMap::ZERO {
+                // check whether any aggregation occurred
+                if aggr_bits == GlueMap::ZERO {
+                    // no aggregation occurred, so self may now be unnecessary glue.
+                    self.clean()
+                } else {
                     // left or right may now be unnecessary glue.
-                    // also, since some aggregation into self.gluemap occured, self
+                    // also, since some aggregation into self.gluemap occurred, self
                     // cannot be a glue node.
                     if let Some(child) = self.left.take() {
                         self.left = child.clean();
@@ -228,8 +230,6 @@ impl<A: Afi> Node<A> {
                         self.right = child.clean();
                     };
                     Some(self)
-                } else {
-                    self.clean()
                 }
             }
             _ => self.clean(),
@@ -257,20 +257,8 @@ impl<A: Afi> Node<A> {
                 Some(self)
             }
             PrefixOrdering::Subprefix(common) => match qnode.branch_direction(&common) {
-                Direction::Left => {
-                    if let Some(child) = &self.left {
-                        child.search(qnode)
-                    } else {
-                        None
-                    }
-                }
-                Direction::Right => {
-                    if let Some(child) = &self.right {
-                        child.search(qnode)
-                    } else {
-                        None
-                    }
-                }
+                Direction::Left => self.left.as_ref().and_then(|child| child.search(qnode)),
+                Direction::Right => self.left.as_ref().and_then(|child| child.search(qnode)),
             },
             _ => None,
         }
@@ -281,11 +269,11 @@ impl<A: Afi> Node<A> {
             PrefixOrdering::Divergent(_) => None,
             cmp => {
                 let prefix = if let PrefixOrdering::Subprefix(_) = cmp {
-                    qnode.prefix().to_owned()
+                    qnode.prefix()
                 } else {
-                    self.prefix().to_owned()
+                    self.prefix()
                 };
-                let mut new = Box::new(Node::new(prefix, self.gluemap & qnode.gluemap));
+                let mut new = Box::new(Self::new(*prefix, self.gluemap & qnode.gluemap));
                 if let Some(child) = &self.left {
                     if let Some(intersect_child) = child.intersect_nodes(qnode) {
                         new = new.add(intersect_child);

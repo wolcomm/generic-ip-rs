@@ -19,6 +19,6 @@ impl<A: Afi> FromStr for Node<A> {
     type Err = Error;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
-        s.parse::<Prefix<_>>().map(Node::from).map_err(Error::from)
+        s.parse::<Prefix<_>>().map(Self::from).map_err(Error::from)
     }
 }

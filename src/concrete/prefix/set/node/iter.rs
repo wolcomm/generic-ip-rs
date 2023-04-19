@@ -52,12 +52,10 @@ impl<'a, A: Afi> Iterator for Children<'a, A> {
             }
         }
         // No children left, recurse over parent
-        if let Some(parent) = self.parent.take() {
+        self.parent.take().and_then(|parent| {
             *self = *parent;
             self.next()
-        } else {
-            None
-        }
+        })
     }
 }
 

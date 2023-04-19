@@ -43,13 +43,13 @@ impl<A: Afi> Not for GlueMap<A> {
 
 impl<A: Afi> BitAndAssign for GlueMap<A> {
     fn bitand_assign(&mut self, other: Self) {
-        *self = *self & other
+        *self = *self & other;
     }
 }
 
 impl<A: Afi> BitOrAssign for GlueMap<A> {
     fn bitor_assign(&mut self, other: Self) {
-        *self = *self | other
+        *self = *self | other;
     }
 }
 
@@ -77,12 +77,12 @@ impl<A: Afi> GlueMap<A> {
     }
 
     pub fn next_range(&self, from: PrefixLength<A>) -> Option<RangeInclusive<PrefixLength<A>>> {
+        let max = || Self::MAX.into();
         let start = from.into_primitive().into();
         let first = start + self.inner[start..].first_one()?;
-        let last = match self.inner[first..].first_zero() {
-            Some(len) => first + len - 1,
-            None => Self::MAX.into(),
-        };
+        let last = self.inner[first..]
+            .first_zero()
+            .map_or_else(max, |len| first + len - 1);
         // Ok to unwrap because indices of Self are within the bounds
         // of `PrefixLength<A>`
         let lower = first.try_into().unwrap();
@@ -111,7 +111,7 @@ impl<A: Afi> fmt::Debug for GlueMap<A> {
             .field(&format_args!(
                 "{:#0w$b}",
                 &self.inner,
-                w = A::Primitive::MAX_LENGTH.into() as usize + 2
+                w = A::Primitive::MAX_LENGTH.into() + 2
             ))
             .finish()
     }

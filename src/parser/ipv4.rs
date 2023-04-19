@@ -51,7 +51,7 @@ mod tests {
         let input = "1.01.0.0";
         let addr = parse_addr(input);
         #[cfg(feature = "std")]
-        std::println!("{:?}", addr);
+        std::println!("{addr:?}");
         assert!(addr.is_err());
     }
 
@@ -92,7 +92,7 @@ mod tests {
             #[test]
             fn parse_any_utf8(s in r"\PC*") {
                 let stdlib: Option<Ipv4Addr> = s.parse().ok();
-                assert_eq!(parse_addr(&s).map(Address::new).ok(), stdlib.map(Address::from))
+                assert_eq!(parse_addr(&s).map(Address::new).ok(), stdlib.map(Address::from));
             }
         }
 

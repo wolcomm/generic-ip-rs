@@ -1,18 +1,16 @@
-//! [`PrefixSet<A>`] and related types.
-use std::borrow::ToOwned;
 use std::boxed::Box;
 use std::mem;
 
 use super::Prefix;
 use crate::traits::Afi;
 
+mod iter;
+use self::iter::{Prefixes, Ranges};
+
 mod node;
 use self::node::Node;
 
-mod iter;
 mod ops;
-
-pub use self::iter::{Prefixes, Ranges};
 
 /// A collection of IP prefixes, providing fast insertion and iteration,
 /// and set-theorectic arithmetic.
@@ -66,12 +64,13 @@ pub struct Set<A: Afi> {
 
 impl<A: Afi> Set<A> {
     /// Construct a new, empty [`PrefixSet<A>`].
-    pub fn new() -> Self {
-        Set { root: None }
+    #[must_use]
+    pub const fn new() -> Self {
+        Self::new_with_root(None)
     }
 
-    fn new_with_root(root: Option<Box<Node<A>>>) -> Self {
-        Set { root }
+    const fn new_with_root(root: Option<Box<Node<A>>>) -> Self {
+        Self { root }
     }
 
     fn insert_node(&mut self, new: Box<Node<A>>) -> &mut Self {
@@ -205,7 +204,7 @@ impl<A: Afi> Set<A> {
 
     fn aggregate(&mut self) -> &mut Self {
         if let Some(root) = mem::take(&mut self.root) {
-            self.root = root.aggregate(None)
+            self.root = root.aggregate(None);
         }
         self
     }
@@ -224,10 +223,9 @@ impl<A: Afi> Set<A> {
     /// # }
     /// ```
     pub fn contains(&self, prefix: Prefix<A>) -> bool {
-        match &self.root {
-            Some(root) => root.search(&prefix.into()).is_some(),
-            None => false,
-        }
+        self.root
+            .as_ref()
+            .map_or(false, |root| root.search(&prefix.into()).is_some())
     }
 
     /// Get the number of prefixes in `self`.
@@ -243,6 +241,7 @@ impl<A: Afi> Set<A> {
     /// #     Ok(())
     /// # }
     /// ```
+    #[must_use]
     pub fn len(&self) -> usize {
         self.prefixes().count()
     }
@@ -257,6 +256,7 @@ impl<A: Afi> Set<A> {
     /// #     Ok(())
     /// # }
     /// ```
+    #[must_use]
     pub fn is_empty(&self) -> bool {
         self.ranges().count() == 0
     }
@@ -277,7 +277,7 @@ impl<A: Afi> Set<A> {
     /// # }
     /// ```
     pub fn clear(&mut self) {
-        self.root = None
+        self.root = None;
     }
 
     /// Get an iterator over the [`PrefixRange<A>`](ip::concrete::PrefixRange)s
@@ -297,6 +297,7 @@ impl<A: Afi> Set<A> {
     /// #     Ok(())
     /// # }
     /// ```
+    #[must_use]
     pub fn ranges(&self) -> Ranges<'_, A> {
         self.into()
     }
@@ -319,6 +320,7 @@ impl<A: Afi> Set<A> {
     /// #     Ok(())
     /// # }
     /// ```
+    #[must_use]
     pub fn prefixes(&self) -> Prefixes<'_, A> {
         self.into()
     }
@@ -334,6 +336,7 @@ impl<A: Afi, U> Extend<U> for Set<A>
 where
     U: Into<Node<A>>,
 {
+    #[allow(unused_results)]
     fn extend<T>(&mut self, iter: T)
     where
         T: IntoIterator<Item = U>,
@@ -350,7 +353,7 @@ where
     where
         I: IntoIterator<Item = T>,
     {
-        Self::new().insert_from(iter).to_owned()
+        Self::new().insert_from(iter).clone()
     }
 }
 

@@ -238,6 +238,14 @@
 #![no_std]
 #[cfg(feature = "std")]
 extern crate std;
+// silence unused dev-dependency warnings
+#[cfg(test)]
+mod deps {
+    use criterion as _;
+    use itertools as _;
+    use utils as _;
+    use version_sync as _;
+}
 
 /// Types for working with IP objects of either address family.
 pub mod any;

@@ -153,7 +153,7 @@ mod ipv4 {
             .read()
             .into_iter()
             .collect();
-        let diff = s.clone() - t.clone();
+        let diff = s - t.clone();
         let err = t.prefixes().filter(|p| diff.contains(*p)).count();
         assert_eq!(err, 0)
     }
@@ -168,7 +168,7 @@ mod ipv4 {
             .read()
             .into_iter()
             .collect();
-        let diff = s.clone() - t.clone();
+        let diff = s - t.clone();
         let err = t.prefixes().filter(|p| diff.contains(*p)).count();
         assert_eq!(err, 0)
     }
@@ -334,7 +334,7 @@ mod ipv6 {
             .read()
             .into_iter()
             .collect();
-        let diff = s.clone() - t.clone();
+        let diff = s - t.clone();
         let err = t.prefixes().filter(|p| diff.contains(*p)).count();
         assert_eq!(err, 0)
     }
@@ -349,7 +349,7 @@ mod ipv6 {
             .read()
             .into_iter()
             .collect();
-        let diff = s.clone() - t.clone();
+        let diff = s - t.clone();
         let err = t.prefixes().filter(|p| diff.contains(*p)).count();
         assert_eq!(err, 0)
     }

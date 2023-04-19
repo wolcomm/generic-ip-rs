@@ -23,6 +23,10 @@ mod range;
 pub use self::range::Range;
 
 #[cfg(feature = "std")]
+// TODO: remove `unknown_lints` dance when `clippy::unnecessary_box_returns` is stabilised
+#[allow(unknown_lints)]
+#[allow(clippy::unnecessary_box_returns)]
+#[warn(unknown_lints)]
 mod set;
 pub use self::set::Set;
 

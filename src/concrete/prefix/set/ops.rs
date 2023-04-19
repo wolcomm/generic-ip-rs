@@ -1,6 +1,5 @@
 use core::cmp::{Ordering, PartialEq, PartialOrd};
 use core::ops::{Add, BitAnd, BitOr, BitXor, Mul, Not, Sub};
-use std::borrow::ToOwned;
 
 use num_traits::{One, Zero};
 
@@ -21,7 +20,7 @@ impl<A: Afi> One for Set<A> {
     fn one() -> Self {
         Self::new()
             .insert(<A as AfiClass>::PrefixRange::ALL)
-            .to_owned()
+            .clone()
     }
 }
 
@@ -30,8 +29,8 @@ impl<A: Afi> BitAnd for Set<A> {
 
     fn bitand(self, rhs: Self) -> Self::Output {
         match (self.root, rhs.root) {
-            (Some(r), Some(s)) => Self::Output::new_with_root(r & s).aggregate().to_owned(),
-            _ => Set::zero(),
+            (Some(r), Some(s)) => Self::Output::new_with_root(r & s).aggregate().clone(),
+            _ => Self::Output::zero(),
         }
     }
 }
@@ -41,9 +40,9 @@ impl<A: Afi> BitOr for Set<A> {
 
     fn bitor(self, rhs: Self) -> Self::Output {
         match (&self.root, &rhs.root) {
-            (Some(r), Some(s)) => Self::Output::new_with_root(r.to_owned() | s.to_owned())
+            (Some(r), Some(s)) => Self::Output::new_with_root(r.clone() | s.clone())
                 .aggregate()
-                .to_owned(),
+                .clone(),
             (Some(_), None) => self,
             (None, Some(_)) => rhs,
             (None, None) => Self::Output::zero(),
@@ -55,7 +54,7 @@ impl<A: Afi> BitXor for Set<A> {
     type Output = Self;
 
     fn bitxor(self, rhs: Self) -> Self::Output {
-        (self.to_owned() | rhs.to_owned()) - (self & rhs)
+        (self.clone() | rhs.clone()) - (self & rhs)
     }
 }
 
@@ -81,9 +80,9 @@ impl<A: Afi> Sub for Set<A> {
 
     fn sub(self, rhs: Self) -> Self::Output {
         match (&self.root, &rhs.root) {
-            (Some(r), Some(s)) => Self::Output::new_with_root(r.to_owned() - s.to_owned())
+            (Some(r), Some(s)) => Self::Output::new_with_root(r.clone() - s.clone())
                 .aggregate()
-                .to_owned(),
+                .clone(),
             _ => self,
         }
     }
@@ -153,6 +152,7 @@ mod tests {
                         .or_else(|_| s.parse().map(Insertable::Prefix))
                 }
             }
+            #[allow(clippy::from_over_into)]
             impl<A: Afi> Into<Node<A>> for Insertable<A> {
                 fn into(self) -> Node<A> {
                     match self {
@@ -245,15 +245,13 @@ mod tests {
     }
 
     #[test]
-    fn ipv4_zero_set_is_empty() -> TestResult {
+    fn ipv4_zero_set_is_empty() {
         assert_eq!(Set::<Ipv4>::zero().prefixes().count(), 0);
-        Ok(())
     }
 
     #[test]
-    fn ipv6_zero_set_is_empty() -> TestResult {
+    fn ipv6_zero_set_is_empty() {
         assert_eq!(Set::<Ipv6>::zero().prefixes().count(), 0);
-        Ok(())
     }
 
     test_unary_op!(!zero == one, !one == zero);

@@ -159,7 +159,7 @@ mod tests {
             #[test]
             fn parse_any_utf8(s in r"\PC*") {
                 let stdlib: Option<Ipv6Addr> = s.parse().ok();
-                assert_eq!(parse_addr(&s).map(Address::new).ok(), stdlib.map(Address::from))
+                assert_eq!(parse_addr(&s).map(Address::new).ok(), stdlib.map(Address::from));
             }
         }
 

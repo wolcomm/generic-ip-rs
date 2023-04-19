@@ -1,12 +1,11 @@
 use core::str::FromStr;
 use std::boxed::Box;
-use std::println;
 
 use super::{GlueMap, Node};
 use crate::{error::TestResult, traits::Afi, Ipv4, Ipv6};
 
 #[allow(clippy::boxed_local)]
-fn subtree_size<A: Afi>(root: Box<Node<A>>) -> usize {
+fn subtree_size<A: Afi>(root: &Node<A>) -> usize {
     root.children().count()
 }
 
@@ -18,7 +17,7 @@ impl<A: Afi> FromStr for Box<Node<A>> {
     type Err = <Node<A> as FromStr>::Err;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
-        s.parse().map(Box::new)
+        s.parse().map(Self::new)
     }
 }
 
@@ -77,25 +76,22 @@ mod new_ipv4_singleton {
     }
 
     #[test]
-    fn has_none_children() -> TestResult {
+    fn has_none_children() {
         let n = setup();
         assert!(n.left.is_none());
         assert!(n.right.is_none());
-        Ok(())
     }
 
     #[test]
-    fn has_singleton_gluemap() -> TestResult {
+    fn has_singleton_gluemap() {
         let n = setup();
         assert_eq!(n.gluemap.count_ones(), 1);
-        Ok(())
     }
 
     #[test]
-    fn becomes_glue_after_removal() -> TestResult {
+    fn becomes_glue_after_removal() {
         let n = setup();
         assert!(is_glue(&n.remove(&mut "192.0.2.0/24".parse().unwrap())));
-        Ok(())
     }
 
     mod added_with_self {
@@ -108,18 +104,16 @@ mod new_ipv4_singleton {
         }
 
         #[test]
-        fn is_unchanged() -> TestResult {
+        fn is_unchanged() {
             let n = super::setup();
             let m = setup();
             assert_eq!(n, m);
-            Ok(())
         }
 
         #[test]
-        fn has_subtree_size_one() -> TestResult {
+        fn has_subtree_size_one() {
             let n = setup();
-            assert_eq!(subtree_size(n), 1);
-            Ok(())
+            assert_eq!(subtree_size(&n), 1);
         }
     }
 
@@ -133,39 +127,34 @@ mod new_ipv4_singleton {
         }
 
         #[test]
-        fn returns_same_root() -> TestResult {
+        fn returns_same_root() {
             let n = super::setup();
             let m = setup();
             assert_eq!(n, m);
-            Ok(())
         }
 
         #[test]
-        fn has_some_right_child() -> TestResult {
+        fn has_some_right_child() {
             let n = setup();
             assert!(n.right.is_some());
-            Ok(())
         }
 
         #[test]
-        fn has_none_left_child() -> TestResult {
+        fn has_none_left_child() {
             let n = setup();
             assert!(n.left.is_none());
-            Ok(())
         }
 
         #[test]
-        fn has_subtree_size_two() -> TestResult {
+        fn has_subtree_size_two() {
             let n = setup();
-            assert_eq!(subtree_size(n), 2);
-            Ok(())
+            assert_eq!(subtree_size(&n), 2);
         }
 
         #[test]
-        fn becomes_glue_after_removal() -> TestResult {
+        fn becomes_glue_after_removal() {
             let n = setup();
             assert!(is_glue(&n.remove(&mut "192.0.2.0/24".parse().unwrap())));
-            Ok(())
         }
     }
 
@@ -179,32 +168,28 @@ mod new_ipv4_singleton {
         }
 
         #[test]
-        fn returns_same_root() -> TestResult {
+        fn returns_same_root() {
             let n = super::setup();
             let m = setup();
             assert_eq!(n, m);
-            Ok(())
         }
 
         #[test]
-        fn has_some_right_child() -> TestResult {
+        fn has_some_right_child() {
             let n = setup();
             assert!(n.right.is_some());
-            Ok(())
         }
 
         #[test]
-        fn has_none_left_child() -> TestResult {
+        fn has_none_left_child() {
             let n = setup();
             assert!(n.left.is_none());
-            Ok(())
         }
 
         #[test]
-        fn has_subtree_size_two() -> TestResult {
+        fn has_subtree_size_two() {
             let n = setup();
-            assert_eq!(subtree_size(n), 2);
-            Ok(())
+            assert_eq!(subtree_size(&n), 2);
         }
     }
 
@@ -218,41 +203,35 @@ mod new_ipv4_singleton {
         }
 
         #[test]
-        fn returns_new_root() -> TestResult {
+        fn returns_new_root() {
             let n = super::setup();
             let m = setup();
             assert_ne!(n, m);
-            Ok(())
         }
 
         #[test]
-        fn has_some_left_child() -> TestResult {
+        fn has_some_left_child() {
             let n = setup();
             assert!(n.left.is_some());
-            Ok(())
         }
 
         #[test]
-        fn has_none_right_child() -> TestResult {
+        fn has_none_right_child() {
             let n = setup();
             assert!(n.right.is_none());
-            Ok(())
         }
 
         #[test]
-        fn has_subtree_size_two() -> TestResult {
+        fn has_subtree_size_two() {
             let n = setup();
-            assert_eq!(subtree_size(n), 2);
-            Ok(())
+            assert_eq!(subtree_size(&n), 2);
         }
 
         #[test]
-        fn is_unchanged_after_subprefix_removal() -> TestResult {
+        fn is_unchanged_after_subprefix_removal() {
             let n = setup();
             let m = n.clone().remove(&mut "192.0.2.0/24".parse().unwrap());
-            println!("{:#?}", m);
             assert_eq!(m, n);
-            Ok(())
         }
     }
 
@@ -266,46 +245,40 @@ mod new_ipv4_singleton {
         }
 
         #[test]
-        fn returns_new_root() -> TestResult {
+        fn returns_new_root() {
             let n = super::setup();
             let m = setup();
             assert_ne!(n, m);
-            Ok(())
         }
 
         #[test]
-        fn has_some_left_child() -> TestResult {
+        fn has_some_left_child() {
             let n = setup();
             assert!(n.left.is_some());
-            Ok(())
         }
 
         #[test]
-        fn has_some_right_child() -> TestResult {
+        fn has_some_right_child() {
             let n = setup();
             assert!(n.right.is_some());
-            Ok(())
         }
 
         #[test]
-        fn is_glue() -> TestResult {
+        fn is_glue() {
             let n = setup();
             assert!(n.is_glue());
-            Ok(())
         }
 
         #[test]
-        fn has_subtree_size_three() -> TestResult {
+        fn has_subtree_size_three() {
             let n = setup();
-            assert_eq!(subtree_size(n), 3);
-            Ok(())
+            assert_eq!(subtree_size(&n), 3);
         }
 
         #[test]
-        fn can_iter() -> TestResult {
+        fn can_iter() {
             let n = setup();
-            assert_eq!(n.children().count(), subtree_size(n));
-            Ok(())
+            assert_eq!(n.children().count(), subtree_size(&n));
         }
 
         mod after_aggregation {
@@ -348,46 +321,40 @@ mod new_ipv4_singleton {
         }
 
         #[test]
-        fn returns_new_root() -> TestResult {
+        fn returns_new_root() {
             let n = super::setup();
             let m = setup();
             assert_ne!(n, m);
-            Ok(())
         }
 
         #[test]
-        fn has_some_left_child() -> TestResult {
+        fn has_some_left_child() {
             let n = setup();
             assert!(n.left.is_some());
-            Ok(())
         }
 
         #[test]
-        fn has_some_right_child() -> TestResult {
+        fn has_some_right_child() {
             let n = setup();
             assert!(n.right.is_some());
-            Ok(())
         }
 
         #[test]
-        fn is_glue() -> TestResult {
+        fn is_glue() {
             let n = setup();
             assert!(n.is_glue());
-            Ok(())
         }
 
         #[test]
-        fn has_subtree_size_three() -> TestResult {
+        fn has_subtree_size_three() {
             let n = setup();
-            assert_eq!(subtree_size(n), 3);
-            Ok(())
+            assert_eq!(subtree_size(&n), 3);
         }
 
         #[test]
-        fn can_iter() -> TestResult {
+        fn can_iter() {
             let n = setup();
-            assert_eq!(n.children().count(), subtree_size(n));
-            Ok(())
+            assert_eq!(n.children().count(), subtree_size(&n));
         }
 
         mod after_aggregation {
@@ -398,10 +365,9 @@ mod new_ipv4_singleton {
             }
 
             #[test]
-            fn is_glue() -> TestResult {
+            fn is_glue() {
                 let n = setup();
                 assert!(n.is_glue());
-                Ok(())
             }
         }
     }
@@ -415,18 +381,16 @@ mod new_ipv6_singleton {
     }
 
     #[test]
-    fn has_none_children() -> TestResult {
+    fn has_none_children() {
         let n = setup();
         assert!(n.left.is_none());
         assert!(n.right.is_none());
-        Ok(())
     }
 
     #[test]
-    fn has_singleton_gluemap() -> TestResult {
+    fn has_singleton_gluemap() {
         let n = setup();
         assert_eq!(n.gluemap.count_ones(), 1);
-        Ok(())
     }
 
     mod added_with_self {
@@ -439,25 +403,22 @@ mod new_ipv6_singleton {
         }
 
         #[test]
-        fn is_unchanged() -> TestResult {
+        fn is_unchanged() {
             let n = super::setup();
             let m = setup();
             assert_eq!(n, m);
-            Ok(())
         }
 
         #[test]
-        fn has_subtree_size_one() -> TestResult {
+        fn has_subtree_size_one() {
             let n = setup();
-            assert_eq!(subtree_size(n), 1);
-            Ok(())
+            assert_eq!(subtree_size(&n), 1);
         }
 
         #[test]
-        fn can_iter() -> TestResult {
+        fn can_iter() {
             let n = setup();
-            assert_eq!(n.children().count(), subtree_size(n));
-            Ok(())
+            assert_eq!(n.children().count(), subtree_size(&n));
         }
     }
 
@@ -471,39 +432,34 @@ mod new_ipv6_singleton {
         }
 
         #[test]
-        fn returns_same_root() -> TestResult {
+        fn returns_same_root() {
             let n = super::setup();
             let m = setup();
             assert_eq!(n, m);
-            Ok(())
         }
 
         #[test]
-        fn has_some_left_child() -> TestResult {
+        fn has_some_left_child() {
             let n = setup();
             assert!(n.left.is_some());
-            Ok(())
         }
 
         #[test]
-        fn has_none_right_child() -> TestResult {
+        fn has_none_right_child() {
             let n = setup();
             assert!(n.right.is_none());
-            Ok(())
         }
 
         #[test]
-        fn has_subtree_size_two() -> TestResult {
+        fn has_subtree_size_two() {
             let n = setup();
-            assert_eq!(subtree_size(n), 2);
-            Ok(())
+            assert_eq!(subtree_size(&n), 2);
         }
 
         #[test]
-        fn can_iter() -> TestResult {
+        fn can_iter() {
             let n = setup();
-            assert_eq!(n.children().count(), subtree_size(n));
-            Ok(())
+            assert_eq!(n.children().count(), subtree_size(&n));
         }
     }
 
@@ -517,39 +473,34 @@ mod new_ipv6_singleton {
         }
 
         #[test]
-        fn returns_same_root() -> TestResult {
+        fn returns_same_root() {
             let n = super::setup();
             let m = setup();
             assert_eq!(n, m);
-            Ok(())
         }
 
         #[test]
-        fn has_some_left_child() -> TestResult {
+        fn has_some_left_child() {
             let n = setup();
             assert!(n.left.is_some());
-            Ok(())
         }
 
         #[test]
-        fn has_none_right_child() -> TestResult {
+        fn has_none_right_child() {
             let n = setup();
             assert!(n.right.is_none());
-            Ok(())
         }
 
         #[test]
-        fn has_subtree_size_two() -> TestResult {
+        fn has_subtree_size_two() {
             let n = setup();
-            assert_eq!(subtree_size(n), 2);
-            Ok(())
+            assert_eq!(subtree_size(&n), 2);
         }
 
         #[test]
-        fn can_iter() -> TestResult {
+        fn can_iter() {
             let n = setup();
-            assert_eq!(n.children().count(), subtree_size(n));
-            Ok(())
+            assert_eq!(n.children().count(), subtree_size(&n));
         }
     }
 
@@ -563,39 +514,34 @@ mod new_ipv6_singleton {
         }
 
         #[test]
-        fn returns_new_root() -> TestResult {
+        fn returns_new_root() {
             let n = super::setup();
             let m = setup();
             assert_ne!(n, m);
-            Ok(())
         }
 
         #[test]
-        fn has_none_left_child() -> TestResult {
+        fn has_none_left_child() {
             let n = setup();
             assert!(n.left.is_none());
-            Ok(())
         }
 
         #[test]
-        fn has_some_right_child() -> TestResult {
+        fn has_some_right_child() {
             let n = setup();
             assert!(n.right.is_some());
-            Ok(())
         }
 
         #[test]
-        fn has_subtree_size_two() -> TestResult {
+        fn has_subtree_size_two() {
             let n = setup();
-            assert_eq!(subtree_size(n), 2);
-            Ok(())
+            assert_eq!(subtree_size(&n), 2);
         }
 
         #[test]
-        fn can_iter() -> TestResult {
+        fn can_iter() {
             let n = setup();
-            assert_eq!(n.children().count(), subtree_size(n));
-            Ok(())
+            assert_eq!(n.children().count(), subtree_size(&n));
         }
     }
 
@@ -609,46 +555,40 @@ mod new_ipv6_singleton {
         }
 
         #[test]
-        fn returns_new_root() -> TestResult {
+        fn returns_new_root() {
             let n = super::setup();
             let m = setup();
             assert_ne!(n, m);
-            Ok(())
         }
 
         #[test]
-        fn has_some_left_child() -> TestResult {
+        fn has_some_left_child() {
             let n = setup();
             assert!(n.left.is_some());
-            Ok(())
         }
 
         #[test]
-        fn has_some_right_child() -> TestResult {
+        fn has_some_right_child() {
             let n = setup();
             assert!(n.right.is_some());
-            Ok(())
         }
 
         #[test]
-        fn is_glue() -> TestResult {
+        fn is_glue() {
             let n = setup();
             assert!(n.is_glue());
-            Ok(())
         }
 
         #[test]
-        fn has_subtree_size_two() -> TestResult {
+        fn has_subtree_size_two() {
             let n = setup();
-            assert_eq!(subtree_size(n), 3);
-            Ok(())
+            assert_eq!(subtree_size(&n), 3);
         }
 
         #[test]
-        fn can_iter() -> TestResult {
+        fn can_iter() {
             let n = setup();
-            assert_eq!(n.children().count(), subtree_size(n));
-            Ok(())
+            assert_eq!(n.children().count(), subtree_size(&n));
         }
     }
 }
