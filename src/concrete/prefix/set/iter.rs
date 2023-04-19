@@ -1,8 +1,5 @@
-use ip::{Afi, PrefixRange};
-
-use crate::node;
-
-use super::PrefixSet;
+use super::{node, Set};
+use crate::{concrete::PrefixRange, traits::Afi};
 
 /// Non-consuming iterator returned by [`PrefixSet<A>::ranges()`].
 #[derive(Debug)]
@@ -11,8 +8,8 @@ pub struct Ranges<'a, A: Afi> {
     ranges_iter: Option<node::Ranges<'a, A>>,
 }
 
-impl<'a, A: Afi> From<&'a PrefixSet<A>> for Ranges<'a, A> {
-    fn from(s: &'a PrefixSet<A>) -> Self {
+impl<'a, A: Afi> From<&'a Set<A>> for Ranges<'a, A> {
+    fn from(s: &'a Set<A>) -> Self {
         Self {
             tree_iter: s.root.as_ref().map(|root| root.children()),
             ranges_iter: None,
@@ -50,8 +47,8 @@ pub struct Prefixes<'a, A: Afi> {
     prefix_range_iter: Option<<PrefixRange<A> as IntoIterator>::IntoIter>,
 }
 
-impl<'a, A: Afi> From<&'a PrefixSet<A>> for Prefixes<'a, A> {
-    fn from(s: &'a PrefixSet<A>) -> Self {
+impl<'a, A: Afi> From<&'a Set<A>> for Prefixes<'a, A> {
+    fn from(s: &'a Set<A>) -> Self {
         Self {
             ranges_iter: s.into(),
             prefix_range_iter: None,
@@ -59,7 +56,7 @@ impl<'a, A: Afi> From<&'a PrefixSet<A>> for Prefixes<'a, A> {
     }
 }
 
-impl<'a, A: Afi> Iterator for Prefixes<'a, A> {
+impl<A: Afi> Iterator for Prefixes<'_, A> {
     type Item = <PrefixRange<A> as IntoIterator>::Item;
 
     fn next(&mut self) -> Option<Self::Item> {

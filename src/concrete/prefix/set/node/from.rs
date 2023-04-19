@@ -1,13 +1,7 @@
-use std::str::FromStr;
+use core::str::FromStr;
 
-use ip::{
-    concrete::{Prefix, PrefixRange},
-    Afi,
-};
-
-use crate::error::{Error, Result};
-
-use super::{GlueMap, Node};
+use super::{GlueMap, Node, Prefix};
+use crate::{concrete::PrefixRange, error::Error, traits::Afi};
 
 impl<A: Afi> From<Prefix<A>> for Node<A> {
     fn from(prefix: Prefix<A>) -> Self {
@@ -24,7 +18,7 @@ impl<A: Afi> From<PrefixRange<A>> for Node<A> {
 impl<A: Afi> FromStr for Node<A> {
     type Err = Error;
 
-    fn from_str(s: &str) -> Result<Self> {
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
         s.parse::<Prefix<_>>().map(Node::from).map_err(Error::from)
     }
 }

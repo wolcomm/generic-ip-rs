@@ -1,10 +1,9 @@
-use std::str::FromStr;
-
-use ip::{Afi, Ipv4, Ipv6};
-
-use crate::tests::TestResult;
+use core::str::FromStr;
+use std::boxed::Box;
+use std::println;
 
 use super::{GlueMap, Node};
+use crate::{error::TestResult, traits::Afi, Ipv4, Ipv6};
 
 #[allow(clippy::boxed_local)]
 fn subtree_size<A: Afi>(root: Box<Node<A>>) -> usize {

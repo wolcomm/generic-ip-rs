@@ -1,10 +1,11 @@
-use ip::{
-    concrete::{PrefixLength, PrefixRange},
-    traits::PrefixLength as _,
-    Afi,
-};
+use std::boxed::Box;
+use std::vec::Vec;
 
 use super::Node;
+use crate::{
+    concrete::{PrefixLength, PrefixRange},
+    traits::{Afi, PrefixLength as _},
+};
 
 #[derive(Debug)]
 pub struct Children<'a, A: Afi> {
@@ -75,7 +76,7 @@ impl<'a, A: Afi> From<&'a Node<A>> for Ranges<'a, A> {
     }
 }
 
-impl<'a, A: Afi> Iterator for Ranges<'a, A> {
+impl<A: Afi> Iterator for Ranges<'_, A> {
     type Item = PrefixRange<A>;
 
     fn next(&mut self) -> Option<Self::Item> {

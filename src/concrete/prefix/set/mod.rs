@@ -1,9 +1,13 @@
 //! [`PrefixSet<A>`] and related types.
+use std::borrow::ToOwned;
+use std::boxed::Box;
 use std::mem;
 
-use ip::{Afi, Prefix};
+use super::Prefix;
+use crate::traits::Afi;
 
-use crate::node::Node;
+mod node;
+use self::node::Node;
 
 mod iter;
 mod ops;
@@ -12,6 +16,33 @@ pub use self::iter::{Prefixes, Ranges};
 
 /// A collection of IP prefixes, providing fast insertion and iteration,
 /// and set-theorectic arithmetic.
+///
+/// This is a Rust implementation derived in large part from the internal
+/// data-structure used in the widely used [`bgpq3`] tool by Alexandre Snarskii,
+/// packaged as a library, and with set-theoretic operations added.
+///
+/// # Examples
+///
+/// ``` rust
+/// use ip::{Ipv6, Prefix, PrefixLength, PrefixRange};
+/// use prefixset::{Error, PrefixSet};
+///
+/// fn main() -> Result<(), Error> {
+///     // create a set by parsing a Vec<&str>
+///     let set = vec!["2001:db8::/37", "2001:db8:f00::/37"]
+///         .iter()
+///         .map(|s| s.parse::<Prefix<Ipv6>>())
+///         .collect::<Result<PrefixSet<_>, _>>()?;
+///
+///     // create a range by parsing a &str and providing the lower
+///     // and upper prefix lenth bounds
+///     let length = PrefixLength::<Ipv6>::from_primitive(37)?;
+///     let range = PrefixRange::<Ipv6>::new("2001:db8::/36".parse()?, length..=length)?;
+///
+///     assert_eq!(set.ranges().collect::<Vec<_>>(), vec![range]);
+///     Ok(())
+/// }
+/// ```
 ///
 /// Most mutating methods return `&mut Self` for easy chaining, e.g.:
 ///
@@ -26,19 +57,21 @@ pub use self::iter::{Prefixes, Ranges};
 /// #     Ok(())
 /// # }
 /// ```
+///
+/// [`bgpq3`]: https://github.com/snar/bgpq3
 #[derive(Clone, Debug)]
-pub struct PrefixSet<A: Afi> {
+pub struct Set<A: Afi> {
     root: Option<Box<Node<A>>>,
 }
 
-impl<A: Afi> PrefixSet<A> {
+impl<A: Afi> Set<A> {
     /// Construct a new, empty [`PrefixSet<A>`].
     pub fn new() -> Self {
-        PrefixSet { root: None }
+        Set { root: None }
     }
 
     fn new_with_root(root: Option<Box<Node<A>>>) -> Self {
-        PrefixSet { root }
+        Set { root }
     }
 
     fn insert_node(&mut self, new: Box<Node<A>>) -> &mut Self {
@@ -63,9 +96,7 @@ impl<A: Afi> PrefixSet<A> {
     /// # use prefixset::{Error, PrefixSet};
     /// # fn main() -> Result<(), Error> {
     /// let range: PrefixRange<Ipv6> = "2001:db8:f00::/48,64,64".parse()?;
-    /// let set = PrefixSet::new()
-    ///     .insert(range)
-    ///     .to_owned();
+    /// let set = PrefixSet::new().insert(range).to_owned();
     /// assert_eq!(set.len(), 1 << 16);
     /// #     Ok(())
     /// # }
@@ -92,9 +123,7 @@ impl<A: Afi> PrefixSet<A> {
     ///     .into_iter()
     ///     .map(|s| s.parse::<Prefix<Ipv4>>())
     ///     .collect::<Result<_, _>>()?;
-    /// let set = PrefixSet::new()
-    ///     .insert_from(prefixes)
-    ///     .to_owned();
+    /// let set = PrefixSet::new().insert_from(prefixes).to_owned();
     /// assert_eq!(set.len(), 2);
     /// #     Ok(())
     /// # }
@@ -125,10 +154,7 @@ impl<A: Afi> PrefixSet<A> {
     /// # use ip::{Ipv6, Prefix};
     /// # use prefixset::{Error, PrefixSet};
     /// # fn main() -> Result<(), Error> {
-    /// let set = [
-    ///         "2001:db8:f00::/48",
-    ///         "2001:db8:baa::/48",
-    ///     ]
+    /// let set = ["2001:db8:f00::/48", "2001:db8:baa::/48"]
     ///     .into_iter()
     ///     .map(|s| s.parse::<Prefix<Ipv6>>())
     ///     .collect::<Result<PrefixSet<_>, _>>()?
@@ -271,7 +297,7 @@ impl<A: Afi> PrefixSet<A> {
     /// #     Ok(())
     /// # }
     /// ```
-    pub fn ranges(&self) -> Ranges<A> {
+    pub fn ranges(&self) -> Ranges<'_, A> {
         self.into()
     }
 
@@ -293,18 +319,18 @@ impl<A: Afi> PrefixSet<A> {
     /// #     Ok(())
     /// # }
     /// ```
-    pub fn prefixes(&self) -> Prefixes<A> {
+    pub fn prefixes(&self) -> Prefixes<'_, A> {
         self.into()
     }
 }
 
-impl<A: Afi> Default for PrefixSet<A> {
+impl<A: Afi> Default for Set<A> {
     fn default() -> Self {
         Self::new()
     }
 }
 
-impl<A: Afi, U> Extend<U> for PrefixSet<A>
+impl<A: Afi, U> Extend<U> for Set<A>
 where
     U: Into<Node<A>>,
 {
@@ -316,7 +342,7 @@ where
     }
 }
 
-impl<A: Afi, T> FromIterator<T> for PrefixSet<A>
+impl<A: Afi, T> FromIterator<T> for Set<A>
 where
     T: Into<Node<A>>,
 {

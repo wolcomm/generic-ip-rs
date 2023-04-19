@@ -1,8 +1,8 @@
-use std::ops::{BitAnd, BitOr, Sub};
-
-use ip::Afi;
+use core::ops::{BitAnd, BitOr, Sub};
+use std::boxed::Box;
 
 use super::Node;
+use crate::traits::Afi;
 
 impl<A: Afi> PartialEq for Node<A> {
     fn eq(&self, other: &Self) -> bool {

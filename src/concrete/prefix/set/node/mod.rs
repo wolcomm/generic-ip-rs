@@ -1,7 +1,10 @@
-use ip::{
+use std::borrow::ToOwned;
+use std::boxed::Box;
+
+use super::Prefix;
+use crate::{
     concrete::{Hostmask, Netmask, PrefixOrdering},
-    traits::{Address as _, Prefix as _, PrefixLength as _},
-    Afi, Prefix,
+    traits::{Address as _, Afi, Prefix as _, PrefixLength as _},
 };
 
 mod from;
@@ -313,7 +316,7 @@ impl<A: Afi> Node<A> {
         }
     }
 
-    pub fn ranges(&self) -> Ranges<A> {
+    pub fn ranges(&self) -> Ranges<'_, A> {
         self.into()
     }
 

@@ -1,13 +1,8 @@
-extern crate utils;
-use utils::data_set;
-
-use ip::{traits::Prefix as _, Ipv4, Ipv6, Prefix, PrefixRange};
-
 use std::collections::HashSet;
 
-use num::Zero;
-
-use prefixset::PrefixSet;
+use ip::{concrete::PrefixSet, traits::Prefix as _, Ipv4, Ipv6, Prefix, PrefixRange};
+use num_traits::Zero;
+use utils::data_set;
 
 mod ipv4 {
     use super::*;
@@ -180,7 +175,8 @@ mod ipv4 {
 
     // #[test]
     // fn neg_of_set_from_prefixes_has_expected_size() {
-    //     let s: PrefixSet<_> = data_set::<Ipv4Prefix>("AS-WOLCOMM-ipv4-prefixes", 0, 0)
+    //     let s: PrefixSet<_> =
+    // data_set::<Ipv4Prefix>("AS-WOLCOMM-ipv4-prefixes", 0, 0)
     //         .read()
     //         .into_iter()
     //         .collect();
@@ -360,7 +356,8 @@ mod ipv6 {
 
     // #[test]
     // fn neg_of_set_from_prefixes_has_expected_size() {
-    //     let s: PrefixSet<_> = data_set::<Ipv6Prefix>("AS-WOLCOMM-ipv6-prefixes", 0, 0)
+    //     let s: PrefixSet<_> =
+    // data_set::<Ipv6Prefix>("AS-WOLCOMM-ipv6-prefixes", 0, 0)
     //         .read()
     //         .into_iter()
     //         .collect();

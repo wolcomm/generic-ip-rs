@@ -1,11 +1,9 @@
 use std::collections::HashSet;
 use std::iter::FromIterator;
 
-use ip::{Afi, Ipv4, Ipv6, Prefix};
+use ip::{concrete::PrefixSet, Afi, Ipv4, Ipv6, Prefix};
 use itertools::Itertools;
 use proptest::{arbitrary::ParamsFor, prelude::*};
-
-use prefixset::PrefixSet;
 
 #[derive(Clone, Debug)]
 struct TestPrefixSet<A: Afi> {
@@ -16,8 +14,6 @@ struct TestPrefixSet<A: Afi> {
 impl<A: Afi> FromIterator<Prefix<A>> for TestPrefixSet<A> {
     fn from_iter<T: IntoIterator<Item = Prefix<A>>>(iter: T) -> Self {
         let (ps_iter, cs_iter) = iter.into_iter().tee();
-        // let ps = ps_iter.into_iter().map(|p| &**p).collect();
-        // let cs = cs_iter.into_iter().map(|p| **p).collect();
         Self {
             ps: ps_iter.collect(),
             cs: cs_iter.collect(),

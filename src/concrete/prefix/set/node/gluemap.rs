@@ -1,13 +1,12 @@
-use std::fmt;
-use std::ops::{BitAnd, BitAndAssign, BitOr, BitOrAssign, Not, RangeInclusive};
+use core::fmt;
+use core::ops::{BitAnd, BitAndAssign, BitOr, BitOrAssign, Not, RangeInclusive};
 
-use ip::{
+use crate::{
     concrete::{PrefixLength, PrefixRange},
     traits::{
         primitive::{Address, LengthMap as _},
-        PrefixLength as _,
+        Afi, PrefixLength as _,
     },
-    Afi,
 };
 
 #[derive(Clone, Copy, Eq, PartialEq)]

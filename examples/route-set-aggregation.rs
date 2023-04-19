@@ -1,8 +1,5 @@
-use std::error::Error;
-
-use ip::{Ipv4, Prefix};
-
-use prefixset::PrefixSet;
+// TODO: use ip::PrefixSet
+use ip::{concrete::PrefixSet, Error, Ipv4, Prefix};
 
 /// Collect a `Vec<&str>` into a `PrefixSet<Ipv4>` and
 /// print the contained ranges.
@@ -32,9 +29,8 @@ use prefixset::PrefixSet;
 /// ip prefix-list RS-EXAMPLE permit 192.0.2.128/26 le 27
 /// ip prefix-list RS-EXAMPLE permit 192.0.2.192/26 ge 27 le 27
 /// ```
-///
-fn main() -> Result<(), Box<dyn Error>> {
-    let set: PrefixSet<_> = vec![
+fn main() -> Result<(), Error> {
+    let set: PrefixSet<_> = [
         "192.0.2.0/27",
         "192.0.2.32/27",
         "192.0.2.64/27",
@@ -48,6 +44,6 @@ fn main() -> Result<(), Box<dyn Error>> {
     .into_iter()
     .map(|prefix| prefix.parse::<Prefix<Ipv4>>())
     .collect::<Result<_, _>>()?;
-    set.ranges().for_each(|range| println!("{}", range));
+    set.ranges().for_each(|range| println!("{range}"));
     Ok(())
 }

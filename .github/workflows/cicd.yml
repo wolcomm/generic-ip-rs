@@ -37,7 +37,7 @@ jobs:
         uses: actions-rs/cargo@v1
         with:
           command: check
-          args: --all-features --verbose
+          args: --all-features --all-targets --verbose
 
   fmt:
     name: fmt
@@ -61,7 +61,7 @@ jobs:
         uses: actions-rs/cargo@v1
         with:
           command: fmt
-          args: --all -- --check
+          args: --check
 
   clippy:
     name: clippy
@@ -86,7 +86,7 @@ jobs:
         with:
           name: ${{ matrix.rust }}
           token: ${{ secrets.GITHUB_TOKEN }}
-          args: --all-features -- -D warnings
+          args: --all-features --all-targets -- -D warnings
 
   test:
     name: test
@@ -99,6 +99,9 @@ jobs:
         args:
           - --lib
           - --test versions
+          - --test prefix-sets
+          - --test prefix-set-proptests
+          - --benches
         include:
           - rust: nightly
             args: --doc

@@ -22,6 +22,10 @@ pub use self::ord::PrefixOrdering;
 mod range;
 pub use self::range::Range;
 
+#[cfg(feature = "std")]
+mod set;
+pub use self::set::Set;
+
 mod subprefixes;
 pub use self::subprefixes::Subprefixes;
 

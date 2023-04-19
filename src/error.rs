@@ -108,3 +108,6 @@ macro_rules! err {
     };
 }
 pub(crate) use err;
+
+#[cfg(test)]
+pub(crate) type TestResult = Result<(), Error>;

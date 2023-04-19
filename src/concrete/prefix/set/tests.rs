@@ -1,9 +1,13 @@
-use ip::{Ipv4, Prefix, PrefixRange};
+use std::borrow::ToOwned;
+use std::vec::Vec;
+use std::{dbg, vec};
 
-use crate::tests::TestResult;
-// use crate::{IpPrefixRange, Ipv4Prefix};
-
-use super::PrefixSet;
+use super::Set;
+use crate::{
+    concrete::{Prefix, PrefixRange},
+    error::TestResult,
+    Ipv4,
+};
 
 fn assert_send<T: Send>(_: T) -> TestResult {
     Ok(())
@@ -15,8 +19,8 @@ fn assert_sync<T: Sync>(_: T) -> TestResult {
 mod new_ipv4_prefix_set {
     use super::*;
 
-    fn setup() -> PrefixSet<Ipv4> {
-        PrefixSet::new()
+    fn setup() -> Set<Ipv4> {
+        Set::new()
     }
 
     #[test]
@@ -60,7 +64,7 @@ mod new_ipv4_prefix_set {
     mod with_a_prefix_added {
         use super::*;
 
-        fn setup() -> PrefixSet<Ipv4> {
+        fn setup() -> Set<Ipv4> {
             let mut s = super::setup();
             let p = "192.0.2.0/24".parse::<Prefix<Ipv4>>().unwrap();
             s.insert(p).to_owned()
@@ -69,7 +73,6 @@ mod new_ipv4_prefix_set {
         #[test]
         fn contains_one_prefix() -> TestResult {
             let s = setup();
-            println!("{:#?}", s);
             assert_eq!(s.prefixes().count(), 1);
             Ok(())
         }
@@ -101,7 +104,7 @@ mod new_ipv4_prefix_set {
         mod and_removed {
             use super::*;
 
-            fn setup() -> PrefixSet<Ipv4> {
+            fn setup() -> Set<Ipv4> {
                 let mut s = super::setup();
                 let p = "192.0.2.0/24".parse::<Prefix<Ipv4>>().unwrap();
                 s.remove(p).to_owned()
@@ -118,7 +121,7 @@ mod new_ipv4_prefix_set {
         mod with_another_prefix_added {
             use super::*;
 
-            fn setup() -> PrefixSet<Ipv4> {
+            fn setup() -> Set<Ipv4> {
                 let mut s = super::setup();
                 let p = "192.0.0.0/22".parse::<Prefix<Ipv4>>().unwrap();
                 s.insert(p).to_owned()
@@ -156,7 +159,7 @@ mod new_ipv4_prefix_set {
             mod and_a_range_removed {
                 use super::*;
 
-                fn setup() -> PrefixSet<Ipv4> {
+                fn setup() -> Set<Ipv4> {
                     let mut s = super::setup();
                     let r: PrefixRange<Ipv4> = "192.0.0.0/16,24,24".parse().unwrap();
                     s.remove(r).to_owned()
@@ -181,7 +184,7 @@ mod new_ipv4_prefix_set {
             mod with_a_third_prefix_added {
                 use super::*;
 
-                fn setup() -> PrefixSet<Ipv4> {
+                fn setup() -> Set<Ipv4> {
                     let mut s = super::setup();
                     let p: Prefix<Ipv4> = "192.0.3.0/24".parse().unwrap();
                     s.insert(p).to_owned()
@@ -204,7 +207,6 @@ mod new_ipv4_prefix_set {
                 #[test]
                 fn contains_all_prefixes() -> TestResult {
                     let s = setup();
-                    println!("{:#?}", s);
                     assert!(s.contains("192.0.2.0/24".parse()?));
                     assert!(s.contains("192.0.3.0/24".parse()?));
                     assert!(s.contains("192.0.0.0/22".parse()?));
@@ -229,7 +231,7 @@ mod new_ipv4_prefix_set {
                 mod and_a_range_removed {
                     use super::*;
 
-                    fn setup() -> PrefixSet<Ipv4> {
+                    fn setup() -> Set<Ipv4> {
                         let mut s = super::setup();
                         let r: PrefixRange<Ipv4> = "192.0.2.0/23,24,24".parse().unwrap();
                         s.remove(r).to_owned()
@@ -238,7 +240,6 @@ mod new_ipv4_prefix_set {
                     #[test]
                     fn contains_one_prefix() -> TestResult {
                         let s = setup();
-                        println!("{:#?}", s);
                         assert_eq!(s.prefixes().count(), 1);
                         Ok(())
                     }

@@ -3,15 +3,20 @@ use std::io::{BufRead, BufReader};
 use std::marker::PhantomData;
 use std::str::FromStr;
 
-pub struct DataSet<T>(
-    &'static str, // name
-    usize,        // prefixes
-    usize,        // ranges
-    PhantomData<T>,
-);
+pub struct DataSet<T> {
+    name: &'static str,
+    prefixes: usize,
+    ranges: usize,
+    _data: PhantomData<T>,
+}
 
 pub const fn data_set<T>(name: &'static str, prefixes: usize, ranges: usize) -> DataSet<T> {
-    DataSet(name, prefixes, ranges, PhantomData)
+    DataSet {
+        name,
+        prefixes,
+        ranges,
+        _data: PhantomData,
+    }
 }
 
 #[macro_export]
@@ -27,13 +32,13 @@ macro_rules! data_sets {
 
 impl<T> DataSet<T> {
     pub fn name(&self) -> &str {
-        self.0
+        self.name
     }
     pub fn prefixes(&self) -> usize {
-        self.1
+        self.prefixes
     }
     pub fn ranges(&self) -> usize {
-        self.2
+        self.ranges
     }
 }
 
@@ -43,7 +48,7 @@ where
     <T as FromStr>::Err: std::fmt::Debug,
 {
     pub fn read(&self) -> Vec<T> {
-        let path = format!("./test_data/{}.txt", self.name());
+        let path = format!("./test-data/{}.txt", self.name());
         let file = File::open(path).unwrap();
         BufReader::new(file)
             .lines()

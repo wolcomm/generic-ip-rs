@@ -1,17 +1,9 @@
-extern crate itertools;
-extern crate utils;
-
-use utils::{data_sets, DataSet};
-
 use std::time::Duration;
 
 use criterion::{criterion_main, Criterion, Throughput};
-
-use ip::{Ipv4, Ipv6, Prefix, PrefixRange};
-
+use ip::{concrete::PrefixSet, Ipv4, Ipv6, Prefix, PrefixRange};
 use itertools::Itertools;
-
-use prefixset::PrefixSet;
+use utils::{data_sets, DataSet};
 
 macro_rules! benchmarks {
     ( $id:ident: $t:ty =>
@@ -28,8 +20,7 @@ macro_rules! benchmarks {
             );* );
 
             pub fn benches(mut c: &mut Criterion) {
-                construct_by_move(&mut c);
-                // construct_by_copy(&mut c);
+                construct(&mut c);
                 iterate_prefix_ranges(&mut c);
                 iterate_prefixes(&mut c);
                 compute_intersection(&mut c);
@@ -37,7 +28,7 @@ macro_rules! benchmarks {
                 compute_difference(&mut c);
             }
 
-            fn construct_by_move(c: &mut Criterion) {
+            fn construct(c: &mut Criterion) {
                 let mut g = c.benchmark_group("construction by move");
                 g.measurement_time(Duration::from_secs(20));
                 g.sample_size(20);
@@ -51,21 +42,6 @@ macro_rules! benchmarks {
                 }
                 g.finish()
             }
-
-            // fn construct_by_copy(c: &mut Criterion) {
-            //     let mut g = c.benchmark_group("construction by copy");
-            //     g.measurement_time(Duration::from_secs(20));
-            //     g.sample_size(20);
-            //
-            //     for ds in DATA_SETS {
-            //         let prefixes = ds.read();
-            //         g.throughput(Throughput::Elements(prefixes.len() as u64));
-            //         g.bench_function(ds.name(), |b| {
-            //             b.iter(|| -> PrefixSet<_> { prefixes.iter().collect() })
-            //         });
-            //     }
-            //     g.finish()
-            // }
 
             fn iterate_prefix_ranges(c: &mut Criterion) {
                 let mut g = c.benchmark_group("prefix range iteration");

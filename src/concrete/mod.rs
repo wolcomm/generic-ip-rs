@@ -11,7 +11,9 @@ mod interface;
 pub use self::interface::Interface;
 
 mod prefix;
-pub use self::prefix::{Prefix, PrefixLength, PrefixOrdering, Range as PrefixRange, Subprefixes};
+pub use self::prefix::{
+    Prefix, PrefixLength, PrefixOrdering, Range as PrefixRange, Set as PrefixSet, Subprefixes,
+};
 
 macro_rules! impl_try_from_any {
     ( $any_ty:ty {

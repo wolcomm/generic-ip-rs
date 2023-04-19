@@ -1,13 +1,13 @@
-use std::cmp::{Ordering, PartialEq, PartialOrd};
-use std::ops::{Add, BitAnd, BitOr, BitXor, Mul, Not, Sub};
+use core::cmp::{Ordering, PartialEq, PartialOrd};
+use core::ops::{Add, BitAnd, BitOr, BitXor, Mul, Not, Sub};
+use std::borrow::ToOwned;
 
-use ip::Afi;
+use num_traits::{One, Zero};
 
-use num::{One, Zero};
+use super::Set;
+use crate::traits::{Afi, AfiClass};
 
-use super::PrefixSet;
-
-impl<A: Afi> Zero for PrefixSet<A> {
+impl<A: Afi> Zero for Set<A> {
     fn zero() -> Self {
         Self::new()
     }
@@ -17,26 +17,26 @@ impl<A: Afi> Zero for PrefixSet<A> {
     }
 }
 
-impl<A: Afi> One for PrefixSet<A> {
+impl<A: Afi> One for Set<A> {
     fn one() -> Self {
         Self::new()
-            .insert(<A as ip::AfiClass>::PrefixRange::ALL)
+            .insert(<A as AfiClass>::PrefixRange::ALL)
             .to_owned()
     }
 }
 
-impl<A: Afi> BitAnd for PrefixSet<A> {
+impl<A: Afi> BitAnd for Set<A> {
     type Output = Self;
 
     fn bitand(self, rhs: Self) -> Self::Output {
         match (self.root, rhs.root) {
             (Some(r), Some(s)) => Self::Output::new_with_root(r & s).aggregate().to_owned(),
-            _ => PrefixSet::zero(),
+            _ => Set::zero(),
         }
     }
 }
 
-impl<A: Afi> BitOr for PrefixSet<A> {
+impl<A: Afi> BitOr for Set<A> {
     type Output = Self;
 
     fn bitor(self, rhs: Self) -> Self::Output {
@@ -51,7 +51,7 @@ impl<A: Afi> BitOr for PrefixSet<A> {
     }
 }
 
-impl<A: Afi> BitXor for PrefixSet<A> {
+impl<A: Afi> BitXor for Set<A> {
     type Output = Self;
 
     fn bitxor(self, rhs: Self) -> Self::Output {
@@ -59,7 +59,7 @@ impl<A: Afi> BitXor for PrefixSet<A> {
     }
 }
 
-impl<A: Afi> Not for PrefixSet<A> {
+impl<A: Afi> Not for Set<A> {
     type Output = Self;
 
     fn not(self) -> Self::Output {
@@ -67,7 +67,7 @@ impl<A: Afi> Not for PrefixSet<A> {
     }
 }
 
-impl<A: Afi> Add for PrefixSet<A> {
+impl<A: Afi> Add for Set<A> {
     type Output = Self;
 
     #[allow(clippy::suspicious_arithmetic_impl)]
@@ -76,7 +76,7 @@ impl<A: Afi> Add for PrefixSet<A> {
     }
 }
 
-impl<A: Afi> Sub for PrefixSet<A> {
+impl<A: Afi> Sub for Set<A> {
     type Output = Self;
 
     fn sub(self, rhs: Self) -> Self::Output {
@@ -89,7 +89,7 @@ impl<A: Afi> Sub for PrefixSet<A> {
     }
 }
 
-impl<A: Afi> Mul for PrefixSet<A> {
+impl<A: Afi> Mul for Set<A> {
     type Output = Self;
 
     #[allow(clippy::suspicious_arithmetic_impl)]
@@ -98,7 +98,7 @@ impl<A: Afi> Mul for PrefixSet<A> {
     }
 }
 
-impl<A: Afi> PartialEq for PrefixSet<A> {
+impl<A: Afi> PartialEq for Set<A> {
     fn eq(&self, other: &Self) -> bool {
         match (&self.root, &other.root) {
             (Some(r), Some(s)) => r.children().zip(s.children()).all(|(m, n)| m == n),
@@ -108,7 +108,7 @@ impl<A: Afi> PartialEq for PrefixSet<A> {
     }
 }
 
-impl<A: Afi> PartialOrd for PrefixSet<A> {
+impl<A: Afi> PartialOrd for Set<A> {
     fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
         if self == other {
             Some(Ordering::Equal)
@@ -122,40 +122,49 @@ impl<A: Afi> PartialOrd for PrefixSet<A> {
     }
 }
 
-impl<A: Afi> Eq for PrefixSet<A> {}
+impl<A: Afi> Eq for Set<A> {}
 
 #[cfg(test)]
 mod tests {
-
-    use ip::{concrete::PrefixRange, Ipv4, Ipv6};
+    use core::str::FromStr;
+    use std::{dbg, vec};
 
     use paste::paste;
 
-    use crate::tests::{TestError, TestResult};
-
+    use super::super::Node;
     use super::*;
+    use crate::{
+        concrete::{Prefix, PrefixRange},
+        error::{Error, TestResult},
+        Ipv4, Ipv6,
+    };
 
-    impl<A: Afi> FromIterator<&'static str> for PrefixSet<A> {
+    impl<A: Afi> FromIterator<&'static str> for Set<A> {
         fn from_iter<T: IntoIterator<Item = &'static str>>(iter: T) -> Self {
-            iter.into_iter()
-                .map(|s| {
-                    let mut elems = s.split(',');
-                    let prefix = elems
-                        .next()
-                        .ok_or(TestError::from("no prefix"))
-                        .and_then(|s| s.parse().map_err(TestError::from))?;
-                    match (elems.next(), elems.next()) {
-                        (Some(l), Some(u)) => {
-                            let lower = l.parse::<usize>()?.try_into()?;
-                            let upper = u.parse::<usize>()?.try_into()?;
-                            PrefixRange::new(prefix, lower..=upper).map_err(TestError::from)
-                        }
-                        (None, None) => Ok(prefix.into()),
-                        _ => Err(TestError::from("failed to parse range")),
+            enum Insertable<A: Afi> {
+                Prefix(Prefix<A>),
+                Range(PrefixRange<A>),
+            }
+            impl<A: Afi> FromStr for Insertable<A> {
+                type Err = Error;
+                fn from_str(s: &str) -> Result<Self, Self::Err> {
+                    s.parse()
+                        .map(Insertable::Range)
+                        .or_else(|_| s.parse().map(Insertable::Prefix))
+                }
+            }
+            impl<A: Afi> Into<Node<A>> for Insertable<A> {
+                fn into(self) -> Node<A> {
+                    match self {
+                        Self::Prefix(prefix) => prefix.into(),
+                        Self::Range(range) => range.into(),
                     }
-                })
-                .map(Result::unwrap)
-                .collect()
+                }
+            }
+            iter.into_iter()
+                .map(Insertable::from_str)
+                .collect::<Result<_, _>>()
+                .unwrap()
         }
     }
 
@@ -179,7 +188,7 @@ mod tests {
                 $(
                     #[test]
                     fn $fn_id() -> TestResult {
-                        let res: PrefixSet<$p> = dbg!($lhs);
+                        let res: Set<$p> = dbg!($lhs);
                         assert_eq!(res, dbg!($rhs));
                         Ok(())
                     }
@@ -196,8 +205,8 @@ mod tests {
             paste! {
                 test_exprs!($(
                     [<$op _ $operand _is_ $expect>] {
-                        PrefixSet::$operand().$op(),
-                        PrefixSet::$expect()
+                        Set::$operand().$op(),
+                        Set::$expect()
                     }
                 );*);
             }
@@ -227,8 +236,8 @@ mod tests {
             paste! {
                 test_exprs!($(
                     [<$lhs _ $op _ $rhs _is_ $expect>] {
-                        PrefixSet::$lhs().$op(PrefixSet::$rhs()),
-                        PrefixSet::$expect()
+                        Set::$lhs().$op(Set::$rhs()),
+                        Set::$expect()
                     }
                 );*);
             }
@@ -237,13 +246,13 @@ mod tests {
 
     #[test]
     fn ipv4_zero_set_is_empty() -> TestResult {
-        assert_eq!(PrefixSet::<Ipv4>::zero().prefixes().count(), 0);
+        assert_eq!(Set::<Ipv4>::zero().prefixes().count(), 0);
         Ok(())
     }
 
     #[test]
     fn ipv6_zero_set_is_empty() -> TestResult {
-        assert_eq!(PrefixSet::<Ipv6>::zero().prefixes().count(), 0);
+        assert_eq!(Set::<Ipv6>::zero().prefixes().count(), 0);
         Ok(())
     }
 
@@ -293,117 +302,117 @@ mod tests {
 
     test_exprs!( @ipv4 {
         intersect_disjoint_nodes {
-            vec!["1.0.0.0/8,8,16"].into_iter().collect::<PrefixSet<_>>()
+            vec!["1.0.0.0/8,8,16"].into_iter().collect::<Set<_>>()
                 & vec!["2.0.0.0/8,8,16"].into_iter().collect(),
-            PrefixSet::zero()
+            Set::zero()
         };
         intersect_disjoint_ranges {
-            vec!["1.0.0.0/8,8,11"].into_iter().collect::<PrefixSet<_>>()
+            vec!["1.0.0.0/8,8,11"].into_iter().collect::<Set<_>>()
                 & vec!["1.0.0.0/8,12,15"].into_iter().collect(),
-            PrefixSet::zero()
+            Set::zero()
         };
         intersect_overlapping_nodes {
-            vec!["1.0.0.0/8,12,16"].into_iter().collect::<PrefixSet<_>>()
+            vec!["1.0.0.0/8,12,16"].into_iter().collect::<Set<_>>()
                 & vec!["1.0.0.0/12,12,16"].into_iter().collect(),
             vec!["1.0.0.0/12,12,16"].into_iter().collect()
         };
         intersect_overlapping_ranges {
-            vec!["1.0.0.0/8,8,12"].into_iter().collect::<PrefixSet<_>>()
+            vec!["1.0.0.0/8,8,12"].into_iter().collect::<Set<_>>()
                 & vec!["1.0.0.0/8,12,16"].into_iter().collect(),
             vec!["1.0.0.0/8,12,12"].into_iter().collect()
         };
         intersect_overlapping_set_with_parent {
-            vec!["1.0.0.0/8", "1.0.0.0/16"].into_iter().collect::<PrefixSet<_>>()
+            vec!["1.0.0.0/8", "1.0.0.0/16"].into_iter().collect::<Set<_>>()
                 & vec!["1.0.0.0/16"].into_iter().collect(),
             vec!["1.0.0.0/16"].into_iter().collect()
         };
         intersect_overlapping_set_with_sibling {
-            vec!["1.0.0.0/8", "2.0.0.0/8"].into_iter().collect::<PrefixSet<_>>()
+            vec!["1.0.0.0/8", "2.0.0.0/8"].into_iter().collect::<Set<_>>()
                 & vec!["1.0.0.0/8"].into_iter().collect(),
             vec!["1.0.0.0/8"].into_iter().collect()
         };
         intersect_overlapping_set_with_child {
-            vec!["1.0.0.0/8", "1.0.0.0/16"].into_iter().collect::<PrefixSet<_>>()
+            vec!["1.0.0.0/8", "1.0.0.0/16"].into_iter().collect::<Set<_>>()
                 & vec!["1.0.0.0/8"].into_iter().collect(),
             vec!["1.0.0.0/8"].into_iter().collect()
         };
         intersect_covering_parent {
-            vec!["1.0.0.0/16"].into_iter().collect::<PrefixSet<_>>()
+            vec!["1.0.0.0/16"].into_iter().collect::<Set<_>>()
                 & vec!["1.0.0.0/8,16,16"].into_iter().collect(),
             vec!["1.0.0.0/16"].into_iter().collect()
         };
         intersect_covered_child {
-            vec!["1.0.0.0/8,16,16"].into_iter().collect::<PrefixSet<_>>()
+            vec!["1.0.0.0/8,16,16"].into_iter().collect::<Set<_>>()
                 & vec!["1.0.0.0/16"].into_iter().collect(),
             vec!["1.0.0.0/16"].into_iter().collect()
         };
         intersect_overlapping_set_with_covered_child {
-            vec!["1.0.0.0/8", "1.0.0.0/16"].into_iter().collect::<PrefixSet<_>>()
+            vec!["1.0.0.0/8", "1.0.0.0/16"].into_iter().collect::<Set<_>>()
                 & vec!["1.0.0.0/8,16,16"].into_iter().collect(),
             vec!["1.0.0.0/16"].into_iter().collect()
         };
         union_disjoint_nodes {
-            vec!["2.0.0.0/8,8,16"].into_iter().collect::<PrefixSet<_>>()
+            vec!["2.0.0.0/8,8,16"].into_iter().collect::<Set<_>>()
                 | vec!["3.0.0.0/8,8,16"].into_iter().collect(),
             vec!["2.0.0.0/7,8,16"].into_iter().collect()
         };
         union_disjoint_ranges {
-            vec!["1.0.0.0/8,8,11"].into_iter().collect::<PrefixSet<_>>()
+            vec!["1.0.0.0/8,8,11"].into_iter().collect::<Set<_>>()
                 | vec!["1.0.0.0/8,12,15"].into_iter().collect(),
             vec!["1.0.0.0/8,8,15"].into_iter().collect()
         };
         union_overlapping_nodes {
-            vec!["1.0.0.0/8,12,16"].into_iter().collect::<PrefixSet<_>>()
+            vec!["1.0.0.0/8,12,16"].into_iter().collect::<Set<_>>()
                 | vec!["1.0.0.0/12,12,16"].into_iter().collect(),
             vec!["1.0.0.0/8,12,16"].into_iter().collect()
         };
         union_overlapping_ranges {
-            vec!["1.0.0.0/8,8,12"].into_iter().collect::<PrefixSet<_>>()
+            vec!["1.0.0.0/8,8,12"].into_iter().collect::<Set<_>>()
                 | vec!["1.0.0.0/8,12,16"].into_iter().collect(),
             vec!["1.0.0.0/8,8,16"].into_iter().collect()
         };
         union_overlapping_set_with_parent {
-            vec!["1.0.0.0/8", "1.0.0.0/16"].into_iter().collect::<PrefixSet<_>>()
+            vec!["1.0.0.0/8", "1.0.0.0/16"].into_iter().collect::<Set<_>>()
                 | vec!["1.0.0.0/16"].into_iter().collect(),
             vec!["1.0.0.0/8", "1.0.0.0/16"].into_iter().collect()
         };
         union_overlapping_set_with_sibling {
-            vec!["1.0.0.0/8", "2.0.0.0/8"].into_iter().collect::<PrefixSet<_>>()
+            vec!["1.0.0.0/8", "2.0.0.0/8"].into_iter().collect::<Set<_>>()
                 | vec!["1.0.0.0/8"].into_iter().collect(),
             vec!["1.0.0.0/8", "2.0.0.0/8"].into_iter().collect()
         };
         union_overlapping_set_with_child {
-            vec!["1.0.0.0/8", "1.0.0.0/16"].into_iter().collect::<PrefixSet<_>>()
+            vec!["1.0.0.0/8", "1.0.0.0/16"].into_iter().collect::<Set<_>>()
                 | vec!["1.0.0.0/8"].into_iter().collect(),
             vec!["1.0.0.0/8", "1.0.0.0/16"].into_iter().collect()
         };
         union_covering_parent {
-            vec!["1.0.0.0/16"].into_iter().collect::<PrefixSet<_>>()
+            vec!["1.0.0.0/16"].into_iter().collect::<Set<_>>()
                 | vec!["1.0.0.0/8,16,16"].into_iter().collect(),
             vec!["1.0.0.0/8,16,16"].into_iter().collect()
         };
         union_covered_child {
-            vec!["1.0.0.0/8,16,16"].into_iter().collect::<PrefixSet<_>>()
+            vec!["1.0.0.0/8,16,16"].into_iter().collect::<Set<_>>()
                 | vec!["1.0.0.0/16"].into_iter().collect(),
             vec!["1.0.0.0/8,16,16"].into_iter().collect()
         };
         union_overlapping_set_with_covered_child {
-            vec!["1.0.0.0/8", "1.0.0.0/16"].into_iter().collect::<PrefixSet<_>>()
+            vec!["1.0.0.0/8", "1.0.0.0/16"].into_iter().collect::<Set<_>>()
                 | vec!["1.0.0.0/8,16,16"].into_iter().collect(),
             vec!["1.0.0.0/8", "1.0.0.0/8,16,16"].into_iter().collect()
         };
         xor_disjoint_nodes {
-            vec!["2.0.0.0/8,8,16"].into_iter().collect::<PrefixSet<_>>()
+            vec!["2.0.0.0/8,8,16"].into_iter().collect::<Set<_>>()
                 ^ vec!["3.0.0.0/8,8,16"].into_iter().collect(),
             vec!["2.0.0.0/7,8,16"].into_iter().collect()
         };
         xor_disjoint_ranges {
-            vec!["1.0.0.0/8,8,11"].into_iter().collect::<PrefixSet<_>>()
+            vec!["1.0.0.0/8,8,11"].into_iter().collect::<Set<_>>()
                 ^ vec!["1.0.0.0/8,12,15"].into_iter().collect(),
             vec!["1.0.0.0/8,8,15"].into_iter().collect()
         };
         xor_overlapping_nodes {
-            vec!["1.0.0.0/8,12,16"].into_iter().collect::<PrefixSet<_>>()
+            vec!["1.0.0.0/8,12,16"].into_iter().collect::<Set<_>>()
                 ^ vec!["1.0.0.0/12,12,16"].into_iter().collect(),
             vec![
                 "1.16.0.0/12,12,16",
@@ -413,27 +422,27 @@ mod tests {
             ].into_iter().collect()
         };
         xor_overlapping_ranges {
-            vec!["1.0.0.0/8,8,12"].into_iter().collect::<PrefixSet<_>>()
+            vec!["1.0.0.0/8,8,12"].into_iter().collect::<Set<_>>()
                 ^ vec!["1.0.0.0/8,12,16"].into_iter().collect(),
             vec!["1.0.0.0/8,8,11", "1.0.0.0/8,13,16"].into_iter().collect()
         };
         xor_overlapping_set_with_parent {
-            vec!["1.0.0.0/8", "1.0.0.0/16"].into_iter().collect::<PrefixSet<_>>()
+            vec!["1.0.0.0/8", "1.0.0.0/16"].into_iter().collect::<Set<_>>()
                 ^ vec!["1.0.0.0/16"].into_iter().collect(),
             vec!["1.0.0.0/8"].into_iter().collect()
         };
         xor_overlapping_set_with_sibling {
-            vec!["1.0.0.0/8", "2.0.0.0/8"].into_iter().collect::<PrefixSet<_>>()
+            vec!["1.0.0.0/8", "2.0.0.0/8"].into_iter().collect::<Set<_>>()
                 ^ vec!["1.0.0.0/8"].into_iter().collect(),
             vec!["2.0.0.0/8"].into_iter().collect()
         };
         xor_overlapping_set_with_child {
-            vec!["1.0.0.0/8", "1.0.0.0/16"].into_iter().collect::<PrefixSet<_>>()
+            vec!["1.0.0.0/8", "1.0.0.0/16"].into_iter().collect::<Set<_>>()
                 ^ vec!["1.0.0.0/8"].into_iter().collect(),
             vec!["1.0.0.0/16"].into_iter().collect()
         };
         xor_covering_parent {
-            vec!["1.0.0.0/16"].into_iter().collect::<PrefixSet<_>>()
+            vec!["1.0.0.0/16"].into_iter().collect::<Set<_>>()
                 ^ vec!["1.0.0.0/8,16,16"].into_iter().collect(),
             vec![
                 "1.1.0.0/16",
@@ -447,7 +456,7 @@ mod tests {
             ].into_iter().collect()
         };
         xor_covered_child {
-            vec!["1.0.0.0/8,16,16"].into_iter().collect::<PrefixSet<_>>()
+            vec!["1.0.0.0/8,16,16"].into_iter().collect::<Set<_>>()
                 ^ vec!["1.0.0.0/16"].into_iter().collect(),
             vec![
                 "1.1.0.0/16",
@@ -461,22 +470,22 @@ mod tests {
             ].into_iter().collect()
         };
         xor_overlapping_set_with_covered_child {
-            vec!["1.0.0.0/8", "1.0.0.0/16"].into_iter().collect::<PrefixSet<_>>()
+            vec!["1.0.0.0/8", "1.0.0.0/16"].into_iter().collect::<Set<_>>()
                 ^ vec!["1.0.0.0/8,16,16"].into_iter().collect(),
             vec!["1.0.0.0/8"].into_iter().collect()
         };
         sub_disjoint_nodes {
-            vec!["2.0.0.0/8,8,16"].into_iter().collect::<PrefixSet<_>>()
+            vec!["2.0.0.0/8,8,16"].into_iter().collect::<Set<_>>()
                 - vec!["3.0.0.0/8,8,16"].into_iter().collect(),
             vec!["2.0.0.0/8,8,16"].into_iter().collect()
         };
         sub_disjoint_ranges {
-            vec!["1.0.0.0/8,8,11"].into_iter().collect::<PrefixSet<_>>()
+            vec!["1.0.0.0/8,8,11"].into_iter().collect::<Set<_>>()
                 - vec!["1.0.0.0/8,12,15"].into_iter().collect(),
             vec!["1.0.0.0/8,8,11"].into_iter().collect()
         };
         sub_overlapping_nodes {
-            vec!["1.0.0.0/8,12,16"].into_iter().collect::<PrefixSet<_>>()
+            vec!["1.0.0.0/8,12,16"].into_iter().collect::<Set<_>>()
                 - vec!["1.0.0.0/12,12,16"].into_iter().collect(),
             vec![
                 "1.16.0.0/12,12,16",
@@ -486,32 +495,32 @@ mod tests {
             ].into_iter().collect()
         };
         sub_overlapping_ranges {
-            vec!["1.0.0.0/8,8,12"].into_iter().collect::<PrefixSet<_>>()
+            vec!["1.0.0.0/8,8,12"].into_iter().collect::<Set<_>>()
                 - vec!["1.0.0.0/8,12,16"].into_iter().collect(),
             vec!["1.0.0.0/8,8,11"].into_iter().collect()
         };
         sub_overlapping_set_with_parent {
-            vec!["1.0.0.0/8", "1.0.0.0/16"].into_iter().collect::<PrefixSet<_>>()
+            vec!["1.0.0.0/8", "1.0.0.0/16"].into_iter().collect::<Set<_>>()
                 - vec!["1.0.0.0/16"].into_iter().collect(),
             vec!["1.0.0.0/8"].into_iter().collect()
         };
         sub_overlapping_set_with_sibling {
-            vec!["1.0.0.0/8", "2.0.0.0/8"].into_iter().collect::<PrefixSet<_>>()
+            vec!["1.0.0.0/8", "2.0.0.0/8"].into_iter().collect::<Set<_>>()
                 - vec!["1.0.0.0/8"].into_iter().collect(),
             vec!["2.0.0.0/8"].into_iter().collect()
         };
         sub_overlapping_set_with_child {
-            vec!["1.0.0.0/8", "1.0.0.0/16"].into_iter().collect::<PrefixSet<_>>()
+            vec!["1.0.0.0/8", "1.0.0.0/16"].into_iter().collect::<Set<_>>()
                 - vec!["1.0.0.0/8"].into_iter().collect(),
             vec!["1.0.0.0/16"].into_iter().collect()
         };
         sub_covering_parent {
-            vec!["1.0.0.0/16"].into_iter().collect::<PrefixSet<_>>()
+            vec!["1.0.0.0/16"].into_iter().collect::<Set<_>>()
                 - vec!["1.0.0.0/8,16,16"].into_iter().collect(),
-            PrefixSet::zero()
+            Set::zero()
         };
         sub_covered_child {
-            vec!["1.0.0.0/8,16,16"].into_iter().collect::<PrefixSet<_>>()
+            vec!["1.0.0.0/8,16,16"].into_iter().collect::<Set<_>>()
                 - vec!["1.0.0.0/16"].into_iter().collect(),
             vec![
                 "1.1.0.0/16",
@@ -525,7 +534,7 @@ mod tests {
             ].into_iter().collect()
         };
         sub_overlapping_set_with_covered_child {
-            vec!["1.0.0.0/8", "1.0.0.0/16"].into_iter().collect::<PrefixSet<_>>()
+            vec!["1.0.0.0/8", "1.0.0.0/16"].into_iter().collect::<Set<_>>()
                 - vec!["1.0.0.0/8,16,16"].into_iter().collect(),
             vec![
                 "1.0.0.0/8",
@@ -540,7 +549,7 @@ mod tests {
             ].into_iter().collect()
         };
         sub_complex_deaggregation {
-            vec!["2.0.0.0/8,8,10", "3.0.0.0/8,8,9"].into_iter().collect::<PrefixSet<_>>()
+            vec!["2.0.0.0/8,8,10", "3.0.0.0/8,8,9"].into_iter().collect::<Set<_>>()
                 - vec!["2.0.0.0/10", "3.0.0.0/8,8,10"].into_iter().collect(),
             vec![
                 "2.0.0.0/8,8,9",
@@ -550,7 +559,7 @@ mod tests {
             ].into_iter().collect()
         };
         not_singleton {
-            ! vec!["1.0.0.0/8"].into_iter().collect::<PrefixSet<_>>(),
+            ! vec!["1.0.0.0/8"].into_iter().collect::<Set<_>>(),
             vec![
                 "0.0.0.0/0,0,7",
                 "0.0.0.0/0,9,32",
@@ -565,7 +574,7 @@ mod tests {
             ].into_iter().collect()
         };
         not_range {
-            ! vec!["1.0.0.0/8,8,16"].into_iter().collect::<PrefixSet<_>>(),
+            ! vec!["1.0.0.0/8,8,16"].into_iter().collect::<Set<_>>(),
             vec![
                 "0.0.0.0/0,0,7",
                 "0.0.0.0/0,17,32",
