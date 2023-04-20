@@ -131,7 +131,7 @@ jobs:
           fail_ci_if_error: true
 
   docs:
-    name: test
+    name: docs
     needs: [audit]
     runs-on: ubuntu-latest
     steps:
