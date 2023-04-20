@@ -22,8 +22,7 @@ mod ops;
 /// # Examples
 ///
 /// ``` rust
-/// use ip::{Ipv6, Prefix, PrefixLength, PrefixRange};
-/// use prefixset::{Error, PrefixSet};
+/// use ip::{concrete::PrefixSet, Error, Ipv6, Prefix, PrefixLength, PrefixRange};
 ///
 /// fn main() -> Result<(), Error> {
 ///     // create a set by parsing a Vec<&str>
@@ -45,8 +44,7 @@ mod ops;
 /// Most mutating methods return `&mut Self` for easy chaining, e.g.:
 ///
 /// ``` rust
-/// # use ip::{Prefix, Ipv4};
-/// # use prefixset::{Error, PrefixSet};
+/// # use ip::{Prefix, Ipv4, concrete::PrefixSet, Error};
 /// # fn main() -> Result<(), Error> {
 /// let set = PrefixSet::new()
 ///     .insert("192.0.2.0/24".parse::<Prefix<Ipv4>>()?)
@@ -91,8 +89,7 @@ impl<A: Afi> Set<A> {
     /// [`PrefixRange<A>`](ip::concrete::PrefixRange).
     ///
     /// ``` rust
-    /// # use ip::{PrefixRange, Ipv6};
-    /// # use prefixset::{Error, PrefixSet};
+    /// # use ip::{Error, concrete::PrefixSet, PrefixRange, Ipv6};
     /// # fn main() -> Result<(), Error> {
     /// let range: PrefixRange<Ipv6> = "2001:db8:f00::/48,64,64".parse()?;
     /// let set = PrefixSet::new().insert(range).to_owned();
@@ -115,8 +112,7 @@ impl<A: Afi> Set<A> {
     /// efficient than calling [`PrefixSet::insert()`] repeatedly.
     ///
     /// ``` rust
-    /// # use ip::{Ipv4, Prefix};
-    /// # use prefixset::{Error, PrefixSet};
+    /// # use ip::{Error, concrete::PrefixSet, Ipv4, Prefix};
     /// # fn main() -> Result<(), Error> {
     /// let prefixes: Vec<_> = vec!["192.0.2.0/26", "192.0.2.64/26"]
     ///     .into_iter()
@@ -150,8 +146,7 @@ impl<A: Afi> Set<A> {
     /// [`PrefixRange<A>`](ip::concrete::PrefixRange).
     ///
     /// ``` rust
-    /// # use ip::{Ipv6, Prefix};
-    /// # use prefixset::{Error, PrefixSet};
+    /// # use ip::{concrete::PrefixSet, Error, Ipv6, Prefix};
     /// # fn main() -> Result<(), Error> {
     /// let set = ["2001:db8:f00::/48", "2001:db8:baa::/48"]
     ///     .into_iter()
@@ -178,8 +173,7 @@ impl<A: Afi> Set<A> {
     /// efficient than calling [`PrefixSet::remove()`] repeatedly.
     ///
     /// ``` rust
-    /// # use ip::{Ipv4, Prefix, PrefixRange};
-    /// # use prefixset::{Error, PrefixSet};
+    /// # use ip::{concrete::PrefixSet, Error, Ipv4, Prefix, PrefixRange};
     /// # fn main() -> Result<(), Error> {
     /// let prefixes: Vec<_> = vec!["192.0.2.0/26", "192.0.2.64/26"]
     ///     .into_iter()
@@ -212,8 +206,7 @@ impl<A: Afi> Set<A> {
     /// Test whether `prefix` is contained in `self`.
     ///
     /// ``` rust
-    /// # use ip::{Ipv4, Prefix, PrefixRange};
-    /// # use prefixset::{Error, PrefixSet};
+    /// # use ip::{Error, concrete::PrefixSet, Ipv4, Prefix, PrefixRange};
     /// # fn main() -> Result<(), Error> {
     /// let set = PrefixSet::new()
     ///     .insert("192.0.2.0/24,26,26".parse::<PrefixRange<Ipv4>>()?)
@@ -231,8 +224,7 @@ impl<A: Afi> Set<A> {
     /// Get the number of prefixes in `self`.
     ///
     /// ``` rust
-    /// # use ip::{Ipv4, PrefixRange};
-    /// # use prefixset::{Error, PrefixSet};
+    /// # use ip::{concrete::PrefixSet, Error, Ipv4, PrefixRange};
     /// # fn main() -> Result<(), Error> {
     /// let set = PrefixSet::new()
     ///     .insert("192.0.2.0/24,26,26".parse::<PrefixRange<Ipv4>>()?)
@@ -249,8 +241,7 @@ impl<A: Afi> Set<A> {
     /// Test whether `self` is empty.
     ///
     /// ``` rust
-    /// # use ip::Ipv4;
-    /// # use prefixset::{Error, PrefixSet};
+    /// # use ip::{Error, concrete::PrefixSet, Ipv4};
     /// # fn main() -> Result<(), Error> {
     /// assert!(PrefixSet::<Ipv4>::new().is_empty());
     /// #     Ok(())
@@ -264,8 +255,7 @@ impl<A: Afi> Set<A> {
     /// Clear the contents of `self`
     ///
     /// ``` rust
-    /// # use ip::{Ipv6, Prefix};
-    /// # use prefixset::{Error, PrefixSet};
+    /// # use ip::{Ipv6, Prefix, Error, concrete::PrefixSet};
     /// # fn main() -> Result<(), Error> {
     /// let mut set = PrefixSet::new()
     ///     .insert("2001:db8::/32".parse::<Prefix<Ipv6>>()?)
@@ -284,8 +274,7 @@ impl<A: Afi> Set<A> {
     /// contained in `self`.
     ///
     /// ``` rust
-    /// # use ip::{Ipv4, Prefix};
-    /// # use prefixset::{Error, PrefixSet};
+    /// # use ip::{Error, concrete::PrefixSet, Ipv4, Prefix};
     /// # fn main() -> Result<(), Error> {
     /// let set = PrefixSet::new()
     ///     .insert("192.0.2.0/25".parse::<Prefix<Ipv4>>()?)
@@ -306,8 +295,7 @@ impl<A: Afi> Set<A> {
     /// contained in `self`.
     ///
     /// ``` rust
-    /// # use ip::{Ipv4, Prefix};
-    /// # use prefixset::{Error, PrefixSet};
+    /// # use ip::{Ipv4, Prefix, concrete::PrefixSet, Error};
     /// # fn main() -> Result<(), Error> {
     /// let set = PrefixSet::new()
     ///     .insert("192.0.2.0/25".parse::<Prefix<Ipv4>>()?)
