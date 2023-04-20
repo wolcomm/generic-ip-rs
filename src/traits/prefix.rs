@@ -63,7 +63,7 @@ pub trait Prefix:
     /// ```
     fn network(&self) -> Self::Address;
 
-    /// Returns the hostmask of the IP subnet respresented by this prefix.
+    /// Returns the hostmask of the IP subnet represented by this prefix.
     ///
     /// # Examples
     ///
@@ -81,7 +81,7 @@ pub trait Prefix:
     /// ```
     fn hostmask(&self) -> Self::Hostmask;
 
-    /// Returns the netmask of the IP subnet respresented by this prefix.
+    /// Returns the netmask of the IP subnet represented by this prefix.
     ///
     /// # Examples
     ///
@@ -139,7 +139,7 @@ pub trait Prefix:
     /// ```
     fn prefix_len(&self) -> Self::Length;
 
-    /// Returns the broadcast address of the IP subnet respresented by this
+    /// Returns the broadcast address of the IP subnet represented by this
     /// prefix.
     ///
     /// # [`ipnet`] Compatibility

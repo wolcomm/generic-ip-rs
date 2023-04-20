@@ -25,11 +25,11 @@ impl traits::AfiClass for Any {
 /// Enumeration of address family classes.
 #[derive(Clone, Copy, Debug, Hash, PartialEq, Eq)]
 pub enum AfiClass {
-    /// Variant respresenting the class `{ IPv4 }`.
+    /// Variant representing the class `{ IPv4 }`.
     Ipv4,
-    /// Variant respresenting the class `{ IPv6 }`.
+    /// Variant representing the class `{ IPv6 }`.
     Ipv6,
-    /// Variant respresenting the [`Any`] class.
+    /// Variant representing the [`Any`] class.
     Any,
 }
 

@@ -55,7 +55,7 @@ impl<A: Afi> Address<A> {
         Self::new(A::Primitive::from_be_bytes(octets))
     }
 
-    /// Returns a big-endian byte-array respresenting the value of `self`.
+    /// Returns a big-endian byte-array representing the value of `self`.
     ///
     /// # Examples
     ///

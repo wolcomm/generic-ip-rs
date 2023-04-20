@@ -63,7 +63,7 @@
 //!
 //! ### Address-families
 //!
-//! The IP address-families `ipv4` and `ipv6` are respresented in the type
+//! The IP address-families `ipv4` and `ipv6` are represented in the type
 //! system by the zero-sized types [`concrete::Ipv4`] and [`concrete::Ipv6`].
 //!
 //! These "concrete" address-families implement [`traits::Afi`], which in turn

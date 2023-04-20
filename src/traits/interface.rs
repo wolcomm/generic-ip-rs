@@ -19,13 +19,13 @@ use crate::error::Error;
 pub trait Interface:
     Copy + Clone + Debug + Display + FromStr<Err = Error> + Sized + Hash + PartialEq + Eq
 {
-    /// The type of IP address respresented by this interface type.
+    /// The type of IP address represented by this interface type.
     type Address: Address;
 
-    /// The type used to respresent IP prefixes for this IP interface type.
+    /// The type used to represented IP prefixes for this IP interface type.
     type PrefixLength: PrefixLength;
 
-    /// The type used to respresent IP prefix lengths for this IP interface
+    /// The type used to represented IP prefix lengths for this IP interface
     /// type.
     type Prefix: Prefix;
 

@@ -53,9 +53,9 @@ impl<A: traits::Afi> traits::AfiClass for A {
 /// ```
 #[derive(Clone, Copy, Debug, Hash, PartialEq, Eq)]
 pub enum Afi {
-    /// Variant respresenting the IPv4 address family.
+    /// Variant representing the IPv4 address family.
     Ipv4,
-    /// Variant respresenting the IPv6 address family.
+    /// Variant representing the IPv6 address family.
     Ipv6,
 }
 
