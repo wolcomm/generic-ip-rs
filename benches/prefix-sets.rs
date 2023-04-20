@@ -29,22 +29,22 @@ macro_rules! benchmarks {
             }
 
             fn construct(c: &mut Criterion) {
-                let mut g = c.benchmark_group("construction by move");
-                g.measurement_time(Duration::from_secs(20));
-                g.sample_size(20);
+                let mut g = c.benchmark_group("construct");
+                g.measurement_time(Duration::from_secs(10));
+                g.sample_size(10);
 
                 for ds in DATA_SETS {
                     let prefixes = ds.read();
                     g.throughput(Throughput::Elements(prefixes.len() as u64));
                     g.bench_function(ds.name(), |b| {
-                        b.iter(|| -> PrefixSet<_> { prefixes.clone().into_iter().collect() })
+                        b.iter(|| { prefixes.clone().into_iter().collect::<PrefixSet<_>>() })
                     });
                 }
                 g.finish()
             }
 
             fn iterate_prefix_ranges(c: &mut Criterion) {
-                let mut g = c.benchmark_group("prefix range iteration");
+                let mut g = c.benchmark_group("iter-ranges");
                 g.measurement_time(Duration::from_secs(10));
 
                 for ds in DATA_SETS {
@@ -58,7 +58,7 @@ macro_rules! benchmarks {
             }
 
             fn iterate_prefixes(c: &mut Criterion) {
-                let mut g = c.benchmark_group("prefix iteration");
+                let mut g = c.benchmark_group("iter-prefixes");
                 g.measurement_time(Duration::from_secs(10));
 
                 for ds in DATA_SETS {
@@ -72,9 +72,9 @@ macro_rules! benchmarks {
             }
 
             fn compute_intersection(c: &mut Criterion) {
-                let mut g = c.benchmark_group("intersection computation");
-                g.measurement_time(Duration::from_secs(30));
-                g.sample_size(20);
+                let mut g = c.benchmark_group("intersection");
+                g.measurement_time(Duration::from_secs(20));
+                g.sample_size(10);
 
                 DATA_SETS.into_iter()
                     .tuple_combinations()
@@ -88,9 +88,9 @@ macro_rules! benchmarks {
             }
 
             fn compute_union(c: &mut Criterion) {
-                let mut g = c.benchmark_group("union computation");
-                g.measurement_time(Duration::from_secs(30));
-                g.sample_size(20);
+                let mut g = c.benchmark_group("union");
+                g.measurement_time(Duration::from_secs(20));
+                g.sample_size(10);
 
                 DATA_SETS.iter()
                     .tuple_combinations()
@@ -104,9 +104,9 @@ macro_rules! benchmarks {
             }
 
             fn compute_difference(c: &mut Criterion) {
-                let mut g = c.benchmark_group("difference computation");
-                g.measurement_time(Duration::from_secs(30));
-                g.sample_size(20);
+                let mut g = c.benchmark_group("difference");
+                g.measurement_time(Duration::from_secs(20));
+                g.sample_size(10);
 
                 DATA_SETS.iter()
                     .tuple_combinations()
