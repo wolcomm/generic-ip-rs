@@ -34,8 +34,8 @@ mod private {
         ///
         /// # Errors
         ///
-        /// Fails if `n` is outside of the range [`Afi::MIN_LENGTH`] to
-        /// [`Afi::MAX_LENGTH`] inclusive (for `A as Afi`).
+        /// Fails if `n` is outside of the range [`Self::MIN`] to [`Self::MAX`]
+        /// inclusive.
         pub fn from_primitive(
             n: <A::Primitive as primitive::Address<A>>::Length,
         ) -> Result<Self, Error> {

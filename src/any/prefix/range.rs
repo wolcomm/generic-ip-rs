@@ -25,7 +25,7 @@ use crate::{
 /// variants being padded to fill up any unused space.
 ///
 /// As a result, users should avoid using this type in a context where only
-/// [`PrefixRange::Ipv4`] variants are expected.
+/// [`PrefixRange::Ipv4`][Range::Ipv4] variants are expected.
 ///
 /// # Examples
 ///

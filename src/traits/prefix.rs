@@ -284,7 +284,7 @@ pub trait Prefix:
         self.network().afi()
     }
 
-    /// Try to construct a new [`PrefixLength`] for the address-family
+    /// Try to construct a new [`Self::Length`] for the address-family
     /// associated with this IP prefix.
     ///
     /// # Errors
@@ -322,7 +322,8 @@ pub trait Length:
     ///
     /// # Errors
     ///
-    /// An [`Error`] of kind [`error::Kind::PrefixLength`] is returned if
+    /// An [`Error`] of kind
+    /// [`Kind::PrefixLength`][crate::error::Kind::PrefixLength] is returned if
     /// `self` is maximally-valued.
     ///
     /// # Examples
@@ -355,7 +356,8 @@ pub trait Length:
     ///
     /// # Errors
     ///
-    /// An [`Error`] of kind [`error::Kind::PrefixLength`] is returned if
+    /// An [`Error`] of kind
+    /// [`Kind::PrefixLength`][crate::error::Kind::PrefixLength] is returned if
     /// `self` is zero-valued.
     fn decrement(self) -> Result<Self, Error>;
 }
@@ -515,7 +517,7 @@ pub trait Range:
         self.prefix().afi()
     }
 
-    /// Try to construct a new [`PrefixLength`] for the address-family
+    /// Try to construct a new [`Self::Length`] for the address-family
     /// associated with this IP prefix-range.
     ///
     /// # Errors

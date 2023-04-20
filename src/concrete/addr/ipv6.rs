@@ -11,14 +11,15 @@ impl Address<Ipv6> {
     ///
     /// This method is provided for compatibility with [`std::net::Ipv6Addr`],
     /// and is just a wrapper around
-    /// [`Address::is_link_local()`][traits::Address::is_link_local()].
+    /// [`Address::is_link_local()`][crate::traits::Address::is_link_local()].
     #[must_use]
     pub fn is_unicast_link_local(&self) -> bool {
         self.is_link_local()
     }
 
-    /// Returns the [`Ipv6MulticastScope`] variant of the address if the address
-    /// is a multicast address, or [`None`] otherwise.
+    /// Returns the [`Ipv6MulticastScope`][MulticastScope] variant of the
+    /// address if the address is a multicast address, or [`None`]
+    /// otherwise.
     ///
     /// # Examples
     ///

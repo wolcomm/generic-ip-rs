@@ -61,7 +61,7 @@ pub struct Set<A: Afi> {
 }
 
 impl<A: Afi> Set<A> {
-    /// Construct a new, empty [`PrefixSet<A>`].
+    /// Construct a new, empty [`PrefixSet<A>`][Self].
     #[must_use]
     pub const fn new() -> Self {
         Self::new_with_root(None)
@@ -85,8 +85,8 @@ impl<A: Afi> Set<A> {
 
     /// Insert a new `item` into `self`.
     ///
-    /// `T` can be either a [`Prefix<A>`](ip::concrete::Prefix) or a
-    /// [`PrefixRange<A>`](ip::concrete::PrefixRange).
+    /// `T` can be either a [`Prefix<A>`](crate::concrete::Prefix) or a
+    /// [`PrefixRange<A>`](crate::concrete::PrefixRange).
     ///
     /// ``` rust
     /// # use ip::{Error, concrete::PrefixSet, PrefixRange, Ipv6};
@@ -105,11 +105,11 @@ impl<A: Afi> Set<A> {
     }
 
     /// Insert items into `self` from an iterator yielding either
-    /// [`Prefix<A>`](ip::concrete::Prefix) or
-    /// [`PrefixRange<A>`](ip::concrete::PrefixRange).
+    /// [`Prefix<A>`](crate::concrete::Prefix) or
+    /// [`PrefixRange<A>`](crate::concrete::PrefixRange).
     ///
     /// Aggregation occurs after all items are inserted, making this far more
-    /// efficient than calling [`PrefixSet::insert()`] repeatedly.
+    /// efficient than calling [`PrefixSet::insert()`][Self::insert] repeatedly.
     ///
     /// ``` rust
     /// # use ip::{Error, concrete::PrefixSet, Ipv4, Prefix};
@@ -142,8 +142,8 @@ impl<A: Afi> Set<A> {
 
     /// Remove an `item` from `self`.
     ///
-    /// `T` can be either a [`Prefix<A>`](ip::concrete::Prefix) or a
-    /// [`PrefixRange<A>`](ip::concrete::PrefixRange).
+    /// `T` can be either a [`Prefix<A>`](crate::concrete::Prefix) or a
+    /// [`PrefixRange<A>`](crate::concrete::PrefixRange).
     ///
     /// ``` rust
     /// # use ip::{concrete::PrefixSet, Error, Ipv6, Prefix};
@@ -165,12 +165,12 @@ impl<A: Afi> Set<A> {
         self.remove_node(item.into().boxed()).aggregate()
     }
 
-    /// Remove items into `self` from an iterator yielding either
-    /// [`Prefix<A>`](ip::concrete::Prefix) or
-    /// [`PrefixRange<A>`](ip::concrete::PrefixRange).
+    /// Remove items from `self` from an iterator yielding either
+    /// [`Prefix<A>`](crate::concrete::Prefix) or
+    /// [`PrefixRange<A>`](crate::concrete::PrefixRange).
     ///
     /// Aggregation occurs after all items are removed, making this far more
-    /// efficient than calling [`PrefixSet::remove()`] repeatedly.
+    /// efficient than calling [`PrefixSet::remove()`][Self::remove] repeatedly.
     ///
     /// ``` rust
     /// # use ip::{concrete::PrefixSet, Error, Ipv4, Prefix, PrefixRange};
@@ -270,8 +270,9 @@ impl<A: Afi> Set<A> {
         self.root = None;
     }
 
-    /// Get an iterator over the [`PrefixRange<A>`](ip::concrete::PrefixRange)s
-    /// contained in `self`.
+    /// Get an iterator over the
+    /// [`PrefixRange<A>`](crate::concrete::PrefixRange)s contained in
+    /// `self`.
     ///
     /// ``` rust
     /// # use ip::{Error, concrete::PrefixSet, Ipv4, Prefix};
@@ -291,7 +292,7 @@ impl<A: Afi> Set<A> {
         self.into()
     }
 
-    /// Get an iterator over the [`Prefix<A>`](ip::concrete::Prefix)s
+    /// Get an iterator over the [`Prefix<A>`](crate::concrete::Prefix)s
     /// contained in `self`.
     ///
     /// ``` rust

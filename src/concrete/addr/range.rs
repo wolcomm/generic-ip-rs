@@ -21,7 +21,7 @@ use crate::traits::Afi;
 pub struct Range<A: Afi>(RangeInclusive<Address<A>>);
 
 impl<A: Afi> Range<A> {
-    /// Construct a new [`AddressRange<A>`] from `start` and `end` bounds.
+    /// Construct a new [`AddressRange<A>`][Self] from `start` and `end` bounds.
     pub const fn new(start: Address<A>, end: Address<A>) -> Self {
         Self(start..=end)
     }
