@@ -130,11 +130,32 @@ jobs:
           files: coverage.lcov
           fail_ci_if_error: true
 
+  docs:
+    name: test
+    needs: [audit]
+    runs-on: ubuntu-latest
+    steps:
+      - name: checkout
+        uses: actions/checkout@v3
+      - name: install rust
+        uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          toolchain: nightly
+          override: true
+      - name: generate docs
+        uses: actions-rs/cargo@v1
+        with:
+          command: doc
+          args: --all-features --no-deps
+        env:
+          RUSTDOCFLAGS: "--cfg docsrs -D warnings"
+
   publish:
     name: publish
     if: ${{ github.event_name == 'push' &&
             startsWith(github.ref, 'refs/tag') }}
-    needs: [check, fmt, clippy, test]
+    needs: [check, fmt, clippy, test, docs]
     runs-on: ubuntu-latest
     steps:
       - name: checkout
