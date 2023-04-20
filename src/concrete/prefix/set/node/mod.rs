@@ -258,7 +258,7 @@ impl<A: Afi> Node<A> {
             }
             PrefixOrdering::Subprefix(common) => match qnode.branch_direction(&common) {
                 Direction::Left => self.left.as_ref().and_then(|child| child.search(qnode)),
-                Direction::Right => self.left.as_ref().and_then(|child| child.search(qnode)),
+                Direction::Right => self.right.as_ref().and_then(|child| child.search(qnode)),
             },
             _ => None,
         }
