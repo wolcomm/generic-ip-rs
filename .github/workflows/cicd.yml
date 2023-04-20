@@ -37,7 +37,7 @@ jobs:
         uses: actions-rs/cargo@v1
         with:
           command: check
-          args: --all-features --all-targets --verbose
+          args: --all-features --all-targets
 
   fmt:
     name: fmt
