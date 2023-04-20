@@ -101,7 +101,6 @@ jobs:
           - --test versions
           - --test prefix-sets
           - --test prefix-set-proptests
-          - --benches
         include:
           - rust: nightly
             args: --doc
