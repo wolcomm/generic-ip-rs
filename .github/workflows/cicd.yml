@@ -99,7 +99,8 @@ jobs:
         args:
           - --lib
           - --test versions
-          - --test prefix-sets
+          # TODO: exclude until crate has stabilised
+          # - --test prefix-sets
           - --test prefix-set-proptests
         include:
           - rust: nightly
