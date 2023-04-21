@@ -131,6 +131,29 @@ jobs:
           files: coverage.lcov
           fail_ci_if_error: true
 
+  fuzz-check:
+    name: fuzz-check
+    needs: [audit]
+    runs-on: ubuntu-latest
+    steps:
+      - name: checkout
+        uses: actions/checkout@v3
+      - name: install rust
+        uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          toolchain: nightly
+          override: true
+      - name: install cargo-fuzz
+        uses: taiki-e/install-action@v2
+        with:
+          tool: cargo-fuzz
+      - name: check fuzz targets
+        uses: actions-rs/cargo@v1
+        with:
+          command: fuzz
+          args: check
+
   docs:
     name: docs
     needs: [audit]
