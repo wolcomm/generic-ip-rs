@@ -28,6 +28,7 @@ pub use self::range::Range;
 #[allow(clippy::unnecessary_box_returns)]
 #[warn(unknown_lints)]
 mod set;
+#[cfg(feature = "std")]
 pub use self::set::Set;
 
 mod subprefixes;

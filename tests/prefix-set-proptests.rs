@@ -1,17 +1,17 @@
 use std::collections::HashSet;
 use std::iter::FromIterator;
 
-use ip::{concrete::PrefixSet, Afi, Ipv4, Ipv6, Prefix};
+use ip::{traits::PrefixSet as _, AfiClass, Any, Ipv4, Ipv6, Prefix, PrefixSet};
 use itertools::Itertools;
 use proptest::{arbitrary::ParamsFor, prelude::*};
 
 #[derive(Clone, Debug)]
-struct TestPrefixSet<A: Afi> {
+struct TestPrefixSet<A: AfiClass> {
     ps: PrefixSet<A>,
     cs: HashSet<Prefix<A>>,
 }
 
-impl<A: Afi> FromIterator<Prefix<A>> for TestPrefixSet<A> {
+impl<A: AfiClass> FromIterator<Prefix<A>> for TestPrefixSet<A> {
     fn from_iter<T: IntoIterator<Item = Prefix<A>>>(iter: T) -> Self {
         let (ps_iter, cs_iter) = iter.into_iter().tee();
         Self {
@@ -21,9 +21,10 @@ impl<A: Afi> FromIterator<Prefix<A>> for TestPrefixSet<A> {
     }
 }
 
-impl<A: Afi> Arbitrary for TestPrefixSet<A>
+impl<A: AfiClass> Arbitrary for TestPrefixSet<A>
 where
-    Prefix<A>: Arbitrary,
+    A: 'static,
+    Prefix<A>: Arbitrary + 'static,
 {
     type Parameters = ParamsFor<Vec<Prefix<A>>>;
     type Strategy = BoxedStrategy<Self>;
@@ -153,4 +154,5 @@ macro_rules! property_tests {
 property_tests! {
     ipv4 => Ipv4,
     ipv6 => Ipv6,
+    any => Any,
 }

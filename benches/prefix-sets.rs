@@ -1,7 +1,7 @@
 use std::time::Duration;
 
 use criterion::{criterion_main, Criterion, Throughput};
-use ip::{concrete::PrefixSet, Ipv4, Ipv6, Prefix, PrefixRange};
+use ip::{concrete::PrefixSet, traits::PrefixSet as _, Ipv4, Ipv6, Prefix, PrefixRange};
 use itertools::Itertools;
 use utils::{data_sets, DataSet};
 

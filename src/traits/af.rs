@@ -3,8 +3,11 @@ use core::cmp::Ord;
 use core::fmt::Debug;
 use core::hash::Hash;
 
-use super::primitive;
-use super::{Address, Bitmask, Hostmask, Interface, Netmask, Prefix, PrefixLength, PrefixRange};
+#[cfg(feature = "std")]
+use super::PrefixSet;
+use super::{
+    primitive, Address, Bitmask, Hostmask, Interface, Netmask, Prefix, PrefixLength, PrefixRange,
+};
 use crate::{any, concrete, fmt};
 
 /// An interface for describing an IP address family.
@@ -55,6 +58,10 @@ pub trait AfiClass: Copy + Debug + Hash + Ord {
     /// The type representing IP prefix range values of this address family
     /// class.
     type PrefixRange: PrefixRange<Prefix = Self::Prefix, Length = Self::PrefixLength>;
+
+    /// The type representing IP prefix-sets of this address family class.
+    #[cfg(feature = "std")]
+    type PrefixSet: for<'a> PrefixSet<'a, Prefix = Self::Prefix>;
 
     /// Get the [`any::AfiClass`] variant associated with `Self`.
     fn as_afi_class() -> any::AfiClass;

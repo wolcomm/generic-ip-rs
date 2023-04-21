@@ -275,14 +275,18 @@ pub type Address<A> = <A as AfiClass>::Address;
 /// Convenience alias to name types implementing [`traits::Interface`].
 pub type Interface<A> = <A as AfiClass>::Interface;
 
+/// Convenience alias to name types implementing [`traits::Prefix`].
+pub type Prefix<A> = <A as AfiClass>::Prefix;
+
 /// Convenience alias to name types implementing [`traits::PrefixLength`].
 pub type PrefixLength<A> = <A as AfiClass>::PrefixLength;
 
 /// Convenience alias to name types implementing [`traits::PrefixRange`].
 pub type PrefixRange<A> = <A as AfiClass>::PrefixRange;
 
-/// Convenience alias to name types implementing [`traits::Prefix`].
-pub type Prefix<A> = <A as AfiClass>::Prefix;
+/// Convenience alias to name types implementing [`traits::PrefixSet`].
+#[cfg(feature = "std")]
+pub type PrefixSet<A> = <A as AfiClass>::PrefixSet;
 
 /// Convenience alias to name types implementing [`traits::Netmask`].
 pub type Netmask<A> = <A as AfiClass>::Netmask;

@@ -11,6 +11,8 @@ mod interface;
 pub use self::interface::Interface;
 
 mod prefix;
+#[cfg(feature = "std")]
+pub use self::prefix::Set as PrefixSet;
 pub use self::prefix::{Length as PrefixLength, Prefix, Range as PrefixRange, Subprefixes};
 
 macro_rules! delegate {

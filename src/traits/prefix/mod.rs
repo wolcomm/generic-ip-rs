@@ -11,6 +11,9 @@ pub use self::len::Length;
 mod range;
 pub use self::range::Range;
 
+mod set;
+pub use self::set::Set;
+
 /// Address-family independent interface for IP prefixes
 ///
 /// Methods on `Prefix` types that are well defined for all address-families

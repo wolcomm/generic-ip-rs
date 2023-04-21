@@ -5,6 +5,7 @@ use super::Set;
 use crate::{
     concrete::{Prefix, PrefixRange},
     error::TestResult,
+    traits::PrefixSet as _,
     Ipv4,
 };
 

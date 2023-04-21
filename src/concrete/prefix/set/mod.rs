@@ -1,8 +1,8 @@
 use std::boxed::Box;
 use std::mem;
 
-use super::Prefix;
-use crate::traits::Afi;
+use super::{Prefix, Range};
+use crate::traits::{self, Afi};
 
 mod iter;
 use self::iter::{Prefixes, Ranges};
@@ -22,14 +22,14 @@ mod ops;
 /// # Examples
 ///
 /// ``` rust
-/// use ip::{concrete::PrefixSet, Error, Ipv6, Prefix, PrefixLength, PrefixRange};
+/// use ip::{traits::PrefixSet as _, Error, Ipv6, Prefix, PrefixLength, PrefixRange, PrefixSet};
 ///
 /// fn main() -> Result<(), Error> {
 ///     // create a set by parsing a Vec<&str>
-///     let set = vec!["2001:db8::/37", "2001:db8:f00::/37"]
-///         .iter()
+///     let set: PrefixSet<Ipv6> = ["2001:db8::/37", "2001:db8:f00::/37"]
+///         .into_iter()
 ///         .map(|s| s.parse::<Prefix<Ipv6>>())
-///         .collect::<Result<PrefixSet<_>, _>>()?;
+///         .collect::<Result<_, _>>()?;
 ///
 ///     // create a range by parsing a &str and providing the lower
 ///     // and upper prefix lenth bounds
@@ -44,14 +44,12 @@ mod ops;
 /// Most mutating methods return `&mut Self` for easy chaining, e.g.:
 ///
 /// ``` rust
-/// # use ip::{Prefix, Ipv4, concrete::PrefixSet, Error};
-/// # fn main() -> Result<(), Error> {
-/// let set = PrefixSet::new()
+/// # use ip::{traits::PrefixSet as _, Error, Ipv4, Prefix, PrefixSet};
+/// let set = PrefixSet::<Ipv4>::new()
 ///     .insert("192.0.2.0/24".parse::<Prefix<Ipv4>>()?)
 ///     .to_owned();
 /// assert_eq!(set.len(), 1);
-/// #     Ok(())
-/// # }
+/// # Ok::<_, Error>(())
 /// ```
 ///
 /// [`bgpq3`]: https://github.com/snar/bgpq3
@@ -83,25 +81,30 @@ impl<A: Afi> Set<A> {
         self
     }
 
+    pub(crate) fn insert_only<T>(&mut self, item: T) -> &mut Self
+    where
+        T: Into<Node<A>>,
+    {
+        self.insert_node(item.into().boxed())
+    }
+
     /// Insert a new `item` into `self`.
     ///
     /// `T` can be either a [`Prefix<A>`](crate::concrete::Prefix) or a
     /// [`PrefixRange<A>`](crate::concrete::PrefixRange).
     ///
     /// ``` rust
-    /// # use ip::{Error, concrete::PrefixSet, PrefixRange, Ipv6};
-    /// # fn main() -> Result<(), Error> {
+    /// # use ip::{traits::PrefixSet as _, Error, Ipv6, PrefixRange, PrefixSet};
     /// let range: PrefixRange<Ipv6> = "2001:db8:f00::/48,64,64".parse()?;
-    /// let set = PrefixSet::new().insert(range).to_owned();
+    /// let set = PrefixSet::<Ipv6>::new().insert(range).to_owned();
     /// assert_eq!(set.len(), 1 << 16);
-    /// #     Ok(())
-    /// # }
+    /// # Ok::<_, Error>(())
     /// ```
     pub fn insert<T>(&mut self, item: T) -> &mut Self
     where
         T: Into<Node<A>>,
     {
-        self.insert_node(item.into().boxed()).aggregate()
+        self.insert_only(item).aggregate()
     }
 
     /// Insert items into `self` from an iterator yielding either
@@ -112,16 +115,14 @@ impl<A: Afi> Set<A> {
     /// efficient than calling [`PrefixSet::insert()`][Self::insert] repeatedly.
     ///
     /// ``` rust
-    /// # use ip::{Error, concrete::PrefixSet, Ipv4, Prefix};
-    /// # fn main() -> Result<(), Error> {
-    /// let prefixes: Vec<_> = vec!["192.0.2.0/26", "192.0.2.64/26"]
+    /// # use ip::{traits::PrefixSet as _, Error, Ipv4, Prefix, PrefixSet};
+    /// let prefixes: Vec<_> = ["192.0.2.0/26", "192.0.2.64/26"]
     ///     .into_iter()
     ///     .map(|s| s.parse::<Prefix<Ipv4>>())
     ///     .collect::<Result<_, _>>()?;
-    /// let set = PrefixSet::new().insert_from(prefixes).to_owned();
+    /// let set = PrefixSet::<Ipv4>::new().insert_from(prefixes).to_owned();
     /// assert_eq!(set.len(), 2);
-    /// #     Ok(())
-    /// # }
+    /// # Ok::<_, Error>(())
     /// ```
     pub fn insert_from<I, T>(&mut self, iter: I) -> &mut Self
     where
@@ -129,7 +130,7 @@ impl<A: Afi> Set<A> {
         T: Into<Node<A>>,
     {
         iter.into_iter()
-            .fold(self, |set, item| set.insert_node(item.into().boxed()))
+            .fold(self, |set, item| set.insert_only(item))
             .aggregate()
     }
 
@@ -146,17 +147,15 @@ impl<A: Afi> Set<A> {
     /// [`PrefixRange<A>`](crate::concrete::PrefixRange).
     ///
     /// ``` rust
-    /// # use ip::{concrete::PrefixSet, Error, Ipv6, Prefix};
-    /// # fn main() -> Result<(), Error> {
+    /// # use ip::{traits::PrefixSet as _, Error, Ipv6, Prefix, PrefixSet};
     /// let set = ["2001:db8:f00::/48", "2001:db8:baa::/48"]
     ///     .into_iter()
     ///     .map(|s| s.parse::<Prefix<Ipv6>>())
-    ///     .collect::<Result<PrefixSet<_>, _>>()?
+    ///     .collect::<Result<PrefixSet<Ipv6>, _>>()?
     ///     .remove("2001:db8:f00::/48".parse::<Prefix<Ipv6>>()?)
     ///     .to_owned();
     /// assert_eq!(set.len(), 1);
-    /// #     Ok(())
-    /// # }
+    /// # Ok::<_, Error>(())
     /// ```
     pub fn remove<T>(&mut self, item: T) -> &mut Self
     where
@@ -173,18 +172,16 @@ impl<A: Afi> Set<A> {
     /// efficient than calling [`PrefixSet::remove()`][Self::remove] repeatedly.
     ///
     /// ``` rust
-    /// # use ip::{concrete::PrefixSet, Error, Ipv4, Prefix, PrefixRange};
-    /// # fn main() -> Result<(), Error> {
+    /// # use ip::{traits::PrefixSet as _, Error, Ipv4, Prefix, PrefixRange, PrefixSet};
     /// let prefixes: Vec<_> = vec!["192.0.2.0/26", "192.0.2.64/26"]
     ///     .into_iter()
     ///     .map(|s| s.parse::<Prefix<Ipv4>>())
     ///     .collect::<Result<_, _>>()?;
-    /// let mut set = PrefixSet::new()
+    /// let mut set = PrefixSet::<Ipv4>::new()
     ///     .insert("192.0.2.0/24,26,26".parse::<PrefixRange<Ipv4>>()?)
     ///     .to_owned();
     /// assert_eq!(set.remove_from(prefixes).len(), 2);
-    /// #     Ok(())
-    /// # }
+    /// # Ok::<_, Error>(())
     /// ```
     pub fn remove_from<I, T>(&mut self, iter: I) -> &mut Self
     where
@@ -196,122 +193,48 @@ impl<A: Afi> Set<A> {
             .aggregate()
     }
 
-    fn aggregate(&mut self) -> &mut Self {
+    pub(crate) fn aggregate(&mut self) -> &mut Self {
         if let Some(root) = mem::take(&mut self.root) {
             self.root = root.aggregate(None);
         }
         self
     }
 
-    /// Test whether `prefix` is contained in `self`.
-    ///
-    /// ``` rust
-    /// # use ip::{Error, concrete::PrefixSet, Ipv4, Prefix, PrefixRange};
-    /// # fn main() -> Result<(), Error> {
-    /// let set = PrefixSet::new()
-    ///     .insert("192.0.2.0/24,26,26".parse::<PrefixRange<Ipv4>>()?)
-    ///     .to_owned();
-    /// assert!(set.contains("192.0.2.128/26".parse()?));
-    /// #     Ok(())
-    /// # }
-    /// ```
-    pub fn contains(&self, prefix: Prefix<A>) -> bool {
-        self.root
-            .as_ref()
-            .map_or(false, |root| root.search(&prefix.into()).is_some())
-    }
-
-    /// Get the number of prefixes in `self`.
-    ///
-    /// ``` rust
-    /// # use ip::{concrete::PrefixSet, Error, Ipv4, PrefixRange};
-    /// # fn main() -> Result<(), Error> {
-    /// let set = PrefixSet::new()
-    ///     .insert("192.0.2.0/24,26,26".parse::<PrefixRange<Ipv4>>()?)
-    ///     .to_owned();
-    /// assert_eq!(set.len(), 4);
-    /// #     Ok(())
-    /// # }
-    /// ```
-    #[must_use]
-    pub fn len(&self) -> usize {
-        self.prefixes().count()
-    }
-
-    /// Test whether `self` is empty.
-    ///
-    /// ``` rust
-    /// # use ip::{Error, concrete::PrefixSet, Ipv4};
-    /// # fn main() -> Result<(), Error> {
-    /// assert!(PrefixSet::<Ipv4>::new().is_empty());
-    /// #     Ok(())
-    /// # }
-    /// ```
-    #[must_use]
-    pub fn is_empty(&self) -> bool {
-        self.ranges().count() == 0
-    }
-
     /// Clear the contents of `self`
     ///
     /// ``` rust
-    /// # use ip::{Ipv6, Prefix, Error, concrete::PrefixSet};
-    /// # fn main() -> Result<(), Error> {
-    /// let mut set = PrefixSet::new()
+    /// # use ip::{traits::PrefixSet as _, Error, Ipv6, Prefix, PrefixSet};
+    /// let mut set = PrefixSet::<Ipv6>::new()
     ///     .insert("2001:db8::/32".parse::<Prefix<Ipv6>>()?)
     ///     .to_owned();
     /// assert!(!set.is_empty());
     /// set.clear();
     /// assert!(set.is_empty());
-    /// #     Ok(())
-    /// # }
+    /// # Ok::<_, Error>(())
     /// ```
     pub fn clear(&mut self) {
         self.root = None;
     }
+}
 
-    /// Get an iterator over the
-    /// [`PrefixRange<A>`](crate::concrete::PrefixRange)s contained in
-    /// `self`.
-    ///
-    /// ``` rust
-    /// # use ip::{Error, concrete::PrefixSet, Ipv4, Prefix};
-    /// # fn main() -> Result<(), Error> {
-    /// let set = PrefixSet::new()
-    ///     .insert("192.0.2.0/25".parse::<Prefix<Ipv4>>()?)
-    ///     .insert("192.0.2.128/25".parse::<Prefix<Ipv4>>()?)
-    ///     .to_owned();
-    /// let mut ranges = set.ranges();
-    /// assert_eq!(ranges.next(), Some("192.0.2.0/24,25,25".parse()?));
-    /// assert_eq!(ranges.next(), None);
-    /// #     Ok(())
-    /// # }
-    /// ```
-    #[must_use]
-    pub fn ranges(&self) -> Ranges<'_, A> {
+impl<'a, A: Afi> traits::PrefixSet<'a> for Set<A> {
+    type Prefix = Prefix<A>;
+    type Range = Range<A>;
+    type Prefixes = Prefixes<'a, A>;
+    type Ranges = Ranges<'a, A>;
+
+    fn prefixes(&'a self) -> Self::Prefixes {
         self.into()
     }
 
-    /// Get an iterator over the [`Prefix<A>`](crate::concrete::Prefix)s
-    /// contained in `self`.
-    ///
-    /// ``` rust
-    /// # use ip::{Ipv4, Prefix, concrete::PrefixSet, Error};
-    /// # fn main() -> Result<(), Error> {
-    /// let set = PrefixSet::new()
-    ///     .insert("192.0.2.0/25".parse::<Prefix<Ipv4>>()?)
-    ///     .insert("192.0.2.128/25".parse::<Prefix<Ipv4>>()?)
-    ///     .to_owned();
-    /// let mut prefixes = set.prefixes();
-    /// assert_eq!(prefixes.next(), Some("192.0.2.0/25".parse()?));
-    /// assert_eq!(prefixes.next(), Some("192.0.2.128/25".parse()?));
-    /// assert_eq!(prefixes.next(), None);
-    /// #     Ok(())
-    /// # }
-    /// ```
-    #[must_use]
-    pub fn prefixes(&self) -> Prefixes<'_, A> {
+    fn ranges(&'a self) -> Self::Ranges {
         self.into()
+    }
+
+    fn contains(&self, prefix: Self::Prefix) -> bool {
+        self.root
+            .as_ref()
+            .map_or(false, |root| root.search(&prefix.into()).is_some())
     }
 }
 

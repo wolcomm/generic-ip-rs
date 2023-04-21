@@ -21,6 +21,11 @@ pub use self::len::Length;
 mod range;
 pub use self::range::Range;
 
+#[cfg(feature = "std")]
+mod set;
+#[cfg(feature = "std")]
+pub use self::set::Set;
+
 mod subprefixes;
 pub use self::subprefixes::Subprefixes;
 

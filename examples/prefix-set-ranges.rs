@@ -2,7 +2,7 @@ use std::error::Error;
 use std::fs::File;
 use std::io::{BufRead, BufReader};
 
-use ip::{concrete::PrefixSet, Afi, Ipv4, PrefixRange};
+use ip::{traits::PrefixSet as _, Afi, Ipv4, PrefixRange, PrefixSet};
 
 /// Read a list of IPv4 prefix ranges from a file, collect them into a
 /// `PrefixSet` and print the contained ranges.

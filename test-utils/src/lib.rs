@@ -52,7 +52,6 @@ where
         let file = File::open(path).unwrap();
         BufReader::new(file)
             .lines()
-            .into_iter()
             .map(|line| line.unwrap().parse::<T>().unwrap())
             .collect()
     }

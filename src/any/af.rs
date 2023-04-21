@@ -1,5 +1,7 @@
 use core::cmp::Ordering;
 
+#[cfg(feature = "std")]
+use super::PrefixSet;
 use super::{Address, Bitmask, Hostmask, Interface, Netmask, Prefix, PrefixLength, PrefixRange};
 use crate::{concrete, traits};
 
@@ -16,6 +18,9 @@ impl traits::AfiClass for Any {
     type Hostmask = Hostmask;
     type Bitmask = Bitmask;
     type PrefixRange = PrefixRange;
+
+    #[cfg(feature = "std")]
+    type PrefixSet = PrefixSet;
 
     fn as_afi_class() -> AfiClass {
         AfiClass::Any

@@ -4,7 +4,7 @@ use core::ops::{Add, BitAnd, BitOr, BitXor, Mul, Not, Sub};
 use num_traits::{One, Zero};
 
 use super::Set;
-use crate::traits::{Afi, AfiClass};
+use crate::traits::{Afi, AfiClass, PrefixSet as _};
 
 impl<A: Afi> Zero for Set<A> {
     fn zero() -> Self {

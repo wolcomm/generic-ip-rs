@@ -1,5 +1,7 @@
 use core::fmt;
 
+#[cfg(feature = "std")]
+use super::PrefixSet;
 use super::{Address, Bitmask, Hostmask, Interface, Netmask, Prefix, PrefixLength, PrefixRange};
 use crate::{any, error::Error, traits};
 
@@ -35,6 +37,9 @@ impl<A: traits::Afi> traits::AfiClass for A {
     type Hostmask = Hostmask<A>;
     type Bitmask = Bitmask<A>;
     type PrefixRange = PrefixRange<A>;
+
+    #[cfg(feature = "std")]
+    type PrefixSet = PrefixSet<A>;
 
     fn as_afi_class() -> any::AfiClass {
         A::as_afi().into()
