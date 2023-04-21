@@ -179,7 +179,7 @@ jobs:
     name: publish
     if: ${{ github.event_name == 'push' &&
             startsWith(github.ref, 'refs/tag') }}
-    needs: [check, fmt, clippy, test, docs]
+    needs: [check, fmt, clippy, test, docs, fuzz-check]
     runs-on: ubuntu-latest
     steps:
       - name: checkout
