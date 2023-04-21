@@ -108,10 +108,10 @@ impl<'a> Parser<'a> {
         F: FnMut(&mut Self, usize) -> Option<(usize, bool)>,
     {
         let mut count = 0;
-        let _ = (0..lim).try_for_each(|i| {
+        _ = (0..lim).try_for_each(|i| {
             self.atomically(|p| {
                 if i > 0 {
-                    let _ = p.skip(sep)?;
+                    _ = p.skip(sep)?;
                 }
                 f(p, i)
             })
@@ -160,7 +160,7 @@ impl<'a> Parser<'a> {
         } else if took_ipv4 {
             None
         } else {
-            let _ = self.skip(b"::")?;
+            _ = self.skip(b"::")?;
             let mut addtional = [0; 7];
             let limit = 7 - head;
             let (tail, _) = self.take_ipv6_parts(&mut addtional[..limit]);
