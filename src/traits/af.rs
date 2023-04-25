@@ -61,7 +61,7 @@ pub trait AfiClass: Copy + Debug + Hash + Ord {
 
     /// The type representing IP prefix-sets of this address family class.
     #[cfg(feature = "std")]
-    type PrefixSet: for<'a> PrefixSet<'a, Prefix = Self::Prefix>;
+    type PrefixSet: for<'a> PrefixSet<'a, Prefix = Self::Prefix, Range = Self::PrefixRange>;
 
     /// Get the [`any::AfiClass`] variant associated with `Self`.
     fn as_afi_class() -> any::AfiClass;

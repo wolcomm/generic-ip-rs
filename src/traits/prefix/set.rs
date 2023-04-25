@@ -26,13 +26,13 @@ pub trait Set<'a>:
     + PartialEq
     + Eq
     + PartialOrd
-    + BitAnd
-    + BitOr
-    + BitXor
-    + Not
-    + Add
-    + Mul
-    + Sub
+    + BitAnd<Output = Self>
+    + BitOr<Output = Self>
+    + BitXor<Output = Self>
+    + Not<Output = Self>
+    + Add<Output = Self>
+    + Mul<Output = Self>
+    + Sub<Output = Self>
 {
     /// The type of IP prefix over which `Self` represents a set.
     type Prefix: Prefix;
@@ -90,6 +90,23 @@ pub trait Set<'a>:
     /// # Ok::<_, Error>(())
     /// ```
     fn ranges(&'a self) -> Self::Ranges;
+
+    /// Construct a prefix-set consisting of all prefixes.
+    ///
+    /// ```
+    /// # use core::str::FromStr;
+    /// # use ip::{traits::PrefixSet as _, Any, Error, Prefix, PrefixSet};
+    /// let set = PrefixSet::<Any>::any();
+    /// let mut ranges = set.ranges();
+    /// assert_eq!(ranges.next(), Some("0.0.0.0/0,0,32".parse()?));
+    /// assert_eq!(ranges.next(), Some("::/0,0,128".parse()?));
+    /// assert_eq!(ranges.next(), None);
+    /// # Ok::<_, Error>(())
+    /// ```
+    #[must_use]
+    fn any() -> Self {
+        Self::one()
+    }
 
     /// Get the number of prefixes in `self`.
     ///
