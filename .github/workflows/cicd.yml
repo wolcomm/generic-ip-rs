@@ -5,97 +5,16 @@ on:
 
 jobs:
 
-  audit:
-    name: audit
-    runs-on: ubuntu-latest
-    steps:
-      - name: checkout
-        uses: actions/checkout@v3
-      - name: audit
-        uses: actions-rs/audit-check@v1
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-
-  check:
-    name: check
-    needs: [audit]
-    runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        rust: [stable, nightly]
-    steps:
-      - name: checkout
-        uses: actions/checkout@v3
-      - name: install rust
-        uses: actions-rs/toolchain@v1
-        with:
-          profile: minimal
-          toolchain: ${{ matrix.rust }}
-          override: true
-      - name: cargo check
-        uses: actions-rs/cargo@v1
-        with:
-          command: check
-          args: --all-features --all-targets
-
-  fmt:
-    name: fmt
-    needs: [audit]
-    runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        rust: [stable, nightly]
-    steps:
-      - name: checkout
-        uses: actions/checkout@v3
-      - name: install rust
-        uses: actions-rs/toolchain@v1
-        with:
-          profile: minimal
-          toolchain: ${{ matrix.rust }}
-          override: true
-          components: rustfmt
-      - name: rustfmt
-        uses: actions-rs/cargo@v1
-        with:
-          command: fmt
-          args: --check
-
-  clippy:
-    name: clippy
-    needs: [audit]
-    runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        rust: [stable, nightly]
-    steps:
-      - name: checkout
-        uses: actions/checkout@v3
-      - name: install rust
-        uses: actions-rs/toolchain@v1
-        with:
-          profile: minimal
-          toolchain: ${{ matrix.rust }}
-          override: true
-          components: clippy
-      - name: clippy
-        uses: actions-rs/clippy-check@v1
-        with:
-          name: ${{ matrix.rust }}
-          token: ${{ secrets.GITHUB_TOKEN }}
-          args: --all-features --all-targets -- -D warnings
+  lint:
+    name: lint
+    uses: wolcomm/.github/.github/workflows/rust-lint.yml@master
 
   test:
     name: test
-    needs: [audit]
-    runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
-        rust: [stable, nightly]
+        toolchain: [stable, nightly]
         args:
           - --lib
           - --test versions
@@ -103,95 +22,19 @@ jobs:
           # - --test prefix-sets
           - --test prefix-set-proptests
         include:
-          - rust: nightly
+          - toolchain: nightly
             args: --doc
-    steps:
-      - name: checkout
-        uses: actions/checkout@v3
-      - name: install rust
-        uses: actions-rs/toolchain@v1
-        with:
-          profile: minimal
-          toolchain: ${{ matrix.rust }}
-          override: true
-          components: llvm-tools-preview
-      - name: install cargo-llvm-cov
-        uses: taiki-e/install-action@v2
-        with:
-          tool: cargo-llvm-cov
-      - name: run tests
-        uses: actions-rs/cargo@v1
-        with:
-          command: llvm-cov
-          args: --all-features --lcov --output-path coverage.lcov ${{ matrix.args }}
-      - name: upload coverage data
-        if: ${{ hashFiles('coverage.lcov') != ''}}
-        uses: codecov/codecov-action@v3
-        with:
-          files: coverage.lcov
-          fail_ci_if_error: true
-
-  fuzz-check:
-    name: fuzz-check
-    needs: [audit]
-    runs-on: ubuntu-latest
-    steps:
-      - name: checkout
-        uses: actions/checkout@v3
-      - name: install rust
-        uses: actions-rs/toolchain@v1
-        with:
-          profile: minimal
-          toolchain: nightly
-          override: true
-      - name: install cargo-fuzz
-        uses: taiki-e/install-action@v2
-        with:
-          tool: cargo-fuzz
-      - name: check fuzz targets
-        uses: actions-rs/cargo@v1
-        with:
-          command: fuzz
-          args: check
-
-  docs:
-    name: docs
-    needs: [audit]
-    runs-on: ubuntu-latest
-    steps:
-      - name: checkout
-        uses: actions/checkout@v3
-      - name: install rust
-        uses: actions-rs/toolchain@v1
-        with:
-          profile: minimal
-          toolchain: nightly
-          override: true
-      - name: generate docs
-        uses: actions-rs/cargo@v1
-        with:
-          command: doc
-          args: --all-features --no-deps
-        env:
-          RUSTDOCFLAGS: "--cfg docsrs -D warnings"
+    uses: wolcomm/.github/.github/workflows/rust-test.yml@master
+    with:
+      toolchain: ${{ matrix.toolchain }}
+      args: ${{ matrix.args }}
 
   publish:
     name: publish
     if: ${{ github.event_name == 'push' &&
             startsWith(github.ref, 'refs/tag') }}
-    needs: [check, fmt, clippy, test, docs, fuzz-check]
-    runs-on: ubuntu-latest
-    steps:
-      - name: checkout
-        uses: actions/checkout@v3
-      - name: install
-        uses: actions-rs/toolchain@v1
-        with:
-          profile: minimal
-          toolchain: stable
-          override: true
-      - name: publish
-        uses: actions-rs/cargo@v1
-        with:
-          command: publish
-          args: --token ${{ secrets.CRATES_TOKEN }}
+    needs:
+      - lint
+      - test
+    uses: wolcomm/.github/.github/workflows/rust-publish.yml@master
+    secrets: inherit
