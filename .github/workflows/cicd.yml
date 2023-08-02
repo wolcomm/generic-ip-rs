@@ -28,6 +28,7 @@ jobs:
     with:
       toolchain: ${{ matrix.toolchain }}
       args: ${{ matrix.args }}
+    secrets: inherit
 
   publish:
     name: publish
