@@ -27,4 +27,4 @@ macro_rules! delegate {
         )*
     };
 }
-pub(self) use delegate;
+use delegate;

@@ -92,7 +92,7 @@ mod tests {
         fn divergent() {
             let x = "10.0.0.0/16".parse::<Prefix<Ipv4>>().unwrap();
             let y = "10.1.0.0/16".parse::<Prefix<Ipv4>>().unwrap();
-            assert!(matches!(x.partial_cmp(&y), None));
+            assert!(x.partial_cmp(&y).is_none());
         }
     }
 
@@ -124,7 +124,7 @@ mod tests {
         fn divergent() {
             let x = "2001:db8:f::/48".parse::<Prefix<Ipv6>>().unwrap();
             let y = "2001:db8:a::/48".parse::<Prefix<Ipv6>>().unwrap();
-            assert!(matches!(x.partial_cmp(&y), None));
+            assert!(x.partial_cmp(&y).is_none());
         }
     }
 }
