@@ -59,7 +59,7 @@ pub trait Range:
     fn with_intersection(self, len_range: RangeInclusive<Self::Length>) -> Option<Self>;
 
     /// Construct a new IP prefix-range consisting of all the more specific
-    /// subprefixes of `self` with prefix-lengths within `len_range`.
+    /// sub-prefixes of `self` with prefix-lengths within `len_range`.
     ///
     /// # Examples
     ///
@@ -70,9 +70,13 @@ pub trait Range:
     ///
     /// let addr = "192.0.2.0".parse::<Address<Ipv4>>()?;
     ///
-    /// let [l, m, n, p, q]: &[PrefixLength<Ipv4>] = &[24u8, 26, 28, 30, 32].into_iter()
+    /// let [l, m, n, p, q]: &[PrefixLength<Ipv4>] = &[24u8, 26, 28, 30, 32]
+    ///     .into_iter()
     ///     .map(PrefixLength::<Ipv4>::from_primitive)
-    ///     .collect::<Result<Vec<PrefixLength<Ipv4>>, _>>()? else { panic!() };
+    ///     .collect::<Result<Vec<PrefixLength<Ipv4>>, _>>()?
+    /// else {
+    ///     panic!()
+    /// };
     ///
     /// let prefix = Prefix::<Ipv4>::new(addr, *l);
     ///
