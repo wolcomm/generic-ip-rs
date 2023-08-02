@@ -1,4 +1,3 @@
-use core::borrow::Borrow;
 use core::cmp::Ord;
 use core::fmt::Debug;
 use core::hash::Hash;
@@ -16,7 +15,7 @@ pub trait Afi: Copy + Debug + Hash + Ord + 'static {
     // `From<A::Octets> for Address<A>`
     /// The big-endian byte array representation of addresses of this address
     /// family.
-    type Octets: Borrow<[u8]>;
+    type Octets: primitive::Octets;
 
     /// The primitive integer type used to store address values of this address
     /// family.

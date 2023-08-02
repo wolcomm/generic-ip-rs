@@ -1,12 +1,17 @@
+use core::borrow::BorrowMut;
 use core::fmt;
 use core::str::FromStr;
 
 use super::{impl_try_from_any, AddressRange, PrefixLength};
 use crate::{
     any, concrete,
-    error::Error,
+    error::{err, Error, Kind},
     fmt::AddressDisplay,
-    traits::{self, primitive::Address as _, Afi},
+    traits::{
+        self,
+        primitive::{Address as _, Octets as _},
+        Afi,
+    },
     Ipv4, Ipv6,
 };
 
@@ -53,6 +58,43 @@ impl<A: Afi> Address<A> {
     /// ```
     pub fn from_octets(octets: A::Octets) -> Self {
         Self::new(A::Primitive::from_be_bytes(octets))
+    }
+
+    /// Try to construct a new [`Address<A>`] from a big-endian slice of octets.
+    ///
+    /// If `slice` is shorter than [`A::Octets`][Afi::Octets] then the missing
+    /// low-order octets will be zero-filled.
+    ///
+    /// # Errors
+    ///
+    /// An error of kind [`OctetSliceOverrun`][Kind::OctetSliceOverrun] will be
+    /// returned if the length of slice is greater than the length of
+    /// [`A::Octets`][Afi::Octets].
+    ///
+    /// # Examples
+    ///
+    /// ``` rust
+    /// use ip::{Address, Ipv4, Ipv6};
+    ///
+    /// assert_eq!(
+    ///     Address::<Ipv6>::from_slice(&[0x20, 0x01, 0x0d, 0xb8])?,
+    ///     "2001:db8::".parse::<Address<Ipv6>>()?,
+    /// );
+    ///
+    /// assert!(matches!(
+    ///     Address::<Ipv4>::from_slice(&[1, 2, 3, 4, 5]),
+    ///     Err(_),
+    /// ));
+    /// # Ok::<(), ip::Error>(())
+    /// ```
+    pub fn from_slice(slice: &[u8]) -> Result<Self, Error> {
+        let mut octets = A::Octets::ZEROS;
+        let len = slice.len();
+        if len > A::Octets::LENGTH {
+            return Err(err!(Kind::OctetSliceOverrun));
+        }
+        octets.borrow_mut()[..len].copy_from_slice(slice);
+        Ok(Self::from_octets(octets))
     }
 
     /// Returns a big-endian byte-array representing the value of `self`.

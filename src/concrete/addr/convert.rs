@@ -23,6 +23,22 @@ macro_rules! impl_from_primitive {
 }
 impl_from_primitive! { Ipv4, Ipv6, }
 
+// TODO:
+// Ditto
+macro_rules! impl_try_from_byte_slice {
+    ( $( $af:ident ),* $(,)? ) => {
+        $(
+            impl<'a> TryFrom<&'a [u8]> for Address<$af> {
+                type Error = <<$af as Afi>::Octets as TryFrom<&'a [u8]>>::Error;
+                fn try_from(value: &[u8]) -> Result<Self, Self::Error> {
+                    value.try_into().map(Self::from_octets)
+                }
+            }
+        )*
+    };
+}
+impl_try_from_byte_slice! { Ipv4, Ipv6, }
+
 impl<A, O> From<O> for Address<A>
 where
     A: Afi<Octets = O>,

@@ -79,6 +79,9 @@ pub enum Kind {
     AfiMismatch,
     /// An [`Error`] resulting from an invalid prefix-length range.
     PrefixLengthRange,
+    /// An [`Error`] resulting from an attempt to construct an address from a
+    /// byte-slice too long for the address family.
+    OctetSliceOverrun,
 }
 
 impl fmt::Display for Kind {
@@ -90,6 +93,7 @@ impl fmt::Display for Kind {
             Self::ParserError => write!(f, "parser error"),
             Self::AfiMismatch => write!(f, "address family mis-match"),
             Self::PrefixLengthRange => write!(f, "invalid prefix-length range"),
+            Self::OctetSliceOverrun => write!(f, "octet slice too long for address-family"),
         }
     }
 }

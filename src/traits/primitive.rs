@@ -1,3 +1,4 @@
+use core::borrow::{Borrow, BorrowMut};
 use core::fmt::{Binary, Debug, Display};
 use core::hash::Hash;
 use core::mem;
@@ -448,6 +449,21 @@ pub(crate) trait IntoIpv6Segments: Address<Ipv6> {
     }
 }
 impl<P: Address<Ipv6>> IntoIpv6Segments for P {}
+
+/// Underlying byte-array like type used to represent the octets of an IP
+/// address.
+pub trait Octets: Borrow<[u8]> + BorrowMut<[u8]> {
+    /// The length of `Self`, in bytes.
+    const LENGTH: usize;
+
+    /// The zero-value of `Self`.
+    const ZEROS: Self;
+}
+
+impl<const N: usize> Octets for [u8; N] {
+    const LENGTH: usize = N;
+    const ZEROS: Self = [0; N];
+}
 
 /// Underlying integer-like type used to represent an IP prefix-length.
 pub trait Length:
