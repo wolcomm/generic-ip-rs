@@ -59,6 +59,7 @@ impl Set {
     /// # Ok::<_, Error>(())
     /// ```
     #[must_use]
+    #[allow(clippy::missing_const_for_fn)]
     pub fn partition(self) -> (concrete::PrefixSet<Ipv4>, concrete::PrefixSet<Ipv6>) {
         (self.ipv4, self.ipv6)
     }
