@@ -32,11 +32,35 @@ pub struct Set {
 }
 
 impl Set {
-    #[allow(unused_results)]
     fn aggregate(&mut self) -> &mut Self {
-        self.ipv4.aggregate();
-        self.ipv6.aggregate();
+        _ = self.ipv4.aggregate();
+        _ = self.ipv6.aggregate();
         self
+    }
+
+    /// Partition the prefix set by address family.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use core::str::FromStr;
+    /// # use ip::{Any, Error, Prefix, PrefixSet, traits::PrefixSet as _};
+    /// let set: PrefixSet<Any> = ["192.0.2.0/24", "2001:db8::/32"]
+    ///     .into_iter()
+    ///     .map(Prefix::<Any>::from_str)
+    ///     .collect::<Result<_, _>>()?;
+    /// let (_, ipv6) = set.partition();
+    /// let mut ipv6_prefixes = ipv6.prefixes();
+    /// assert_eq!(
+    ///     ipv6_prefixes.next().map(|p| p.to_string()),
+    ///     Some("2001:db8::/32".to_string())
+    /// );
+    /// assert_eq!(ipv6_prefixes.next(), None);
+    /// # Ok::<_, Error>(())
+    /// ```
+    #[must_use]
+    pub fn partition(self) -> (concrete::PrefixSet<Ipv4>, concrete::PrefixSet<Ipv6>) {
+        (self.ipv4, self.ipv6)
     }
 }
 
