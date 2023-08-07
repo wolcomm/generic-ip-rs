@@ -192,7 +192,7 @@
 //!     filtered
 //! );
 //! ```
-#![doc(html_root_url = "https://docs.rs/generic-ip/0.1.0-rc.3")]
+#![doc(html_root_url = "https://docs.rs/generic-ip/0.1.0-rc.4")]
 // clippy lints
 #![warn(clippy::pedantic)]
 #![warn(clippy::cargo)]
