@@ -63,6 +63,60 @@ impl Set {
     pub fn partition(self) -> (concrete::PrefixSet<Ipv4>, concrete::PrefixSet<Ipv6>) {
         (self.ipv4, self.ipv6)
     }
+
+    /// Borrow the address-family partitions of the prefix set.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use core::str::FromStr;
+    /// # use ip::{Any, Error, Prefix, PrefixSet, traits::PrefixSet as _};
+    /// let set: PrefixSet<Any> = ["192.0.2.0/24", "2001:db8::/32"]
+    ///     .into_iter()
+    ///     .map(Prefix::<Any>::from_str)
+    ///     .collect::<Result<_, _>>()?;
+    /// let (ipv4, _) = set.as_partitions();
+    /// let mut ipv4_prefixes = ipv4.prefixes();
+    /// assert_eq!(
+    ///     ipv4_prefixes.next().map(|p| p.to_string()),
+    ///     Some("192.0.2.0/24".to_string())
+    /// );
+    /// assert_eq!(ipv4_prefixes.next(), None);
+    /// # Ok::<_, Error>(())
+    /// ```
+    #[must_use]
+    pub fn as_partitions(&self) -> (&concrete::PrefixSet<Ipv4>, &concrete::PrefixSet<Ipv6>) {
+        (&self.ipv4, &self.ipv6)
+    }
+
+    /// Mutably borrow the address-family partitions of the prefix set.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use core::str::FromStr;
+    /// # use ip::{Any, Ipv4, Error, Prefix, PrefixSet, traits::PrefixSet as _};
+    /// let mut set: PrefixSet<Any> = ["192.0.2.0/24", "2001:db8::/32"]
+    ///     .into_iter()
+    ///     .map(Prefix::<Any>::from_str)
+    ///     .collect::<Result<_, _>>()?;
+    ///
+    /// let (ipv4, _) = set.as_mut_partitions();
+    /// let new = "192.0.2.128/25".parse::<Prefix<Ipv4>>()?;
+    /// _ = ipv4.insert(new);
+    ///
+    /// assert_eq!(set.len(), 3);
+    /// # Ok::<_, Error>(())
+    /// ```
+    #[must_use]
+    pub fn as_mut_partitions(
+        &mut self,
+    ) -> (
+        &mut concrete::PrefixSet<Ipv4>,
+        &mut concrete::PrefixSet<Ipv6>,
+    ) {
+        (&mut self.ipv4, &mut self.ipv6)
+    }
 }
 
 #[derive(Debug)]
