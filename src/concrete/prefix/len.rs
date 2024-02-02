@@ -141,7 +141,7 @@ where
 {
     type Parameters = ();
     type Strategy = BoxedStrategy<Self>;
-    fn arbitrary_with(_: Self::Parameters) -> Self::Strategy {
+    fn arbitrary_with((): Self::Parameters) -> Self::Strategy {
         (A::Primitive::MIN_LENGTH..=A::Primitive::MAX_LENGTH)
             .prop_map(|l| Self::from_primitive(l).unwrap())
             .boxed()

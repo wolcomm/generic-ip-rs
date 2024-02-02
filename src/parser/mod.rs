@@ -70,7 +70,7 @@ impl<'a> Parser<'a> {
         bytes
             .iter()
             .try_for_each(|c| self.take().and_then(|next| next.eq(c).then_some(())))
-            .map(|_| self)
+            .map(|()| self)
     }
 
     fn take_digit(&mut self, radix: u8) -> Option<u8> {

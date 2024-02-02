@@ -159,7 +159,7 @@ impl Arbitrary for Range {
     type Parameters = ();
     type Strategy = BoxedStrategy<Self>;
 
-    fn arbitrary_with(_: Self::Parameters) -> Self::Strategy {
+    fn arbitrary_with((): Self::Parameters) -> Self::Strategy {
         prop_oneof![
             any::<concrete::PrefixRange<Ipv4>>().prop_map(Self::Ipv4),
             any::<concrete::PrefixRange<Ipv6>>().prop_map(Self::Ipv6),

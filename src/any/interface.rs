@@ -97,7 +97,7 @@ impl Arbitrary for Interface {
     type Parameters = ();
     type Strategy = BoxedStrategy<Self>;
 
-    fn arbitrary_with(_: Self::Parameters) -> Self::Strategy {
+    fn arbitrary_with((): Self::Parameters) -> Self::Strategy {
         prop_oneof![
             any::<concrete::Interface<Ipv4>>().prop_map(Self::Ipv4),
             any::<concrete::Interface<Ipv6>>().prop_map(Self::Ipv6),

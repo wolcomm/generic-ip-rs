@@ -81,7 +81,7 @@ impl Arbitrary for Length {
     type Parameters = ();
     type Strategy = BoxedStrategy<Self>;
 
-    fn arbitrary_with(_: Self::Parameters) -> Self::Strategy {
+    fn arbitrary_with((): Self::Parameters) -> Self::Strategy {
         prop_oneof![
             any::<concrete::PrefixLength<Ipv4>>().prop_map(Self::Ipv4),
             any::<concrete::PrefixLength<Ipv6>>().prop_map(Self::Ipv6),

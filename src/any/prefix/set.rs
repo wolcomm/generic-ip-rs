@@ -85,7 +85,7 @@ impl Set {
     /// # Ok::<_, Error>(())
     /// ```
     #[must_use]
-    pub fn as_partitions(&self) -> (&concrete::PrefixSet<Ipv4>, &concrete::PrefixSet<Ipv6>) {
+    pub const fn as_partitions(&self) -> (&concrete::PrefixSet<Ipv4>, &concrete::PrefixSet<Ipv6>) {
         (&self.ipv4, &self.ipv6)
     }
 
