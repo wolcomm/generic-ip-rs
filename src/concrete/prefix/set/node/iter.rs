@@ -7,6 +7,7 @@ use crate::{
     traits::{Afi, PrefixLength as _},
 };
 
+#[allow(clippy::struct_field_names)]
 #[derive(Debug)]
 pub struct Children<'a, A: Afi> {
     this: Option<&'a Node<A>>,
