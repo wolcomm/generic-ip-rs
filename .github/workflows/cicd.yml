@@ -7,7 +7,7 @@ jobs:
 
   lint:
     name: lint
-    uses: wolcomm/.github/.github/workflows/rust-lint.yml@rm-actions-rs
+    uses: wolcomm/.github/.github/workflows/rust-lint.yml@master
 
   test:
     name: test
@@ -24,7 +24,7 @@ jobs:
         include:
           - toolchain: nightly
             args: --doc
-    uses: wolcomm/.github/.github/workflows/rust-test.yml@rm-actions-rs
+    uses: wolcomm/.github/.github/workflows/rust-test.yml@master
     with:
       toolchain: ${{ matrix.toolchain }}
       args: ${{ matrix.args }}
@@ -37,5 +37,5 @@ jobs:
     needs:
       - lint
       - test
-    uses: wolcomm/.github/.github/workflows/rust-publish.yml@rm-actions-rs
+    uses: wolcomm/.github/.github/workflows/rust-publish.yml@master
     secrets: inherit
