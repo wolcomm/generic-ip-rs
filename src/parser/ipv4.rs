@@ -39,7 +39,6 @@ pub(crate) fn parse_range(input: &str) -> Result<(u32, u8, u8, u8), Error> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::parser::ipv6::parse_length;
 
     #[test]
     fn parse_ipv4_addr() {
