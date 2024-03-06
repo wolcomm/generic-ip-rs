@@ -299,7 +299,7 @@ where
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::{traits::Address as _, Ipv4, Ipv6};
+    use crate::traits::Address as _;
 
     #[test]
     fn ipv4_broadcast_is_broadcast() {

@@ -462,7 +462,7 @@ pub(crate) trait IntoIpv6Segments: Address<Ipv6> {
         // Safety:
         // it is always safe to transmute `[u16; 8]` to `[u8; 16]`
         let octets = unsafe {
-            core::mem::transmute([
+            mem::transmute([
                 segments[0].to_be(),
                 segments[1].to_be(),
                 segments[2].to_be(),

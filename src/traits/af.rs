@@ -1,4 +1,3 @@
-use core::cmp::Ord;
 use core::fmt::Debug;
 use core::hash::Hash;
 

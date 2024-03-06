@@ -1,5 +1,4 @@
 use std::collections::HashSet;
-use std::iter::FromIterator;
 
 use ip::{traits::PrefixSet as _, AfiClass, Any, Ipv4, Ipv6, Prefix, PrefixSet};
 use itertools::Itertools;

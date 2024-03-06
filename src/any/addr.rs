@@ -301,7 +301,7 @@ impl Arbitrary for Address {
 
 #[cfg(test)]
 mod tests {
-    use proptest::{arbitrary::any, proptest};
+    use proptest::proptest;
 
     use super::*;
     use crate::traits::Address as _;

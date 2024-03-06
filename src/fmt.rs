@@ -148,7 +148,7 @@ mod tests {
             let bytes = s.as_bytes();
             let tail = &mut self.buf[self.cursor..];
             if tail.len() < bytes.len() {
-                return Err(core::fmt::Error);
+                return Err(fmt::Error);
             }
             let target = &mut tail[..bytes.len()];
             target.copy_from_slice(bytes);

@@ -1,4 +1,4 @@
-use core::cmp::{Ordering, PartialEq, PartialOrd};
+use core::cmp::Ordering;
 use core::ops::{Add, BitAnd, BitOr, BitXor, Mul, Not, Sub};
 
 use num_traits::{One, Zero};
