@@ -155,3 +155,44 @@ where
             .boxed()
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    mod ipv4 {
+        use super::*;
+
+        #[test]
+        fn parse_valid() {
+            let input = "/8";
+            let length = input.parse::<PrefixLength<Ipv4>>().unwrap();
+            assert_eq!(length.as_ref(), &8);
+        }
+
+        #[test]
+        fn parse_invalid() {
+            let input = "/40";
+            let length = input.parse::<PrefixLength<Ipv4>>();
+            assert!(length.is_err_and(|err| err.kind() == Kind::PrefixLength));
+        }
+    }
+
+    mod ipv6 {
+        use super::*;
+
+        #[test]
+        fn parse_valid() {
+            let input = "/40";
+            let length = input.parse::<PrefixLength<Ipv6>>().unwrap();
+            assert_eq!(length.as_ref(), &40);
+        }
+
+        #[test]
+        fn parse_invalid() {
+            let input = "128";
+            let length = input.parse::<PrefixLength<Ipv6>>();
+            assert!(length.is_err_and(|err| err.kind() == Kind::ParserError));
+        }
+    }
+}
