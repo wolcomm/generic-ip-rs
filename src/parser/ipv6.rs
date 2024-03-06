@@ -15,6 +15,14 @@ pub(crate) fn parse_addr(input: &str) -> Result<u128, Error> {
 
 #[allow(clippy::inline_always)]
 #[inline(always)]
+pub(crate) fn parse_length(input: &str) -> Result<u8, Error> {
+    Parser::new(input)
+        .take_only(Parser::take_length)
+        .ok_or_else(|| err!(Kind::ParserError))
+}
+
+#[allow(clippy::inline_always)]
+#[inline(always)]
 pub(crate) fn parse_prefix(input: &str) -> Result<(u128, u8), Error> {
     Parser::new(input)
         .take_with_length(Parser::take_ipv6_segments)
@@ -134,6 +142,13 @@ mod tests {
             range,
             (0x2001_0db8_0000_0000_0000_0000_0000_0000, 32, 48, 64)
         );
+    }
+
+    #[test]
+    fn prefix_len() {
+        let input = "/48";
+        let length = parse_length(input).unwrap();
+        assert_eq!(length, 48);
     }
 
     #[cfg(feature = "std")]

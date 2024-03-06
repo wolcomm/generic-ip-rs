@@ -133,6 +133,20 @@ pub trait Address<A: Afi>:
     where
         S: AsRef<str> + ?Sized;
 
+    /// Parse a string into [`Self::Length`].
+    ///
+    /// This method is primarily intended for use via the
+    /// [`FromStr`][core::str::FromStr] implementation for
+    /// [`PrefixLength<A>`][crate::PrefixLength].
+    ///
+    /// # Errors
+    ///
+    /// Fails if the string does not conform to the textual address
+    /// representation rules for `A`.
+    fn parse_length<S>(s: &S) -> Result<Self::Length, Error>
+    where
+        S: AsRef<str> + ?Sized;
+
     /// Parse a string into a `(Self, Self::Length>)`
     /// pair.
     ///
@@ -283,6 +297,13 @@ impl Address<Ipv4> for u32 {
         parser::ipv4::parse_addr(s.as_ref())
     }
 
+    fn parse_length<S>(s: &S) -> Result<Self::Length, Error>
+    where
+        S: AsRef<str> + ?Sized,
+    {
+        parser::ipv4::parse_length(s.as_ref())
+    }
+
     fn parse_prefix<S>(s: &S) -> Result<(Self, Self::Length), Error>
     where
         S: AsRef<str> + ?Sized,
@@ -388,6 +409,13 @@ impl Address<Ipv6> for u128 {
         S: AsRef<str> + ?Sized,
     {
         parser::ipv6::parse_addr(s.as_ref())
+    }
+
+    fn parse_length<S>(s: &S) -> Result<Self::Length, Error>
+    where
+        S: AsRef<str> + ?Sized,
+    {
+        parser::ipv6::parse_length(s.as_ref())
     }
 
     fn parse_prefix<S>(s: &S) -> Result<(Self, Self::Length), Error>

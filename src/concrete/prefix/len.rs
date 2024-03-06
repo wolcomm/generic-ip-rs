@@ -1,5 +1,5 @@
-use core::fmt;
 use core::ops::Neg;
+use core::{fmt, str::FromStr};
 
 use super::impl_try_from_any;
 use crate::{
@@ -92,6 +92,14 @@ impl<A: Afi> traits::PrefixLength for PrefixLength<A> {
         } else {
             Err(err!(Kind::PrefixLength))
         }
+    }
+}
+
+impl<A: Afi> FromStr for PrefixLength<A> {
+    type Err = Error;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        A::Primitive::parse_length(s).and_then(Self::from_primitive)
     }
 }
 

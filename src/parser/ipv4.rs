@@ -12,6 +12,14 @@ pub(crate) fn parse_addr(input: &str) -> Result<u32, Error> {
 
 #[allow(clippy::inline_always)]
 #[inline(always)]
+pub(crate) fn parse_length(input: &str) -> Result<u8, Error> {
+    Parser::new(input)
+        .take_only(Parser::take_length)
+        .ok_or_else(|| err!(Kind::ParserError))
+}
+
+#[allow(clippy::inline_always)]
+#[inline(always)]
 pub(crate) fn parse_prefix(input: &str) -> Result<(u32, u8), Error> {
     Parser::new(input)
         .take_with_length(Parser::take_ipv4_octets)
@@ -31,6 +39,7 @@ pub(crate) fn parse_range(input: &str) -> Result<(u32, u8, u8, u8), Error> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::parser::ipv6::parse_length;
 
     #[test]
     fn parse_ipv4_addr() {
@@ -67,6 +76,13 @@ mod tests {
         let input = "192.0.2.0/24,25,26";
         let range = parse_range(input).unwrap();
         assert_eq!(range, (0xc000_0200, 24, 25, 26));
+    }
+
+    #[test]
+    fn prefix_len() {
+        let input = "/24";
+        let length = parse_length(input).unwrap();
+        assert_eq!(length, 24);
     }
 
     #[cfg(feature = "std")]
