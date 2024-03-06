@@ -5,7 +5,6 @@ trait Number: Eq + Sized {
     const ZERO: Self;
     fn checked_add(self, rhs: u8) -> Option<Self>;
     fn checked_mul(self, rhs: u8) -> Option<Self>;
-    fn to_be_bytes<const N: usize>(self) -> [u8; N];
 }
 
 macro_rules! impl_number {
@@ -18,11 +17,6 @@ macro_rules! impl_number {
                 }
                 fn checked_mul(self, rhs: u8) -> Option<Self> {
                     self.checked_mul(rhs.into())
-                }
-                fn to_be_bytes<const N: usize>(self) -> [u8; N] {
-                    let mut buf = [0; N];
-                    self.to_be_bytes().into_iter().enumerate().for_each(|(i, octet)| buf[i] = octet);
-                    buf
                 }
             }
         )*
